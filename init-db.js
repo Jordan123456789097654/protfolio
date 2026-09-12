@@ -5,10 +5,16 @@ const fs = require('fs');
 const path = require('path');
 
 async function initDB() {
-  const connStr = process.env.DATABASE_URL.replace(/[?&]sslmode=[^&]*/g, '');
+  const dns = require('dns');
+  if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder('ipv4first');
+  }
+
+  const dbUrl = process.env.DATABASE_URL || '';
+  const connStr = dbUrl.replace(/[?&]sslmode=[^&]*/g, '');
   const pool = new Pool({
     connectionString: connStr,
-    ssl: { rejectUnauthorized: false }
+    ssl: dbUrl ? { rejectUnauthorized: false } : false
   });
 
   try {

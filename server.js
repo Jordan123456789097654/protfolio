@@ -9,10 +9,16 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Database connection pool — strip sslmode param to avoid self-signed cert issues
-const connStr = process.env.DATABASE_URL.replace(/[?&]sslmode=[^&]*/g, '');
+const dns = require('dns');
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
+
+const dbUrl = process.env.DATABASE_URL || '';
+const connStr = dbUrl.replace(/[?&]sslmode=[^&]*/g, '');
 const pool = new Pool({
   connectionString: connStr,
-  ssl: { rejectUnauthorized: false }
+  ssl: dbUrl ? { rejectUnauthorized: false } : false
 });
 
 // Verify DB connection on startup
