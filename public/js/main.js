@@ -1338,6 +1338,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        let mouseX = -9999;
+        let mouseY = -9999;
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
         let time = 0;
         function drawParticles() {
             ctx.clearRect(0, 0, width, height);
@@ -1372,17 +1379,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                const mdx = p.x - mouseX;
-                const mdy = p.y - (mouseY + window.scrollY);
-                const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
+                if (mouseX > 0 && mouseY > 0) {
+                    const mdx = p.x - mouseX;
+                    const mdy = p.y - (mouseY + window.scrollY);
+                    const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
 
-                if (mdist < 140) {
-                    ctx.beginPath();
-                    ctx.moveTo(p.x, p.y);
-                    ctx.lineTo(mouseX, mouseY + window.scrollY);
-                    ctx.strokeStyle = `rgba(0, 212, 255, ${0.45 * (1 - mdist / 140)})`;
-                    ctx.lineWidth = 1.2;
-                    ctx.stroke();
+                    if (mdist < 140) {
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(mouseX, mouseY + window.scrollY);
+                        ctx.strokeStyle = `rgba(0, 212, 255, ${0.45 * (1 - mdist / 140)})`;
+                        ctx.lineWidth = 1.2;
+                        ctx.stroke();
+                    }
                 }
             }
 
