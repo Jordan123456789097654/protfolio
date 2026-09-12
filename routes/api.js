@@ -9,6 +9,7 @@ const upload = multer({
 });
 
 const { safeQuery } = require('../lib/dbAdapter');
+const { sendEmail } = require('../lib/email');
 
 // ── GET site config ──────────────────────────────────────────────
 router.get('/config', async (req, res) => {
@@ -187,37 +188,25 @@ router.post('/contact', async (req, res) => {
     // Send Resend Email Notification if configured
     try {
       const { rows } = await req.app.locals.pool.query('SELECT resend_api_key, notification_email FROM site_config LIMIT 1');
-      const apiKey = rows[0]?.resend_api_key || process.env.RESEND_API_KEY || '';
       const toEmail = rows[0]?.notification_email || 'jordan.lmmsfbla@outlook.com';
 
-      if (apiKey) {
-        fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-          },
-          body: JSON.stringify({
-            from: 'Portfolio Contact <onboarding@resend.dev>',
-            to: [toEmail],
-            subject: `📬 New Portfolio Message from ${name.trim()}`,
-            html: `
-              <div style="font-family:sans-serif;padding:20px;color:#333;">
-                <h2 style="color:#6c63ff;">New Portfolio Contact Message</h2>
-                <p><strong>Name:</strong> ${name.trim()}</p>
-                <p><strong>Email:</strong> <a href="mailto:${email.trim()}">${email.trim()}</a></p>
-                <p><strong>Message:</strong></p>
-                <blockquote style="background:#f4f4f7;padding:15px;border-left:4px solid #6c63ff;margin:0;">${message.trim().replace(/\n/g, '<br>')}</blockquote>
-                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
-                <p style="font-size:12px;color:#888;">Sent from your Portfolio Website</p>
-              </div>
-            `
-          })
-        }).then(r => r.json()).then(resData => console.log('✓ Resend Email Sent:', resData))
-          .catch(e => console.error('✗ Resend Email Error:', e.message));
-      }
+      sendEmail({
+        to: toEmail,
+        subject: `📬 New Portfolio Message from ${name.trim()}`,
+        html: `
+          <div style="font-family:sans-serif;padding:20px;color:#333;">
+            <h2 style="color:#6c63ff;">New Portfolio Contact Message</h2>
+            <p><strong>Name:</strong> ${name.trim()}</p>
+            <p><strong>Email:</strong> <a href="mailto:${email.trim()}">${email.trim()}</a></p>
+            <p><strong>Message:</strong></p>
+            <blockquote style="background:#f4f4f7;padding:15px;border-left:4px solid #6c63ff;margin:0;">${message.trim().replace(/\n/g, '<br>')}</blockquote>
+            <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+            <p style="font-size:12px;color:#888;">Sent from your Portfolio Website</p>
+          </div>
+        `
+      }).catch(e => console.error('✗ Contact Email Error:', e.message));
     } catch (emailErr) {
-      console.error('Resend lookup failed:', emailErr.message);
+      console.error('Email notification lookup failed:', emailErr.message);
     }
 
     res.json({ success: true, message: 'Message sent successfully!' });

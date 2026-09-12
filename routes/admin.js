@@ -12,6 +12,7 @@ const upload = multer({
 });
 
 const { safeQuery } = require('../lib/dbAdapter');
+const { sendEmail } = require('../lib/email');
 
 // ── Login ────────────────────────────────────────────────────────
 router.post('/login', async (req, res) => {
@@ -669,56 +670,38 @@ router.post('/messages/:id/reply', async (req, res) => {
 
     const subject = reply_subject || `Re: Portfolio Contact Message from ${msg.name}`;
 
-    let emailSent = false;
-    let emailError = null;
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+        <h2 style="color: #6c63ff; margin-top: 0;">Reply from ${studentName}</h2>
+        <p>Hi ${msg.name},</p>
+        <div style="background: #ffffff; padding: 18px; border-left: 4px solid #6c63ff; border-radius: 6px; margin: 20px 0; color: #334155; font-size: 15px; line-height: 1.6;">
+          ${reply_text.trim().replace(/\n/g, '<br>')}
+        </div>
+        <hr style="border: none; border-top: 1px solid #cbd5e1; margin: 24px 0;">
+        <p style="font-size: 12px; color: #64748b;"><strong>Original Message from you (${msg.email}):</strong></p>
+        <blockquote style="margin: 0; padding: 10px 14px; background: #f1f5f9; border-radius: 6px; font-size: 13px; color: #475569;">${msg.message.replace(/\n/g, '<br>')}</blockquote>
+      </div>
+    `;
 
-    if (apiKey) {
-      try {
-        const emailRes = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-          },
-          body: JSON.stringify({
-            from: `${studentName} <onboarding@resend.dev>`,
-            to: [msg.email.trim()],
-            subject: subject,
-            html: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
-                <h2 style="color: #6c63ff; margin-top: 0;">Reply from ${studentName}</h2>
-                <p>Hi ${msg.name},</p>
-                <div style="background: #ffffff; padding: 18px; border-left: 4px solid #6c63ff; border-radius: 6px; margin: 20px 0; color: #334155; font-size: 15px; line-height: 1.6;">
-                  ${reply_text.trim().replace(/\n/g, '<br>')}
-                </div>
-                <hr style="border: none; border-top: 1px solid #cbd5e1; margin: 24px 0;">
-                <p style="font-size: 12px; color: #64748b;"><strong>Original Message from you (${msg.email}):</strong></p>
-                <blockquote style="margin: 0; padding: 10px 14px; background: #f1f5f9; border-radius: 6px; font-size: 13px; color: #475569;">${msg.message.replace(/\n/g, '<br>')}</blockquote>
-              </div>
-            `
-          })
-        });
-        const resData = await emailRes.json();
-        if (emailRes.ok) {
-          emailSent = true;
-        } else {
-          emailError = resData.message || JSON.stringify(resData);
-        }
-      } catch (err) {
-        emailError = err.message;
-      }
-    }
+    const emailResult = await sendEmail({
+      to: msg.email.trim(),
+      subject: subject,
+      html: emailHtml
+    });
 
     await req.app.locals.pool.query(
       `UPDATE contact_messages SET status = 'replied', reply_text = $1, replied_at = NOW() WHERE id = $2`,
       [reply_text.trim(), req.params.id]
     );
 
+    const emailSent = emailResult.success;
+    const emailError = emailResult.error || null;
+
     res.json({
       success: true,
       message: emailSent
         ? `Reply email sent successfully to ${msg.email}!`
-        : `Reply saved in database! (Resend Note: ${emailError || 'Check API key'})`,
+        : `Reply saved in database! (${emailError || 'Check email configuration'})`,
       emailSent,
       emailError
     });
@@ -1256,60 +1239,23 @@ router.post('/recommendations/request', async (req, res) => {
     let emailSent = false;
     let emailError = null;
 
-    if (apiKey) {
-      try {
-        const emailRes = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-          },
-          body: JSON.stringify({
-            from: `${studentName} via Portfolio <onboarding@resend.dev>`,
-            to: [teacher_email.trim()],
-            subject: subject,
-            html: htmlBody
-          })
-        });
-        const resData = await emailRes.json();
-        if (emailRes.ok) {
-          emailSent = true;
-        } else {
-          emailError = resData.message || JSON.stringify(resData);
-          // If Resend sandbox restricts external recipient, forward a notification copy to the student owner so they can forward it!
-          const notifyEmail = config.notification_email || 'jordan.lmmsfbla@outlook.com';
-          if (notifyEmail) {
-            await fetch('https://api.resend.com/emails', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-              },
-              body: JSON.stringify({
-                from: `${studentName} Portfolio <onboarding@resend.dev>`,
-                to: [notifyEmail.trim()],
-                subject: `[FORWARD TO ${teacher_name}] ${subject}`,
-                html: `
-                  <div style="background:#fff3cd;color:#856404;padding:14px 18px;border-radius:8px;margin-bottom:20px;font-family:sans-serif;font-size:14px;border:1px solid #ffeeba;">
-                    <strong>ℹ️ Forwarding Notice:</strong> Resend Sandbox restricts direct delivery to external emails without a custom domain.<br>
-                    Please forward this email directly to <strong>${teacher_name}</strong> (<a href="mailto:${teacher_email.trim()}">${teacher_email.trim()}</a>).
-                  </div>
-                  ${htmlBody}
-                `
-              })
-            }).catch(() => {});
-          }
-        }
-      } catch (err) {
-        emailError = err.message;
-      }
+    const emailResult = await sendEmail({
+      to: teacher_email.trim(),
+      subject: subject,
+      html: htmlBody
+    });
+
+    if (emailResult.success) {
+      emailSent = true;
+    } else {
+      emailError = emailResult.error;
     }
 
     let msg = `Recommendation request created for ${teacher_name}!`;
     if (emailSent) {
       msg = `✅ Request email sent to ${teacher_email}!`;
     } else if (emailError) {
-      msg = `⚠️ Request saved, but email could not be delivered to ${teacher_email} via Resend: ${emailError}`;
+      msg = `⚠️ Request saved, but email could not be delivered directly: ${emailError}`;
     }
 
     res.json({
