@@ -1911,6 +1911,43 @@ async function loadRecommendations() {
             </td>
         `);
     } catch (e) { console.error(e); }
+    loadRecommendationRequests();
+}
+
+async function loadRecommendationRequests() {
+    try {
+        const requests = await apiCall('/admin/recommendations/requests');
+        const host = window.location.host;
+        const protocol = window.location.protocol;
+
+        renderTable('recommendation-requests-table', requests, req => {
+            const formUrl = `${protocol}//${host}/recommend-teacher.html?token=${req.token}`;
+            const statusBadge = req.status === 'completed' 
+                ? '<span style="background:rgba(46,213,115,0.15);color:#2ed573;padding:3px 10px;border-radius:99px;font-size:0.75rem;font-weight:700;">✅ Completed</span>'
+                : '<span style="background:rgba(255,171,0,0.15);color:#ffab00;padding:3px 10px;border-radius:99px;font-size:0.75rem;font-weight:700;">⏳ Pending</span>';
+            const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString() : 'Recent';
+
+            return `
+                <td data-label="Recipient Name" style="font-weight:600;">${req.teacher_name}</td>
+                <td data-label="Email">${req.teacher_email}</td>
+                <td data-label="Context">${req.course_or_context || '<span style="color:var(--text-secondary);">General</span>'}</td>
+                <td data-label="Status">${statusBadge}</td>
+                <td data-label="Sent Date">${dateStr}</td>
+                <td data-label="Actions" class="actions-cell">
+                    <button class="btn-sm btn-outline" onclick="copyRequestLink('${formUrl}')">📋 Copy Link</button>
+                    <a href="${formUrl}" target="_blank" class="btn-sm btn-outline" style="text-decoration:none;">🔗 Open Form</a>
+                </td>
+            `;
+        });
+    } catch (e) { console.error('Failed to load recommendation requests:', e.message); }
+}
+
+function copyRequestLink(url) {
+    navigator.clipboard.writeText(url).then(() => {
+        showToast('Recommendation form link copied to clipboard!', 'success');
+    }).catch(() => {
+        prompt('Copy this recommendation form URL:', url);
+    });
 }
 
 function openRecommendationModal(rec = null) {
