@@ -600,26 +600,50 @@
                         <div class="settings-card">
                             <div style="display:flex;justify-content:space-between;align-items:center;">
                                 <h3 style="margin:0;">📄 3. Teacher Recommendation Request Email</h3>
-                                <button type="button" class="btn-outline ai-draft-tpl-btn" data-type="recommendation" style="font-size:0.8rem;padding:4px 10px;">✨ Kyro AI Draft</button>
+                                <button type="button" class="btn-outline ai-draft-tpl-btn" data-type="recommendation_teacher" style="font-size:0.8rem;padding:4px 10px;">✨ Kyro AI Draft</button>
                             </div>
-                            <p class="settings-desc" style="margin-top:6px;">Sent to teachers/counselors when requesting a recommendation letter.</p>
+                            <p class="settings-desc" style="margin-top:6px;">Sent to teachers &amp; counselors when requesting an academic recommendation.</p>
 
                             <div class="form-group">
-                                <label for="rec-subject-input">Subject Line</label>
-                                <input type="text" id="rec-subject-input" name="recommendation_email_subject" placeholder="Letter of Recommendation Request for {{student_name}}">
+                                <label for="rec-teacher-subject-input">Subject Line</label>
+                                <input type="text" id="rec-teacher-subject-input" name="recommendation_teacher_email_subject" placeholder="Teacher Recommendation Request for {{student_name}}">
                             </div>
 
                             <div class="form-group">
-                                <label for="rec-template-input">Email Body / HTML Template</label>
+                                <label for="rec-teacher-template-input">Email Body / HTML Template</label>
                                 <div class="tag-pills-container">
-                                    <span class="tag-pill" onclick="insertTag('rec-template-input', '{{teacher_name}}')">{{teacher_name}}</span>
-                                    <span class="tag-pill" onclick="insertTag('rec-template-input', '{{student_name}}')">{{student_name}}</span>
-                                    <span class="tag-pill" onclick="insertTag('rec-template-input', '{{course_or_context}}')">{{course_or_context}}</span>
-                                    <span class="tag-pill" onclick="insertTag('rec-template-input', '{{form_url}}')">{{form_url}}</span>
-                                    <span class="tag-pill" onclick="insertTag('rec-template-input', '{{class_year}}')">{{class_year}}</span>
-                                    <span class="tag-pill" onclick="insertTag('rec-template-input', '{{site_title}}')">{{site_title}}</span>
+                                    <span class="tag-pill" onclick="insertTag('rec-teacher-template-input', '{{teacher_name}}')">{{teacher_name}}</span>
+                                    <span class="tag-pill" onclick="insertTag('rec-teacher-template-input', '{{student_name}}')">{{student_name}}</span>
+                                    <span class="tag-pill" onclick="insertTag('rec-teacher-template-input', '{{course_or_context}}')">{{course_or_context}}</span>
+                                    <span class="tag-pill" onclick="insertTag('rec-teacher-template-input', '{{form_url}}')">{{form_url}}</span>
+                                    <span class="tag-pill" onclick="insertTag('rec-teacher-template-input', '{{site_title}}')">{{site_title}}</span>
                                 </div>
-                                <textarea id="rec-template-input" name="rec_template_input" rows="7" placeholder="Enter custom HTML or plain text template..."></textarea>
+                                <textarea id="rec-teacher-template-input" name="rec_teacher_template_input" rows="6" placeholder="Enter custom teacher recommendation HTML template..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <h3 style="margin:0;">🌟 4. Mentor / Advisor Endorsement Email</h3>
+                                <button type="button" class="btn-outline ai-draft-tpl-btn" data-type="recommendation_mentor" style="font-size:0.8rem;padding:4px 10px;">✨ Kyro AI Draft</button>
+                            </div>
+                            <p class="settings-desc" style="margin-top:6px;">Sent to mentors, therapists, career advisors &amp; industry leaders.</p>
+
+                            <div class="form-group">
+                                <label for="rec-mentor-subject-input">Subject Line</label>
+                                <input type="text" id="rec-mentor-subject-input" name="recommendation_mentor_email_subject" placeholder="Mentor Endorsement Request for {{student_name}}">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="rec-mentor-template-input">Email Body / HTML Template</label>
+                                <div class="tag-pills-container">
+                                    <span class="tag-pill" onclick="insertTag('rec-mentor-template-input', '{{teacher_name}}')">{{teacher_name}}</span>
+                                    <span class="tag-pill" onclick="insertTag('rec-mentor-template-input', '{{student_name}}')">{{student_name}}</span>
+                                    <span class="tag-pill" onclick="insertTag('rec-mentor-template-input', '{{course_or_context}}')">{{course_or_context}}</span>
+                                    <span class="tag-pill" onclick="insertTag('rec-mentor-template-input', '{{form_url}}')">{{form_url}}</span>
+                                    <span class="tag-pill" onclick="insertTag('rec-mentor-template-input', '{{site_title}}')">{{site_title}}</span>
+                                </div>
+                                <textarea id="rec-mentor-template-input" name="rec_mentor_template_input" rows="6" placeholder="Enter custom mentor endorsement HTML template..."></textarea>
                             </div>
                         </div>
 

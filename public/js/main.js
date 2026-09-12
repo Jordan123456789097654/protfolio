@@ -1475,12 +1475,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function updateClock() {
             const now = new Date();
-            const hours = now.getHours();
-            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const estTimeString = now.toLocaleString("en-US", { timeZone: "America/New_York" });
+            const estDate = new Date(estTimeString);
+            const hours = estDate.getHours();
+            const minutes = estDate.getMinutes().toString().padStart(2, '0');
             const ampm = hours >= 12 ? 'PM' : 'AM';
             const displayHours = hours % 12 || 12;
 
-            if (liveClock) liveClock.textContent = `${displayHours}:${minutes} ${ampm}`;
+            if (liveClock) liveClock.textContent = `${displayHours}:${minutes} ${ampm} EST`;
 
             // Awake vs Sleeping status based on 7 AM to 11 PM
             if (awakeStatus) {
@@ -1508,10 +1510,10 @@ document.addEventListener('DOMContentLoaded', () => {
         updateClock();
         setInterval(updateClock, 30000);
 
-        // Fetch Weather info via Open-Meteo free API
+        // Fetch Weather info via Open-Meteo free API for Postal Code 30041 (Cumming, GA) in EST timezone
         async function fetchWeather() {
             try {
-                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=38.8951&longitude=-77.0364&current_weather=true');
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=34.2073&longitude=-84.1402&current_weather=true&timezone=America%2FNew_York');
                 const data = await res.json();
                 if (data && data.current_weather) {
                     const tempC = data.current_weather.temperature;

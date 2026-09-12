@@ -2079,16 +2079,23 @@ async function handleIntegrationsSave(e) {
 function openRequestRecommendationModal() {
     const html = `
         <div class="form-group">
-            <label>Teacher / Recommender Name *</label>
-            <input type="text" name="teacher_name" placeholder="e.g. Mr. David Vance" required>
+            <label>Request Type / Recipient Role *</label>
+            <select name="recipient_type" class="form-control" style="width:100%;padding:10px;background:#1e293b;border:1px solid rgba(255,255,255,0.1);color:#fff;border-radius:8px;margin-bottom:12px;">
+                <option value="teacher">👨‍🏫 Teacher / Academic Counselor (Formal Academic Recommendation)</option>
+                <option value="mentor">🌿 Mentor, Therapist or Advisor (Personal / Career Endorsement)</option>
+            </select>
         </div>
         <div class="form-group">
-            <label>Teacher Email Address *</label>
-            <input type="email" name="teacher_email" placeholder="e.g. dvance@school.edu" required>
+            <label>Recipient Full Name *</label>
+            <input type="text" name="teacher_name" placeholder="e.g. Dr. Jane Smith / Coach Miller" required>
         </div>
         <div class="form-group">
-            <label>Course / Subject / Context</label>
-            <input type="text" name="course_or_context" placeholder="e.g. AP Computer Science Principles &amp; FBLA Advisor">
+            <label>Recipient Email Address *</label>
+            <input type="email" name="teacher_email" placeholder="e.g. mentor@domain.com" required>
+        </div>
+        <div class="form-group">
+            <label>Course / Subject / Context Focus</label>
+            <input type="text" name="course_or_context" placeholder="e.g. AP Computer Science, Youth Mentorship, Personal Growth">
         </div>
     `;
 
@@ -2123,15 +2130,19 @@ async function loadEmailTemplates() {
         const contactTpl = document.getElementById('contact-template-input');
         const replySub = document.getElementById('reply-subject-input');
         const replyTpl = document.getElementById('reply-template-input');
-        const recSub = document.getElementById('rec-subject-input');
-        const recTpl = document.getElementById('rec-template-input');
+        const recTeacherSub = document.getElementById('rec-teacher-subject-input');
+        const recTeacherTpl = document.getElementById('rec-teacher-template-input');
+        const recMentorSub = document.getElementById('rec-mentor-subject-input');
+        const recMentorTpl = document.getElementById('rec-mentor-template-input');
 
         if (contactSub && data.contact_email_subject !== undefined) contactSub.value = data.contact_email_subject || '';
         if (contactTpl && data.contact_email_template !== undefined) contactTpl.value = data.contact_email_template || '';
         if (replySub && data.reply_email_subject !== undefined) replySub.value = data.reply_email_subject || '';
         if (replyTpl && data.reply_email_template !== undefined) replyTpl.value = data.reply_email_template || '';
-        if (recSub && data.recommendation_email_subject !== undefined) recSub.value = data.recommendation_email_subject || '';
-        if (recTpl && data.recommendation_email_template !== undefined) recTpl.value = data.recommendation_email_template || '';
+        if (recTeacherSub && data.recommendation_teacher_email_subject !== undefined) recTeacherSub.value = data.recommendation_teacher_email_subject || '';
+        if (recTeacherTpl && data.recommendation_teacher_email_template !== undefined) recTeacherTpl.value = data.recommendation_teacher_email_template || '';
+        if (recMentorSub && data.recommendation_mentor_email_subject !== undefined) recMentorSub.value = data.recommendation_mentor_email_subject || '';
+        if (recMentorTpl && data.recommendation_mentor_email_template !== undefined) recMentorTpl.value = data.recommendation_mentor_email_template || '';
     } catch (e) {
         console.error('Failed to load email templates:', e.message);
     }
@@ -2144,8 +2155,10 @@ async function handleEmailTemplatesSave(e) {
         contact_email_template: document.getElementById('contact-template-input')?.value || '',
         reply_email_subject: document.getElementById('reply-subject-input')?.value || '',
         reply_email_template: document.getElementById('reply-template-input')?.value || '',
-        recommendation_email_subject: document.getElementById('rec-subject-input')?.value || '',
-        recommendation_email_template: document.getElementById('rec-template-input')?.value || ''
+        recommendation_teacher_email_subject: document.getElementById('rec-teacher-subject-input')?.value || '',
+        recommendation_teacher_email_template: document.getElementById('rec-teacher-template-input')?.value || '',
+        recommendation_mentor_email_subject: document.getElementById('rec-mentor-subject-input')?.value || '',
+        recommendation_mentor_email_template: document.getElementById('rec-mentor-template-input')?.value || ''
     };
 
     try {
@@ -2289,13 +2302,16 @@ async function handleAIDraftEmailTemplate(type) {
     } else if (type === 'reply') {
         targetId = 'reply-template-input';
         prompt = `Draft a warm, polite HTML email reply template from student {{student_name}} to a visitor {{name}}. Use these exact tags: {{name}}, {{reply_text}}, {{original_message}}, {{email}}, {{student_name}}, {{date}}, {{site_title}}. Include clean inline CSS. Output ONLY the raw HTML.`;
-    } else if (type === 'recommendation') {
-        targetId = 'rec-template-input';
-        prompt = `Draft a respectful, formal HTML recommendation request email template from student {{student_name}} to teacher {{teacher_name}}. Use these exact tags: {{teacher_name}}, {{student_name}}, {{course_or_context}}, {{form_url}}, {{class_year}}, {{site_title}}. Include clean inline CSS and a call-to-action button linking to {{form_url}}. Output ONLY the raw HTML.`;
+    } else if (type === 'recommendation_teacher') {
+        targetId = 'rec-teacher-template-input';
+        prompt = `Design a brand new, formal academic recommendation request HTML email from student {{student_name}} to teacher {{teacher_name}}. Features: blue gradient header, respectful academic request phrasing, highlight box for {{course_or_context}}, and button linking to {{form_url}}. Use exact tags: {{teacher_name}}, {{student_name}}, {{course_or_context}}, {{form_url}}, {{site_title}}. Output ONLY raw inline-styled HTML.`;
+    } else if (type === 'recommendation_mentor') {
+        targetId = 'rec-mentor-template-input';
+        prompt = `Design a warm, inspiring mentor/therapist endorsement request HTML email from {{student_name}} to mentor {{teacher_name}}. Features: teal/emerald gradient header, personal growth request phrasing, highlight box for {{course_or_context}}, and glowing button linking to {{form_url}}. Use exact tags: {{teacher_name}}, {{student_name}}, {{course_or_context}}, {{form_url}}, {{site_title}}. Output ONLY raw inline-styled HTML.`;
     }
 
     if (targetId) {
-        await generateAIDraft(prompt, targetId, 'You are an expert HTML email template designer.');
+        generateAIDraft(prompt, targetId, 'You are an expert HTML email designer and student communication strategist.');
     }
 }
 
