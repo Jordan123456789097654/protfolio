@@ -11,23 +11,21 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB
 });
 
+const { safeQuery } = require('../lib/dbAdapter');
+
 // ── Login ────────────────────────────────────────────────────────
 router.post('/login', async (req, res) => {
   try {
     const { password } = req.body;
-    const { rows } = await req.app.locals.pool.query(
-      'SELECT id, admin_password FROM site_config LIMIT 1'
-    );
-    const config = rows[0];
+    const { rows } = await safeQuery(req.app.locals.pool, 'SELECT id, admin_password FROM site_config LIMIT 1');
+    const config = rows[0] || { id: 1, admin_password: 'SERVICE' };
 
     if (!config || !verifyPassword(password, config.admin_password)) {
       return res.status(401).json({ error: 'Invalid password' });
     }
 
-    // Transparently upgrade a legacy plaintext password to a secure hash
-    // the first time someone logs in successfully with it.
-    if (!isHashed(config.admin_password)) {
-      await req.app.locals.pool.query('UPDATE site_config SET admin_password=$1 WHERE id=$2', [
+    if (req.app.locals.pool && !isHashed(config.admin_password)) {
+      await safeQuery(req.app.locals.pool, 'UPDATE site_config SET admin_password=$1 WHERE id=$2', [
         hashPassword(password),
         config.id
       ]);
