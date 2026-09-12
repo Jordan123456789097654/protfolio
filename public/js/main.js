@@ -470,7 +470,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${cert.description ? `<p class="cert-description">${cert.description}</p>` : ''}
                 <div class="cert-footer">
                     <span class="cert-date">${cert.issue_date ? `Issued: ${cert.issue_date}` : 'Verified Credential'}</span>
-                    ${cert.credential_url ? `<a href="${cert.credential_url}" target="_blank" rel="noopener noreferrer" class="cert-verify-link">Verify Credential <i data-lucide="external-link"></i></a>` : ''}
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        ${cert.badge_image_url ? `<a href="${cert.badge_image_url}" target="_blank" rel="noopener noreferrer" class="cert-verify-link" style="background:rgba(0,212,255,0.12);border-color:rgba(0,212,255,0.3);color:var(--accent-secondary);"><i data-lucide="file-text"></i> View Certificate</a>` : ''}
+                        ${cert.credential_url ? `<a href="${cert.credential_url}" target="_blank" rel="noopener noreferrer" class="cert-verify-link">Verify Credential <i data-lucide="external-link"></i></a>` : ''}
+                    </div>
                 </div>
             `;
 

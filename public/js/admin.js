@@ -775,8 +775,14 @@ function openCertificationModal(cert = null) {
             <input type="url" name="credential_url" value="${cert?.credential_url || ''}" placeholder="https://credly.com/badges/...">
         </div>
         <div class="form-group">
-            <label>Badge Image URL (Optional)</label>
-            <input type="url" name="badge_image_url" value="${cert?.badge_image_url || ''}" placeholder="https://...">
+            <label>Certificate Image / Badge / PDF Upload</label>
+            <div id="cert-photo-dropzone" class="photo-dropzone">
+                <input type="file" id="cert-photo-file" accept="image/*,application/pdf" class="hidden">
+                <input type="hidden" name="badge_image_url" id="cert-photo-url" value="${cert?.badge_image_url || ''}">
+                <div id="cert-photo-preview" class="photo-dropzone-preview">
+                    ${cert?.badge_image_url ? (cert.badge_image_url.endsWith('.pdf') ? `<span class="pdf-badge">📄 PDF File</span>` : `<img src="${cert.badge_image_url}" alt="Certificate preview">`) : '<div class="dropzone-placeholder">📂 Drag & drop certificate image/PDF here, or <strong>click to browse</strong></div>'}
+                </div>
+            </div>
         </div>
         <div class="form-group">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
@@ -803,6 +809,10 @@ function openCertificationModal(cert = null) {
             showToast('Error saving certification', 'error');
         }
     });
+
+    setTimeout(() => {
+        setupDropzone('cert-photo-dropzone', 'cert-photo-file', 'cert-photo-url', 'cert-photo-preview');
+    }, 0);
 }
 
 // Gallery / Photos
