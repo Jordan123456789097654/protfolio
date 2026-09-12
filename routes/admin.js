@@ -1276,6 +1276,29 @@ router.post('/recommendations/request', async (req, res) => {
           emailSent = true;
         } else {
           emailError = resData.message || JSON.stringify(resData);
+          // If Resend sandbox restricts external recipient, forward a notification copy to the student owner so they can forward it!
+          const notifyEmail = config.notification_email || 'jordan.lmmsfbla@outlook.com';
+          if (notifyEmail) {
+            await fetch('https://api.resend.com/emails', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+              },
+              body: JSON.stringify({
+                from: `${studentName} Portfolio <onboarding@resend.dev>`,
+                to: [notifyEmail.trim()],
+                subject: `[FORWARD TO ${teacher_name}] ${subject}`,
+                html: `
+                  <div style="background:#fff3cd;color:#856404;padding:14px 18px;border-radius:8px;margin-bottom:20px;font-family:sans-serif;font-size:14px;border:1px solid #ffeeba;">
+                    <strong>ℹ️ Forwarding Notice:</strong> Resend Sandbox restricts direct delivery to external emails without a custom domain.<br>
+                    Please forward this email directly to <strong>${teacher_name}</strong> (<a href="mailto:${teacher_email.trim()}">${teacher_email.trim()}</a>).
+                  </div>
+                  ${htmlBody}
+                `
+              })
+            }).catch(() => {});
+          }
         }
       } catch (err) {
         emailError = err.message;
