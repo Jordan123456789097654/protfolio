@@ -2140,7 +2140,7 @@ function openRequestRecommendationModal() {
     openModal('📩 Send Recommendation Request Email', html, async (formData) => {
         try {
             const res = await apiCall('/admin/recommendations/request', 'POST', formData);
-            if (res.success) {
+            if (res && res.success) {
                 showToast(res.message, res.emailSent ? 'success' : 'error');
                 closeModal();
                 
@@ -2151,7 +2151,7 @@ function openRequestRecommendationModal() {
                     }, 300);
                 }
             } else {
-                showToast(res.error || 'Failed to send request.', 'error');
+                showToast(res?.error || 'Failed to send request.', 'error');
             }
         } catch (err) {
             showToast('Error: ' + err.message, 'error');
