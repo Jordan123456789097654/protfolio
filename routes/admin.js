@@ -1282,9 +1282,16 @@ router.post('/recommendations/request', async (req, res) => {
       }
     }
 
+    let msg = `Recommendation request created for ${teacher_name}!`;
+    if (emailSent) {
+      msg = `✅ Request email sent to ${teacher_email}!`;
+    } else if (emailError) {
+      msg = `⚠️ Request saved, but email could not be delivered to ${teacher_email} via Resend: ${emailError}`;
+    }
+
     res.json({
       success: true,
-      message: emailSent ? `Recommendation request email sent to ${teacher_email}!` : 'Request created, but email could not be sent automatically. You can copy the link below.',
+      message: msg,
       request: rows[0],
       formUrl,
       emailSent,
