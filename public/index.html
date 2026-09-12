@@ -52,6 +52,10 @@
         <div class="blob blob-aurora"></div>
     </div>
 
+    <!-- Rain Canvas Overlay & Glass Blur Effect -->
+    <canvas id="rain-canvas"></canvas>
+    <div id="rain-glass-blur" class="rain-glass-blur"></div>
+
     <!-- Modern Glass Header Navigation -->
     <nav id="navbar">
         <div class="nav-container">
@@ -90,10 +94,25 @@
     <!-- Hero Section -->
     <header id="hero" class="hero-section">
         <div class="hero-content reveal">
-            <div class="status-badge magnetic">
-                <span class="status-dot"></span>
-                <span>Open to new opportunities</span>
+            <!-- Dynamic Time, Weather & Greeting Banner -->
+            <div class="hero-widgets-row">
+                <div class="time-status-pill magnetic">
+                    <span class="clock-icon">🕒</span>
+                    <span id="live-clock">12:00 PM</span>
+                    <span class="status-divider">•</span>
+                    <span id="awake-status">Jordan is Awake ☀️</span>
+                </div>
+                <div id="weather-status-pill" class="weather-status-pill magnetic">
+                    <span id="weather-icon">🌧️</span>
+                    <span id="weather-text">Checking weather...</span>
+                    <button id="toggle-rain-btn" class="toggle-rain-btn" title="Toggle Rain Animation">🌧️ Rain FX</button>
+                </div>
             </div>
+
+            <div id="dynamic-greeting-banner" class="dynamic-greeting-banner">
+                <span id="greeting-text">Welcome to my portfolio</span>
+            </div>
+
             <h1 id="hero-name" class="hero-title-text">Loading...</h1>
             <h2 id="hero-title" class="hero-subtitle-text glitch-text"></h2>
             <div id="hero-class-year" class="class-year-badge magnetic hidden">

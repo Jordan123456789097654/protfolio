@@ -1458,7 +1458,181 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ── Spotify Now Playing Widget ──────────────────────────────────
+    // ── Live Time, Awake Status, Greeting & Rain Weather Animation ─────
+    let rainActive = false;
+    let rainAnimationFrame = null;
+
+    function initDynamicTimeAndWeather() {
+        const liveClock = document.getElementById('live-clock');
+        const awakeStatus = document.getElementById('awake-status');
+        const greetingText = document.getElementById('greeting-text');
+        const weatherText = document.getElementById('weather-text');
+        const weatherIcon = document.getElementById('weather-icon');
+        const toggleRainBtn = document.getElementById('toggle-rain-btn');
+
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours % 12 || 12;
+
+            if (liveClock) liveClock.textContent = `${displayHours}:${minutes} ${ampm}`;
+
+            // Awake vs Sleeping status based on 7 AM to 11 PM
+            if (awakeStatus) {
+                if (hours >= 7 && hours < 23) {
+                    awakeStatus.textContent = 'Jordan is Awake ☀️';
+                } else {
+                    awakeStatus.textContent = 'Jordan is Resting 🌙';
+                }
+            }
+
+            // Dynamic Time of Day Greeting
+            if (greetingText) {
+                if (hours >= 5 && hours < 12) {
+                    greetingText.textContent = 'Good Morning! Welcome to my portfolio';
+                } else if (hours >= 12 && hours < 18) {
+                    greetingText.textContent = 'Good Afternoon! Welcome to my portfolio';
+                } else if (hours >= 18 && hours < 22) {
+                    greetingText.textContent = 'Good Evening! Welcome to my portfolio';
+                } else {
+                    greetingText.textContent = 'Working Late! Welcome to my portfolio';
+                }
+            }
+        }
+
+        updateClock();
+        setInterval(updateClock, 30000);
+
+        // Fetch Weather info via Open-Meteo free API
+        async function fetchWeather() {
+            try {
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=38.8951&longitude=-77.0364&current_weather=true');
+                const data = await res.json();
+                if (data && data.current_weather) {
+                    const tempC = data.current_weather.temperature;
+                    const tempF = Math.round((tempC * 9/5) + 32);
+                    const code = data.current_weather.weathercode;
+
+                    let icon = '🌤️';
+                    let condition = 'Clear Skies';
+                    let isRaining = false;
+
+                    if (code >= 51 && code <= 67 || code >= 80 && code <= 82) {
+                        icon = '🌧️';
+                        condition = 'Rainy';
+                        isRaining = true;
+                    } else if (code >= 71 && code <= 77 || code >= 85 && code <= 86) {
+                        icon = '❄️';
+                        condition = 'Snowing';
+                    } else if (code >= 1 && code <= 3) {
+                        icon = '⛅';
+                        condition = 'Partly Cloudy';
+                    } else if (code >= 95) {
+                        icon = '⛈️';
+                        condition = 'Stormy';
+                        isRaining = true;
+                    }
+
+                    if (weatherText) weatherText.textContent = `${tempF}°F • ${condition}`;
+                    if (weatherIcon) weatherIcon.textContent = icon;
+
+                    if (isRaining) {
+                        startRainAnimation();
+                    }
+                }
+            } catch (e) {
+                if (weatherText) weatherText.textContent = '72°F • Clear';
+                if (weatherIcon) weatherIcon.textContent = '☀️';
+            }
+        }
+
+        fetchWeather();
+
+        if (toggleRainBtn) {
+            toggleRainBtn.addEventListener('click', () => {
+                if (rainActive) {
+                    stopRainAnimation();
+                    showToast('Rain Animation Disabled');
+                } else {
+                    startRainAnimation();
+                    showToast('🌧️ Rain & Screen Blur FX Enabled!');
+                }
+            });
+        }
+    }
+
+    function startRainAnimation() {
+        const canvas = document.getElementById('rain-canvas');
+        const blurOverlay = document.getElementById('rain-glass-blur');
+        if (!canvas) return;
+
+        rainActive = true;
+        canvas.classList.add('active');
+        if (blurOverlay) blurOverlay.classList.add('active');
+
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        const numDrops = 140;
+        const drops = [];
+
+        for (let i = 0; i < numDrops; i++) {
+            drops.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                length: Math.random() * 25 + 15,
+                speed: Math.random() * 10 + 12,
+                opacity: Math.random() * 0.4 + 0.35,
+                width: Math.random() * 1.5 + 0.8
+            });
+        }
+
+        function renderRain() {
+            if (!rainActive) return;
+            ctx.clearRect(0, 0, width, height);
+
+            for (let i = 0; i < drops.length; i++) {
+                const d = drops[i];
+                d.y += d.speed;
+                d.x += 1.5; // slight wind angle
+
+                if (d.y > height) {
+                    d.y = -d.length;
+                    d.x = Math.random() * width;
+                }
+
+                ctx.beginPath();
+                ctx.moveTo(d.x, d.y);
+                ctx.lineTo(d.x + 4, d.y + d.length);
+                ctx.strokeStyle = `rgba(180, 220, 255, ${d.opacity})`;
+                ctx.lineWidth = d.width;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            }
+
+            rainAnimationFrame = requestAnimationFrame(renderRain);
+        }
+
+        renderRain();
+    }
+
+    function stopRainAnimation() {
+        rainActive = false;
+        if (rainAnimationFrame) cancelAnimationFrame(rainAnimationFrame);
+        const canvas = document.getElementById('rain-canvas');
+        const blurOverlay = document.getElementById('rain-glass-blur');
+        if (canvas) canvas.classList.remove('active');
+        if (blurOverlay) blurOverlay.classList.remove('active');
+    }
+
     function initSpotifyWidget() {
         const widget = document.getElementById('spotify-widget');
         if (!widget) return;
@@ -1507,6 +1681,7 @@ document.addEventListener('DOMContentLoaded', () => {
             initParticleCanvas();
             initSoundEvents();
             initSpotifyWidget();
+            initDynamicTimeAndWeather();
         }, 200);
     });
 });
