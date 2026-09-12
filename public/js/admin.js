@@ -6,8 +6,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('logout-btn').addEventListener('click', handleLogout);
     
     document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => switchTab(e.target.dataset.tab));
+        btn.addEventListener('click', (e) => {
+            const tab = e.currentTarget.dataset.tab;
+            switchTab(tab, true);
+        });
     });
+
+    window.addEventListener('popstate', checkTabFromURL);
 
     document.getElementById('config-form').addEventListener('submit', handleConfigSave);
     
@@ -15,9 +20,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('add-project-btn').addEventListener('click', () => openProjectModal());
     document.getElementById('add-skill-btn').addEventListener('click', () => openSkillModal());
     document.getElementById('add-experience-btn').addEventListener('click', () => openExperienceModal());
+    const addCertBtn = document.getElementById('add-certification-btn');
+    if (addCertBtn) addCertBtn.addEventListener('click', () => openCertificationModal());
     document.getElementById('add-achievement-btn').addEventListener('click', () => openAchievementModal());
     document.getElementById('add-gallery-btn').addEventListener('click', () => openGalleryModal());
     document.getElementById('add-testimonial-btn').addEventListener('click', () => openTestimonialModal());
+    document.getElementById('add-recommendation-btn').addEventListener('click', () => openRecommendationModal());
+    const reqRecBtn = document.getElementById('request-recommendation-btn');
+    if (reqRecBtn) reqRecBtn.addEventListener('click', () => openRequestRecommendationModal());
+    document.getElementById('add-faq-btn').addEventListener('click', () => openFAQModal());
     document.getElementById('add-social-btn').addEventListener('click', () => openSocialModal());
 
     // Modal
@@ -31,6 +42,70 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = '/admin/spotify/login';
     });
     document.getElementById('spotify-disconnect-btn').addEventListener('click', handleSpotifyDisconnect);
+    const integrationsForm = document.getElementById('integrations-form');
+    if (integrationsForm) integrationsForm.addEventListener('submit', handleIntegrationsSave);
+
+    // Message Reply Modal listeners
+    const replyForm = document.getElementById('reply-form');
+    if (replyForm) replyForm.addEventListener('submit', handleReplySubmit);
+    const replyCancelBtn = document.getElementById('reply-cancel-btn');
+    if (replyCancelBtn) replyCancelBtn.addEventListener('click', () => {
+        document.getElementById('reply-modal-overlay').classList.add('hidden');
+    });
+    const aiDraftReplyBtn = document.getElementById('ai-draft-reply-btn');
+    if (aiDraftReplyBtn) aiDraftReplyBtn.addEventListener('click', handleAIDraftReply);
+
+    // Email templates form listener & AI Draft buttons
+    const emailTemplatesForm = document.getElementById('email-templates-form');
+    if (emailTemplatesForm) emailTemplatesForm.addEventListener('submit', handleEmailTemplatesSave);
+    document.querySelectorAll('.ai-draft-tpl-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const type = e.currentTarget.dataset.type;
+            handleAIDraftEmailTemplate(type);
+        });
+    });
+
+    // Kyro AI Studio
+    const bioGenBtn = document.getElementById('ai-generate-bio-btn');
+    if (bioGenBtn) bioGenBtn.addEventListener('click', handleAIBioGenerate);
+    const bioApplyBtn = document.getElementById('ai-apply-bio-btn');
+    if (bioApplyBtn) bioApplyBtn.addEventListener('click', handleAIApplyBio);
+    const bulletGenBtn = document.getElementById('ai-generate-bullets-btn');
+    if (bulletGenBtn) bulletGenBtn.addEventListener('click', handleAIBulletOptimize);
+    const chatSendBtn = document.getElementById('ai-chat-send-btn');
+    if (chatSendBtn) chatSendBtn.addEventListener('click', handleAIChatSend);
+    const chatInput = document.getElementById('ai-chat-input');
+    if (chatInput) chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAIChatSend(); });
+
+    // AI Resume PDF Generator buttons in Admin Panel
+    const adminAiResumeBtn = document.getElementById('admin-ai-resume-btn');
+    if (adminAiResumeBtn) adminAiResumeBtn.addEventListener('click', () => generateAdminPDFResume(true));
+    const adminStdResumeBtn = document.getElementById('admin-std-resume-btn');
+    if (adminStdResumeBtn) adminStdResumeBtn.addEventListener('click', () => generateAdminPDFResume(false));
+
+    // Section Manager
+    const saveSecBtn = document.getElementById('save-sections-btn');
+    if (saveSecBtn) saveSecBtn.addEventListener('click', handleSaveSections);
+
+    // Media Gallery & Cropper
+    const mediaInput = document.getElementById('media-upload-input');
+    if (mediaInput) mediaInput.addEventListener('change', handleMediaUploadFile);
+    const cropCancelBtn = document.getElementById('cropper-cancel-btn');
+    if (cropCancelBtn) cropCancelBtn.addEventListener('click', () => {
+        document.getElementById('cropper-modal').classList.add('hidden');
+        if (activeCropper) activeCropper.destroy();
+    });
+    const cropSaveBtn = document.getElementById('cropper-save-btn');
+    if (cropSaveBtn) cropSaveBtn.addEventListener('click', handleCropSaveUpload);
+
+    document.querySelectorAll('.crop-ratio-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.crop-ratio-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            const ratio = parseFloat(e.target.dataset.ratio);
+            if (activeCropper) activeCropper.setAspectRatio(ratio === 0 ? NaN : ratio);
+        });
+    });
 
     // Rich text bio editor + photo dropzone
     initRichTextToolbar('config-bio-editor', 'config-bio');
@@ -62,6 +137,14 @@ async function apiCall(endpoint, method = 'GET', body = null) {
             data = await response.json();
         } catch(e) {}
         
+        if (response.status === 401) {
+            if (endpoint === '/admin/check') {
+                return { authenticated: false };
+            }
+            showLogin();
+            return null;
+        }
+
         if (!response.ok) {
             throw new Error(data?.error || `HTTP error ${response.status}`);
         }
@@ -75,7 +158,7 @@ async function apiCall(endpoint, method = 'GET', body = null) {
 async function checkAuth() {
     try {
         const res = await apiCall('/admin/check');
-        if (res.authenticated) {
+        if (res && res.authenticated) {
             showDashboard();
         } else {
             showLogin();
@@ -127,21 +210,114 @@ function showDashboard() {
     loadProjects();
     loadSkills();
     loadExperience();
+    loadCertifications();
     loadAchievements();
     loadGallery();
     loadTestimonials();
     loadSocial();
     loadMessages();
     loadSpotifyStatus();
+    loadSections();
+    loadMedia();
+    loadIntegrations();
+    loadEmailTemplates();
+    loadRecommendations();
+    loadFAQs();
+    loadAnalytics();
+    initQRCode();
+    checkTabFromURL();
 }
 
-// Tabs
-function switchTab(tabId) {
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+async function loadAnalytics() {
+    try {
+        const stats = await apiCall('/admin/analytics');
+        if (stats) {
+            if (document.getElementById('stat-page-views')) document.getElementById('stat-page-views').textContent = stats.total_page_views || 0;
+            if (document.getElementById('stat-project-clicks')) document.getElementById('stat-project-clicks').textContent = stats.total_project_clicks || 0;
+            if (document.getElementById('stat-messages-count')) document.getElementById('stat-messages-count').textContent = stats.total_messages || 0;
+            if (document.getElementById('stat-downloads-count')) document.getElementById('stat-downloads-count').textContent = stats.total_resume_downloads || 0;
+        }
+    } catch (e) {
+        console.error('Analytics load error:', e);
+    }
+}
+
+function initQRCode() {
+    const box = document.getElementById('qrcode-box');
+    const label = document.getElementById('qr-target-url');
+    const dlBtn = document.getElementById('download-qr-btn');
+    if (!box) return;
+
+    const targetUrl = window.location.origin;
+    if (label) label.textContent = targetUrl;
+
+    box.innerHTML = '';
+    if (window.QRCode) {
+        new QRCode(box, {
+            text: targetUrl,
+            width: 130,
+            height: 130,
+            colorDark: "#1e1b4b",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    }
+
+    if (dlBtn) {
+        dlBtn.onclick = () => {
+            const img = box.querySelector('img') || box.querySelector('canvas');
+            if (!img) return;
+            const src = img.tagName === 'CANVAS' ? img.toDataURL('image/png') : img.src;
+            const link = document.createElement('a');
+            link.download = 'portfolio-qr-code.png';
+            link.href = src;
+            link.click();
+            showToast('QR Code downloaded!', 'success');
+        };
+    }
+}
+
+// Tabs & URL Router
+function switchTab(tabId, updateURL = true) {
+    if (!tabId) return;
+    const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+    const panel = document.getElementById(`tab-${tabId}`);
+    if (!panel) return;
+
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     
-    document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
-    document.getElementById(`tab-${tabId}`).classList.add('active');
+    if (btn) btn.classList.add('active');
+    panel.classList.add('active');
+
+    if (updateURL && window.history && window.history.pushState) {
+        const newPath = `/admin/${tabId}`;
+        if (window.location.pathname !== newPath) {
+            window.history.pushState({ tab: tabId }, '', newPath);
+        }
+    }
+}
+
+function checkTabFromURL() {
+    let path = window.location.pathname.replace(/\/+$/, '');
+    let tabId = '';
+    
+    if (path.includes('/admin/')) {
+        tabId = path.split('/admin/')[1];
+    } else if (window.location.hash) {
+        tabId = window.location.hash.replace('#', '');
+    }
+    
+    if (!tabId || tabId === 'admin' || tabId === 'admin.html') {
+        tabId = 'overview';
+    }
+
+    const panel = document.getElementById(`tab-${tabId}`);
+    if (panel) {
+        switchTab(tabId, false);
+    } else {
+        switchTab('overview', false);
+    }
 }
 
 // Config
@@ -154,7 +330,8 @@ async function loadConfig() {
             document.getElementById('config-tagline').value = config.tagline || '';
             document.getElementById('config-class-year').value = config.class_year || '';
             document.getElementById('config-bio').value = config.about_bio || '';
-            document.getElementById('config-bio-editor').innerHTML = config.about_bio || '';
+            const bioEditor = document.getElementById('config-bio-editor');
+            if (bioEditor) bioEditor.innerHTML = config.about_bio || '';
             document.getElementById('config-photo').value = config.about_photo_url || '';
             updateDropzonePreview('config-photo-preview', config.about_photo_url || '');
             document.getElementById('config-quote-text').value = config.quote_text || '';
@@ -244,11 +421,14 @@ function openProjectModal(project = null) {
     const html = `
         <div class="form-group">
             <label>Title</label>
-            <input type="text" name="title" value="${project?.title || ''}" required>
+            <input type="text" name="title" value="${project?.title || ''}" placeholder="e.g. AI Portfolio Generator" required>
         </div>
         <div class="form-group">
-            <label>Description</label>
-            <textarea name="description" required>${project?.description || ''}</textarea>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <label>Description *</label>
+                <button type="button" class="btn-outline" style="font-size:0.75rem;padding:2px 8px;cursor:pointer;" onclick="generateAIDraft('Write a concise 2-3 sentence project description highlighting key tech and features for project: ' + (document.querySelector('input[name=title]').value || 'Project'), document.querySelector('textarea[name=description]'))">✨ AI Draft</button>
+            </div>
+            <textarea name="description" placeholder="Project overview, technologies used, impact..." required>${project?.description || ''}</textarea>
         </div>
         <div class="form-group">
             <label>Image</label>
@@ -408,7 +588,10 @@ function openExperienceModal(exp = null) {
             <input type="text" name="company" value="${exp?.company || ''}" placeholder="e.g. Robotics Club, Student Council, Varsity Soccer" required>
         </div>
         <div class="form-group">
-            <label>Description</label>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <label>Description</label>
+                <button type="button" class="btn-outline" style="font-size:0.75rem;padding:2px 8px;cursor:pointer;" onclick="generateAIDraft('Write 3 high-impact resume bullet points starting with strong action verbs for role: ' + (document.querySelector('input[name=job_title]').value || 'Member') + ' at ' + (document.querySelector('input[name=company]').value || 'Organization'), document.querySelector('textarea[name=description]'))">✨ AI Draft</button>
+            </div>
             <textarea name="description" placeholder="What you did, achievements, responsibilities...">${exp?.description || ''}</textarea>
         </div>
         <div class="form-group row">
@@ -500,7 +683,10 @@ function openAchievementModal(achievement = null) {
             <select name="category">${options}</select>
         </div>
         <div class="form-group">
-            <label>Description</label>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <label>Description</label>
+                <button type="button" class="btn-outline" style="font-size:0.75rem;padding:2px 8px;cursor:pointer;" onclick="generateAIDraft('Write an impressive accomplishment summary paragraph for achievement: ' + (document.querySelector('input[name=title]').value || 'Award') + ' from ' + (document.querySelector('input[name=issuer]').value || 'Organization'), document.querySelector('textarea[name=description]'))">✨ AI Draft</button>
+            </div>
             <textarea name="description" placeholder="Any extra detail worth mentioning...">${achievement?.description || ''}</textarea>
         </div>
         <div class="form-group">
@@ -539,6 +725,82 @@ function openAchievementModal(achievement = null) {
     setTimeout(() => {
         setupDropzone('achievement-photo-dropzone', 'achievement-photo-file', 'achievement-photo-url', 'achievement-photo-preview');
     }, 0);
+}
+
+// Certifications & Badges Shelf
+async function loadCertifications() {
+    try {
+        const certs = await apiCall('/admin/certifications');
+        renderTable('certifications-table', certs, c => `
+            <td data-label="Title" style="font-weight:600;">${c.title}</td>
+            <td data-label="Issuer">${c.issuer}</td>
+            <td data-label="Category">${c.category || 'Certification'}</td>
+            <td data-label="Issue Date">${c.issue_date || ''}</td>
+            <td data-label="Published">${publishToggleHTML('/admin/certifications', c, 'loadCertifications')}</td>
+            <td data-label="Actions" class="actions-cell">
+                <button class="btn-sm btn-outline" onclick='openCertificationModal(${JSON.stringify(c).replace(/'/g, "&apos;")})'>Edit</button>
+                <button class="btn-sm btn-danger" onclick="deleteItem('/admin/certifications', ${c.id}, loadCertifications)">Delete</button>
+            </td>
+        `);
+    } catch (e) { console.error(e); }
+}
+
+function openCertificationModal(cert = null) {
+    const isEdit = !!cert;
+    const html = `
+        <div class="form-group">
+            <label>Certification Title</label>
+            <input type="text" name="title" value="${cert?.title || ''}" placeholder="e.g. AWS Certified Cloud Practitioner" required>
+        </div>
+        <div class="form-group">
+            <label>Issuing Organization</label>
+            <input type="text" name="issuer" value="${cert?.issuer || ''}" placeholder="e.g. Amazon Web Services, Codecademy, AP Board" required>
+        </div>
+        <div class="form-group">
+            <label>Category</label>
+            <input type="text" name="category" value="${cert?.category || 'Certification'}" placeholder="e.g. Cloud, Web Development, AP Honors">
+        </div>
+        <div class="form-group">
+            <label>Issue Date / Term</label>
+            <input type="text" name="issue_date" value="${cert?.issue_date || ''}" placeholder="e.g. May 2024 or 2024-2025">
+        </div>
+        <div class="form-group">
+            <label>Credential ID (Optional)</label>
+            <input type="text" name="credential_id" value="${cert?.credential_id || ''}" placeholder="e.g. AWS-1928374">
+        </div>
+        <div class="form-group">
+            <label>Verification URL (Optional)</label>
+            <input type="url" name="credential_url" value="${cert?.credential_url || ''}" placeholder="https://credly.com/badges/...">
+        </div>
+        <div class="form-group">
+            <label>Badge Image URL (Optional)</label>
+            <input type="url" name="badge_image_url" value="${cert?.badge_image_url || ''}" placeholder="https://...">
+        </div>
+        <div class="form-group">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <label>Description / Skills Verified</label>
+                <button type="button" class="btn-outline" style="font-size:0.75rem;padding:2px 8px;cursor:pointer;" onclick="generateAIDraft('Write a concise 2-sentence description highlighting key skills verified for certification: ' + (document.querySelector('input[name=title]').value || 'Certification') + ' issued by ' + (document.querySelector('input[name=issuer]').value || 'Issuer'), document.querySelector('textarea[name=description]'))">✨ AI Draft</button>
+            </div>
+            <textarea name="description" placeholder="Brief overview of skills verified by this badge...">${cert?.description || ''}</textarea>
+        </div>
+        <div class="form-group">
+            <label>Sort Order</label>
+            <input type="number" name="sort_order" value="${cert?.sort_order || 0}" required>
+        </div>
+    `;
+
+    openModal(isEdit ? 'Edit Certification' : 'Add Certification', html, async (data) => {
+        data.sort_order = parseInt(data.sort_order, 10);
+        try {
+            if (isEdit) await apiCall(`/admin/certifications/${cert.id}`, 'PUT', data);
+            else await apiCall('/admin/certifications', 'POST', data);
+            showToast(`Certification ${isEdit ? 'updated' : 'added'}`, 'success');
+            loadCertifications();
+            closeModal();
+        } catch (e) {
+            showToast('Error saving certification', 'error');
+        }
+    });
 }
 
 // Gallery / Photos
@@ -721,20 +983,55 @@ function openSocialModal(social = null) {
     });
 }
 
-// Messages
+// Messages & Replies
 async function loadMessages() {
     try {
         const msgs = await apiCall('/admin/messages');
-        renderTable('messages-table', msgs, m => `
-            <td data-label="Name">${m.name}</td>
-            <td data-label="Email">${m.email}</td>
-            <td data-label="Message" class="msg-cell" style="cursor:pointer;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="this.style.whiteSpace=this.style.whiteSpace==='nowrap'?'normal':'nowrap';this.style.maxWidth='none'">${m.message}</td>
-            <td data-label="Date">${new Date(m.created_at).toLocaleString()}</td>
-            <td data-label="Actions" class="actions-cell">
-                <button class="btn-sm btn-danger" onclick="deleteItem('/admin/messages', ${m.id}, loadMessages)">Delete</button>
-            </td>
-        `);
+        renderTable('messages-table', msgs, m => {
+            const isReplied = m.status === 'replied';
+            const statusBadge = isReplied
+                ? `<span class="status-badge">Replied</span>`
+                : `<span class="status-badge" style="background:rgba(255,255,255,0.06);color:var(--text-secondary);border-color:var(--border);">Unread</span>`;
+            return `
+                <td data-label="Status">${statusBadge}</td>
+                <td data-label="Name" style="font-weight:600;">${m.name}</td>
+                <td data-label="Email">${m.email}</td>
+                <td data-label="Message" class="msg-cell" style="cursor:pointer;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="this.style.whiteSpace=this.style.whiteSpace==='nowrap'?'normal':'nowrap';this.style.maxWidth='none'">${m.message}</td>
+                <td data-label="Date">${new Date(m.created_at).toLocaleDateString()}</td>
+                <td data-label="Actions" class="actions-cell">
+                    <button class="btn-sm btn-primary" onclick='openReplyModal(${JSON.stringify(m).replace(/'/g, "&apos;")})'>✉️ Reply</button>
+                    <button class="btn-sm btn-danger" onclick="deleteItem('/admin/messages', ${m.id}, loadMessages)">Delete</button>
+                </td>
+            `;
+        });
     } catch (e) { console.error(e); }
+}
+
+function openReplyModal(msg) {
+    const modal = document.getElementById('reply-modal-overlay');
+    const recipientInput = document.getElementById('reply-recipient');
+    const origMsgDiv = document.getElementById('reply-original-msg');
+    const subjectInput = document.getElementById('reply-subject');
+    const bodyTextarea = document.getElementById('reply-body');
+    const msgIdInput = document.getElementById('reply-msg-id');
+
+    if (!modal) return;
+
+    msgIdInput.value = msg.id;
+    recipientInput.value = `${msg.name} <${msg.email}>`;
+    
+    let origHTML = `<div><strong>From:</strong> ${msg.name} (${msg.email}) &bull; <span style="font-size:0.8rem;opacity:0.8;">${new Date(msg.created_at).toLocaleString()}</span></div>`;
+    origHTML += `<div style="margin-top:6px;white-space:pre-wrap;color:var(--text-primary);">${msg.message}</div>`;
+    if (msg.reply_text) {
+        origHTML += `<div style="margin-top:10px;padding-top:8px;border-top:1px dashed rgba(255,255,255,0.15);color:#00d4ff;"><strong>Previous Sent Reply (${msg.replied_at ? new Date(msg.replied_at).toLocaleDateString() : 'Sent'}):</strong><br><div style="white-space:pre-wrap;color:var(--text-secondary);">${msg.reply_text}</div></div>`;
+    }
+    origMsgDiv.innerHTML = origHTML;
+
+    const defaultSubject = document.getElementById('reply-subject-input')?.value || 'Re: Portfolio Contact Message from {{name}}';
+    subjectInput.value = defaultSubject.replace(/\{\{name\}\}/g, msg.name);
+    bodyTextarea.value = '';
+
+    modal.classList.remove('hidden');
 }
 
 async function deleteItem(endpoint, id, reloadFn) {
@@ -975,3 +1272,1019 @@ async function handleExport() {
         showToast('Error downloading backup', 'error');
     }
 }
+
+// ── Kyro AI Studio Functions ─────────────────────────────────────
+async function handleAIBioGenerate() {
+    const tone = document.getElementById('ai-bio-tone').value;
+    const notes = document.getElementById('ai-bio-notes').value;
+    const btn = document.getElementById('ai-generate-bio-btn');
+    const resultBox = document.getElementById('ai-bio-result');
+    const outputArea = document.getElementById('ai-bio-output');
+
+    btn.textContent = 'Generating...';
+    btn.disabled = true;
+
+    try {
+        const prompt = `Write a compelling portfolio bio/summary in a "${tone}" tone. Highlights/notes: ${notes || 'General software development and creative projects'}. Keep it engaging and 2-3 paragraphs.`;
+        const res = await apiCall('/admin/ai/generate', 'POST', {
+            prompt,
+            systemPrompt: 'You are an expert executive resume writer and personal brand strategist.',
+            model: 'kyro-ultra-70b'
+        });
+        if (res.success && res.text) {
+            outputArea.value = res.text.trim();
+            resultBox.classList.remove('hidden');
+            showToast('Bio generated with Kyro AI!', 'success');
+        }
+    } catch (err) {
+        showToast(err.message || 'AI Generation failed', 'error');
+    } finally {
+        btn.textContent = 'Generate Bio';
+        btn.disabled = false;
+    }
+}
+
+function handleAIApplyBio() {
+    const text = document.getElementById('ai-bio-output').value;
+    if (!text) return;
+    const bioTextarea = document.getElementById('config-bio');
+    const wysiwyg = document.getElementById('wysiwyg-editor') || document.getElementById('config-bio-editor');
+    if (bioTextarea) bioTextarea.value = text;
+    if (wysiwyg) wysiwyg.innerHTML = text.replace(/\n\n/g, '<br><br>');
+    showToast('Applied generated bio to Site Config!', 'success');
+}
+
+async function handleAIBulletOptimize() {
+    const title = document.getElementById('ai-bullet-title').value;
+    const notes = document.getElementById('ai-bullet-notes').value;
+    const btn = document.getElementById('ai-generate-bullets-btn');
+    const resultBox = document.getElementById('ai-bullets-result');
+    const outputArea = document.getElementById('ai-bullets-output');
+
+    if (!notes) {
+        showToast('Please enter raw notes or responsibilities', 'error');
+        return;
+    }
+
+    btn.textContent = 'Optimizing...';
+    btn.disabled = true;
+
+    try {
+        const prompt = `Convert these notes for the role "${title || 'Developer'}" into 3-4 high-impact, action-verb resume bullet points: ${notes}`;
+        const res = await apiCall('/admin/ai/generate', 'POST', {
+            prompt,
+            systemPrompt: 'You are a technical resume coach specializing in software engineering bullet points.',
+            model: 'kyro-coder-pro'
+        });
+        if (res.success && res.text) {
+            outputArea.value = res.text.trim();
+            resultBox.classList.remove('hidden');
+            showToast('Bullets optimized with Kyro AI!', 'success');
+        }
+    } catch (err) {
+        showToast(err.message || 'Optimization failed', 'error');
+    } finally {
+        btn.textContent = 'Optimize Bullets';
+        btn.disabled = false;
+    }
+}
+
+async function handleAIChatSend() {
+    const input = document.getElementById('ai-chat-input');
+    const model = document.getElementById('ai-chat-model').value;
+    const chatLog = document.getElementById('ai-chat-log');
+    const prompt = input.value.trim();
+    if (!prompt) return;
+
+    const userMsg = document.createElement('div');
+    userMsg.className = 'chat-msg user';
+    userMsg.textContent = prompt;
+    chatLog.appendChild(userMsg);
+
+    input.value = '';
+    chatLog.scrollTop = chatLog.scrollHeight;
+
+    const aiMsg = document.createElement('div');
+    aiMsg.className = 'chat-msg ai';
+    aiMsg.textContent = 'Kyro AI is thinking...';
+    chatLog.appendChild(aiMsg);
+    chatLog.scrollTop = chatLog.scrollHeight;
+
+    try {
+        const res = await apiCall('/admin/ai/generate', 'POST', {
+            prompt,
+            model,
+            systemPrompt: 'You are Kyro AI Copilot, a high-performance software engineering & portfolio assistant.'
+        });
+        if (res.success && res.text) {
+            aiMsg.textContent = res.text;
+        } else {
+            aiMsg.textContent = 'No response received.';
+        }
+    } catch (err) {
+        aiMsg.textContent = `Error: ${err.message}`;
+    }
+    chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+// ── Section Manager Functions ────────────────────────────────────
+let currentSectionsData = [];
+
+async function loadSections() {
+    try {
+        const sections = await apiCall('/admin/sections');
+        currentSectionsData = sections || [];
+        renderSectionsManager();
+    } catch (e) {
+        console.error('Error loading sections:', e);
+    }
+}
+
+function renderSectionsManager() {
+    const list = document.getElementById('sections-manager-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    currentSectionsData.forEach((sec, idx) => {
+        const card = document.createElement('div');
+        card.className = 'section-item-card';
+        card.innerHTML = `
+            <div class="section-item-left">
+                <span class="badge" style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75rem;">#${sec.sort_order || idx + 1}</span>
+                <input type="text" class="section-title-input" data-id="${sec.section_id}" value="${sec.title || sec.section_id}">
+                <span style="font-size:0.8rem;color:var(--text-secondary);">(${sec.section_id})</span>
+            </div>
+            <div class="section-actions">
+                <label class="publish-label">
+                    <input type="checkbox" class="section-vis-check" data-id="${sec.section_id}" ${sec.is_visible !== false ? 'checked' : ''}>
+                    <span>Visible</span>
+                </label>
+                <button type="button" class="btn-outline sec-move-up" data-idx="${idx}" ${idx === 0 ? 'disabled' : ''}>▲</button>
+                <button type="button" class="btn-outline sec-move-down" data-idx="${idx}" ${idx === currentSectionsData.length - 1 ? 'disabled' : ''}>▼</button>
+            </div>
+        `;
+        list.appendChild(card);
+    });
+
+    list.querySelectorAll('.sec-move-up').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const i = parseInt(e.target.dataset.idx, 10);
+            if (i > 0) {
+                const temp = currentSectionsData[i];
+                currentSectionsData[i] = currentSectionsData[i - 1];
+                currentSectionsData[i - 1] = temp;
+                updateSectionSortOrders();
+                renderSectionsManager();
+            }
+        });
+    });
+
+    list.querySelectorAll('.sec-move-down').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const i = parseInt(e.target.dataset.idx, 10);
+            if (i < currentSectionsData.length - 1) {
+                const temp = currentSectionsData[i];
+                currentSectionsData[i] = currentSectionsData[i + 1];
+                currentSectionsData[i + 1] = temp;
+                updateSectionSortOrders();
+                renderSectionsManager();
+            }
+        });
+    });
+}
+
+function updateSectionSortOrders() {
+    currentSectionsData.forEach((sec, idx) => {
+        sec.sort_order = idx + 1;
+    });
+}
+
+async function handleSaveSections() {
+    const inputs = document.querySelectorAll('.section-title-input');
+    const checks = document.querySelectorAll('.section-vis-check');
+
+    inputs.forEach(inp => {
+        const sec = currentSectionsData.find(s => s.section_id === inp.dataset.id);
+        if (sec) sec.title = inp.value.trim();
+    });
+
+    checks.forEach(chk => {
+        const sec = currentSectionsData.find(s => s.section_id === chk.dataset.id);
+        if (sec) sec.is_visible = chk.checked;
+    });
+
+    try {
+        const updated = await apiCall('/admin/sections/reorder', 'PUT', { sections: currentSectionsData });
+        currentSectionsData = updated;
+        renderSectionsManager();
+        showToast('Section layout saved!', 'success');
+    } catch (err) {
+        showToast('Failed to save section layout', 'error');
+    }
+}
+
+// ── Media Gallery & Cropper Functions ────────────────────────────
+let activeCropper = null;
+
+async function loadMedia() {
+    const grid = document.getElementById('media-grid');
+    if (!grid) return;
+    try {
+        const files = await apiCall('/admin/media');
+        grid.innerHTML = '';
+
+        if (!files || files.length === 0) {
+            grid.innerHTML = '<div style="color:var(--text-secondary);font-size:0.9rem;">No uploaded media files found.</div>';
+            return;
+        }
+
+        files.forEach(file => {
+            const card = document.createElement('div');
+            card.className = 'media-card';
+            card.innerHTML = `
+                <img src="${file.url}" class="media-thumb" alt="${file.filename}">
+                <div class="media-info">
+                    <span class="media-filename" title="${file.filename}">${file.filename}</span>
+                    <div style="display:flex;gap:0.4rem;margin-top:4px;">
+                        <button class="btn-outline copy-media-btn" style="flex:1;padding:0.25rem 0.5rem;font-size:0.75rem;" data-url="${file.url}">Copy Link</button>
+                        <button class="btn-danger del-media-btn" style="padding:0.25rem 0.5rem;font-size:0.75rem;" data-name="${file.filename}">Delete</button>
+                    </div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+
+        grid.querySelectorAll('.copy-media-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                navigator.clipboard.writeText(e.target.dataset.url);
+                showToast('Image URL copied!', 'success');
+            });
+        });
+
+        grid.querySelectorAll('.del-media-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                if (confirm(`Delete media asset "${e.target.dataset.name}"?`)) {
+                    await apiCall(`/admin/media/${encodeURIComponent(e.target.dataset.name)}`, 'DELETE');
+                    showToast('Media file deleted', 'success');
+                    loadMedia();
+                }
+            });
+        });
+    } catch (e) {
+        console.error('Error loading media:', e);
+    }
+}
+
+function handleMediaUploadFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        const targetImg = document.getElementById('cropper-target-img');
+        targetImg.src = event.target.result;
+
+        const cropperModal = document.getElementById('cropper-modal');
+        cropperModal.classList.remove('hidden');
+
+        if (activeCropper) activeCropper.destroy();
+        activeCropper = new Cropper(targetImg, {
+            aspectRatio: 1,
+            viewMode: 1
+        });
+    };
+    reader.readAsDataURL(file);
+}
+
+function handleCropSaveUpload() {
+    if (!activeCropper) return;
+
+    activeCropper.getCroppedCanvas({ width: 800, height: 800 }).toBlob(async (blob) => {
+        if (!blob) {
+            showToast('Failed to crop image', 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', blob, `cropped-${Date.now()}.jpg`);
+
+        try {
+            const res = await fetch('/admin/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+            if (res.ok && data.url) {
+                showToast('Cropped image uploaded successfully!', 'success');
+                document.getElementById('cropper-modal').classList.add('hidden');
+                if (activeCropper) activeCropper.destroy();
+                activeCropper = null;
+                loadMedia();
+            } else {
+                showToast(data.error || 'Upload failed', 'error');
+            }
+        } catch (err) {
+            showToast('Upload error', 'error');
+        }
+    }, 'image/jpeg', 0.9);
+}
+
+// ── Integrations Settings Functions ──────────────────────────────
+async function loadIntegrations() {
+    try {
+        const data = await apiCall('/admin/settings/integrations');
+        if (data) {
+            document.getElementById('discord-webhook-input').value = data.discord_webhook_url || '';
+            document.getElementById('kyro-key-input').value = data.kyro_api_key || '';
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function handleIntegrationsSave(e) {
+    e.preventDefault();
+    const discord_webhook_url = document.getElementById('discord-webhook-input').value.trim();
+    const kyro_api_key = document.getElementById('kyro-key-input').value.trim();
+
+    try {
+        await apiCall('/admin/settings/integrations', 'PUT', { discord_webhook_url, kyro_api_key });
+        showToast('API Integrations saved!', 'success');
+    } catch (err) {
+        showToast(err.message || 'Failed to save integrations', 'error');
+    }
+}
+
+// ── Admin PDF Resume & Kyro AI Generator ─────────────────────────
+async function generateAdminPDFResume(useAI = false) {
+    const btn = document.getElementById(useAI ? 'admin-ai-resume-btn' : 'admin-std-resume-btn');
+    const origText = btn ? btn.textContent : '';
+    if (btn) {
+        btn.textContent = useAI ? 'Kyro AI Polishing Resume...' : 'Generating PDF...';
+        btn.disabled = true;
+    }
+
+    try {
+        const [config, experience, skills, social] = await Promise.all([
+            apiCall('/admin/config'),
+            apiCall('/admin/experience'),
+            apiCall('/admin/skills'),
+            apiCall('/admin/social')
+        ]);
+
+        let bioText = (config?.about_bio || '').replace(/<[^>]*>/g, '');
+        let expList = Array.isArray(experience) ? [...experience] : [];
+
+        if (useAI) {
+            showToast('Prompting Kyro AI to polish resume content...', 'success');
+            try {
+                const aiRes = await apiCall('/admin/ai/generate', 'POST', {
+                    prompt: `Polish and optimize this portfolio bio into a punchy executive summary paragraph for a resume PDF: ${bioText || 'Full-stack software developer building high-tech web applications.'}`,
+                    systemPrompt: 'You are an elite technical resume copywriter.',
+                    model: 'kyro-ultra-70b'
+                });
+                if (aiRes.success && aiRes.text) {
+                    bioText = aiRes.text.trim();
+                }
+            } catch (e) {
+                console.warn('Kyro AI bio polish skipped:', e.message);
+            }
+        }
+
+        const pdfTheme = document.getElementById('pdf-theme-select')?.value || 'modern';
+
+        // Log resume download analytics event
+        fetch('/api/analytics/event', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ event_type: 'resume_download', details: `theme:${pdfTheme},ai:${useAI}` })
+        }).catch(() => {});
+
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+            showToast('PDF library loading... Please try again.', 'error');
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 40;
+        let y = 50;
+
+        const mainFont = pdfTheme === 'classic' ? 'times' : (pdfTheme === 'developer' ? 'courier' : 'helvetica');
+
+        // Header Styling based on selected theme
+        if (pdfTheme === 'classic') {
+            // Executive Classic Layout: Centered Serif Header with Double Rules
+            doc.setTextColor(20, 20, 30);
+            doc.setFont(mainFont, 'bold');
+            doc.setFontSize(24);
+            doc.text(config?.name || 'Your Name', pageWidth / 2, 55, { align: 'center' });
+
+            doc.setFont(mainFont, 'italic');
+            doc.setFontSize(12);
+            doc.setTextColor(80, 80, 95);
+            doc.text(config?.title || 'Developer & Creator', pageWidth / 2, 73, { align: 'center' });
+
+            const contactLine = [
+                config?.class_year ? `Class of ${config.class_year}` : '',
+                (social || []).map(s => s.url).filter(Boolean).slice(0, 2).join('  |  ')
+            ].filter(Boolean).join('   •   ');
+            if (contactLine) {
+                doc.setFont(mainFont, 'normal');
+                doc.setFontSize(9);
+                doc.text(contactLine, pageWidth / 2, 90, { align: 'center' });
+            }
+
+            doc.setDrawColor(30, 30, 45);
+            doc.setLineWidth(1.5);
+            doc.line(margin, 104, pageWidth - margin, 104);
+            doc.setLineWidth(0.5);
+            doc.line(margin, 107, pageWidth - margin, 107);
+            y = 130;
+        } else if (pdfTheme === 'developer') {
+            // Tech Developer Layout: Monospace Header Banner with Green/Cyan Accents
+            doc.setFillColor(15, 23, 42);
+            doc.rect(0, 0, pageWidth, 115, 'F');
+            doc.setFillColor(0, 212, 255);
+            doc.rect(0, 0, 6, 115, 'F');
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFont(mainFont, 'bold');
+            doc.setFontSize(22);
+            doc.text(`> ${config?.name || 'Your Name'}`, margin, 48);
+
+            doc.setTextColor(0, 212, 255);
+            doc.setFont(mainFont, 'bold');
+            doc.setFontSize(11);
+            doc.text(`// ${config?.title || 'Developer & Creator'}`, margin, 68);
+
+            doc.setTextColor(148, 163, 184);
+            doc.setFont(mainFont, 'normal');
+            doc.setFontSize(9);
+            const contactLine = [
+                config?.class_year ? `Graduation: ${config.class_year}` : '',
+                (social || []).map(s => s.url).filter(Boolean).slice(0, 2).join('  |  ')
+            ].filter(Boolean).join('   •   ');
+            if (contactLine) doc.text(contactLine, margin, 92);
+            y = 140;
+        } else {
+            // Modern Minimalist Layout
+            doc.setFillColor(18, 18, 26);
+            doc.rect(0, 0, pageWidth, 110, 'F');
+            doc.setFillColor(108, 99, 255);
+            doc.rect(0, 0, 6, 110, 'F');
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFont(mainFont, 'bold');
+            doc.setFontSize(22);
+            doc.text(config?.name || 'Your Name', margin, 45);
+
+            doc.setTextColor(0, 212, 255);
+            doc.setFont(mainFont, 'normal');
+            doc.setFontSize(12);
+            doc.text(config?.title || 'Developer & Creator', margin, 65);
+
+            doc.setTextColor(160, 160, 176);
+            doc.setFontSize(9);
+            const contactLine = [
+                config?.class_year ? `Graduation: ${config.class_year}` : '',
+                (social || []).map(s => s.url).filter(Boolean).slice(0, 2).join('  |  ')
+            ].filter(Boolean).join('   •   ');
+            if (contactLine) doc.text(contactLine, margin, 88);
+            y = 135;
+        }
+
+        function addHeading(title) {
+            if (y > pageHeight - 60) { doc.addPage(); y = 50; }
+            if (pdfTheme === 'classic') {
+                doc.setTextColor(30, 30, 45);
+                doc.setFont(mainFont, 'bold');
+                doc.setFontSize(13);
+                doc.text(title.toUpperCase(), margin, y + 13);
+                y += 20;
+                doc.setDrawColor(40, 40, 50);
+                doc.setLineWidth(1);
+                doc.line(margin, y, pageWidth - margin, y);
+                y += 15;
+            } else if (pdfTheme === 'developer') {
+                doc.setTextColor(108, 99, 255);
+                doc.setFont(mainFont, 'bold');
+                doc.setFontSize(12);
+                doc.text(`[// ${title.toUpperCase()}]`, margin, y + 13);
+                y += 22;
+                doc.setDrawColor(200, 200, 220);
+                doc.setLineWidth(0.5);
+                doc.line(margin, y, pageWidth - margin, y);
+                y += 15;
+            } else {
+                doc.setFillColor(108, 99, 255);
+                doc.rect(margin, y, 4, 16, 'F');
+                doc.setTextColor(18, 18, 26);
+                doc.setFont(mainFont, 'bold');
+                doc.setFontSize(13);
+                doc.text(title.toUpperCase(), margin + 12, y + 13);
+                y += 22;
+                doc.setDrawColor(230, 230, 240);
+                doc.setLineWidth(0.75);
+                doc.line(margin, y, pageWidth - margin, y);
+                y += 15;
+            }
+        }
+
+        if (bioText) {
+            addHeading(useAI ? 'AI-Polished Executive Summary' : 'Executive Summary');
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(50, 50, 60);
+            const splitBio = doc.splitTextToSize(bioText, pageWidth - margin * 2);
+            doc.text(splitBio, margin, y);
+            y += splitBio.length * 14 + 15;
+        }
+
+        if (expList && expList.length > 0) {
+            addHeading('Experience & Activities');
+            expList.forEach(exp => {
+                if (y > pageHeight - 80) { doc.addPage(); y = 50; }
+                
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(11);
+                doc.setTextColor(20, 20, 30);
+                doc.text(exp.job_title || 'Role', margin, y);
+
+                const dateStr = exp.is_current ? `${exp.start_date || ''} – Present` : `${exp.start_date || ''} – ${exp.end_date || ''}`;
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(9);
+                doc.setTextColor(108, 99, 255);
+                doc.text(dateStr, pageWidth - margin, y, { align: 'right' });
+                y += 14;
+
+                if (exp.company) {
+                    doc.setFont('helvetica', 'oblique');
+                    doc.setFontSize(9.5);
+                    doc.setTextColor(80, 80, 100);
+                    doc.text(exp.company, margin, y);
+                    y += 14;
+                }
+
+                if (exp.description) {
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(9);
+                    doc.setTextColor(60, 60, 75);
+                    const descClean = exp.description.replace(/<[^>]*>/g, '');
+                    const splitDesc = doc.splitTextToSize(descClean, pageWidth - margin * 2);
+                    doc.text(splitDesc, margin, y);
+                    y += splitDesc.length * 13 + 12;
+                } else {
+                    y += 8;
+                }
+            });
+        }
+
+        if (skills && skills.length > 0) {
+            addHeading('Skills & Technical Proficiencies');
+            const categories = {};
+            skills.forEach(s => {
+                const cat = s.category || 'General';
+                if (!categories[cat]) categories[cat] = [];
+                categories[cat].push(s.name);
+            });
+
+            Object.keys(categories).forEach(cat => {
+                if (y > pageHeight - 50) { doc.addPage(); y = 50; }
+                const catTitle = `${cat}: `;
+                doc.setFont(mainFont, 'bold');
+                doc.setFontSize(9.5);
+                doc.setTextColor(30, 30, 45);
+                doc.text(catTitle, margin, y);
+
+                doc.setFont(mainFont, 'normal');
+                doc.setTextColor(70, 70, 85);
+                const skillsStr = categories[cat].join(', ');
+                const maxSkillWidth = pageWidth - margin * 2 - 140;
+                const splitSkills = doc.splitTextToSize(skillsStr, maxSkillWidth);
+                doc.text(splitSkills, margin + 140, y);
+                y += Math.max(splitSkills.length * 13, 16) + 6;
+            });
+        }
+
+        const filename = `${(config?.name || 'Portfolio').replace(/\s+/g, '_')}_${useAI ? 'AI_' : ''}Resume.pdf`;
+        doc.save(filename);
+        showToast(`📄 ${useAI ? 'AI-Enhanced' : 'Standard'} Resume PDF downloaded!`, 'success');
+    } catch (err) {
+        showToast(err.message || 'Error generating resume PDF', 'error');
+    } finally {
+        if (btn) {
+            btn.textContent = origText;
+            btn.disabled = false;
+        }
+    }
+}
+
+// Recommendations & Letters
+async function loadRecommendations() {
+    try {
+        const items = await apiCall('/admin/recommendations');
+        renderTable('recommendations-table', items, r => `
+            <td data-label="Recommender" style="font-weight:600;">${r.recommender_name}</td>
+            <td data-label="Title / Org">${r.recommender_title || ''} ${r.school_or_org ? `(${r.school_or_org})` : ''}</td>
+            <td data-label="Quote Excerpt" style="max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">"${r.quote_excerpt}"</td>
+            <td data-label="Letter PDF">${r.letter_pdf_url ? `<a href="${r.letter_pdf_url}" target="_blank" style="color:var(--accent);font-weight:600;">View PDF</a>` : '<span style="color:var(--text-secondary);">None</span>'}</td>
+            <td data-label="Published">${publishToggleHTML('/admin/recommendations', r, 'loadRecommendations')}</td>
+            <td data-label="Actions" class="actions-cell">
+                <button class="btn-sm btn-outline" onclick='openRecommendationModal(${JSON.stringify(r).replace(/'/g, "&apos;")})'>Edit</button>
+                <button class="btn-sm btn-danger" onclick="deleteItem('/admin/recommendations', ${r.id}, loadRecommendations)">Delete</button>
+            </td>
+        `);
+    } catch (e) { console.error(e); }
+}
+
+function openRecommendationModal(rec = null) {
+    const isEdit = !!rec;
+    const html = `
+        <div class="form-group">
+            <label>Recommender Name</label>
+            <input type="text" name="recommender_name" value="${rec?.recommender_name || ''}" placeholder="e.g. Dr. Sarah Jenkins" required>
+        </div>
+        <div class="form-group">
+            <label>Title / Role</label>
+            <input type="text" name="recommender_title" value="${rec?.recommender_title || ''}" placeholder="e.g. AP Computer Science Teacher & Robotics Advisor">
+        </div>
+        <div class="form-group">
+            <label>School / Organization</label>
+            <input type="text" name="school_or_org" value="${rec?.school_or_org || ''}" placeholder="e.g. Oakridge High School">
+        </div>
+        <div class="form-group">
+            <label>Quote Excerpt</label>
+            <textarea name="quote_excerpt" rows="3" placeholder="Key highlight quote from the recommendation letter..." required>${rec?.quote_excerpt || ''}</textarea>
+        </div>
+        <div class="form-group">
+            <label>Letter PDF URL (optional)</label>
+            <div class="photo-input-group">
+                <input type="text" name="letter_pdf_url" id="rec-pdf-url" value="${rec?.letter_pdf_url || ''}" placeholder="https://... or /uploads/letter.pdf">
+                <label for="rec-pdf-file" class="btn-outline upload-btn" style="cursor:pointer;">Upload PDF</label>
+                <input type="file" id="rec-pdf-file" accept=".pdf,application/pdf" class="hidden">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Sort Order</label>
+            <input type="number" name="sort_order" value="${rec?.sort_order || 0}" required>
+        </div>
+    `;
+
+    openModal(isEdit ? 'Edit Recommendation' : 'Add Recommendation', html, async (data) => {
+        try {
+            if (isEdit) await apiCall(`/admin/recommendations/${rec.id}`, 'PUT', data);
+            else await apiCall('/admin/recommendations', 'POST', data);
+            showToast(`Recommendation ${isEdit ? 'updated' : 'added'}`, 'success');
+            loadRecommendations();
+            closeModal();
+        } catch (e) {
+            showToast('Error saving recommendation', 'error');
+        }
+    });
+
+    setTimeout(() => {
+        const pdfFileInput = document.getElementById('rec-pdf-file');
+        const pdfUrlInput = document.getElementById('rec-pdf-url');
+        if (pdfFileInput && pdfUrlInput) {
+            pdfFileInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const formData = new FormData();
+                formData.append('file', file);
+                try {
+                    const res = await fetch('/admin/upload', { method: 'POST', body: formData });
+                    const resData = await res.json();
+                    if (res.ok && resData.url) {
+                        pdfUrlInput.value = resData.url;
+                        showToast('PDF uploaded!', 'success');
+                    }
+                } catch (err) {
+                    showToast('PDF upload failed', 'error');
+                }
+            });
+        }
+    }, 0);
+}
+
+// FAQ (Frequently Asked Questions)
+async function loadFAQs() {
+    try {
+        const items = await apiCall('/admin/faqs');
+        renderTable('faqs-table', items, f => `
+            <td data-label="Question" style="font-weight:600;">${f.question}</td>
+            <td data-label="Category">${f.category || 'General'}</td>
+            <td data-label="Answer" style="max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.answer}</td>
+            <td data-label="Published">${publishToggleHTML('/admin/faqs', f, 'loadFAQs')}</td>
+            <td data-label="Actions" class="actions-cell">
+                <button class="btn-sm btn-outline" onclick='openFAQModal(${JSON.stringify(f).replace(/'/g, "&apos;")})'>Edit</button>
+                <button class="btn-sm btn-danger" onclick="deleteItem('/admin/faqs', ${f.id}, loadFAQs)">Delete</button>
+            </td>
+        `);
+    } catch (e) { console.error(e); }
+}
+
+function openFAQModal(faq = null) {
+    const isEdit = !!faq;
+    const html = `
+        <div class="form-group">
+            <label>Question</label>
+            <input type="text" name="question" value="${faq?.question || ''}" placeholder="e.g. What are your primary academic interests?" required>
+        </div>
+        <div class="form-group">
+            <label>Category</label>
+            <input type="text" name="category" value="${faq?.category || 'General'}" placeholder="e.g. Academics, Leadership, Availability">
+        </div>
+        <div class="form-group">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <label>Answer *</label>
+                <button type="button" class="btn-outline" style="font-size:0.75rem;padding:2px 8px;cursor:pointer;" onclick="generateAIDraft('Draft a clear, professional answer for student portfolio FAQ question: ' + (document.querySelector('input[name=question]').value || 'Question'), document.querySelector('textarea[name=answer]'))">✨ AI Draft Answer</button>
+            </div>
+            <textarea name="answer" rows="4" placeholder="Detailed answer..." required>${faq?.answer || ''}</textarea>
+        </div>
+        <div class="form-group">
+            <label>Sort Order</label>
+            <input type="number" name="sort_order" value="${faq?.sort_order || 0}" required>
+        </div>
+    `;
+
+    openModal(isEdit ? 'Edit FAQ Item' : 'Add FAQ Item', html, async (data) => {
+        try {
+            if (isEdit) await apiCall(`/admin/faqs/${faq.id}`, 'PUT', data);
+            else await apiCall('/admin/faqs', 'POST', data);
+            showToast(`FAQ item ${isEdit ? 'updated' : 'added'}`, 'success');
+            loadFAQs();
+            closeModal();
+        } catch (e) {
+            showToast('Error saving FAQ item', 'error');
+        }
+    });
+}
+
+// ── Integrations Settings Handler ──────────────────────────────
+async function loadIntegrations() {
+    try {
+        const data = await apiCall('/admin/settings/integrations');
+        const discordInput = document.getElementById('discord-webhook-input');
+        const kyroInput = document.getElementById('kyro-key-input');
+        const resendInput = document.getElementById('resend-key-input');
+        const emailInput = document.getElementById('notification-email-input');
+
+        if (discordInput && data.discord_webhook_url) discordInput.value = data.discord_webhook_url;
+        if (kyroInput && data.kyro_api_key) kyroInput.value = data.kyro_api_key;
+        if (resendInput && data.resend_api_key) resendInput.value = data.resend_api_key;
+        if (emailInput && data.notification_email) emailInput.value = data.notification_email;
+    } catch (e) {
+        console.error('Failed to load integrations:', e.message);
+    }
+}
+
+async function handleIntegrationsSave(e) {
+    e.preventDefault();
+    const discord_webhook_url = document.getElementById('discord-webhook-input')?.value || '';
+    const kyro_api_key = document.getElementById('kyro-key-input')?.value || '';
+    const resend_api_key = document.getElementById('resend-key-input')?.value || '';
+    const notification_email = document.getElementById('notification-email-input')?.value || '';
+
+    try {
+        await apiCall('/admin/settings/integrations', 'PUT', {
+            discord_webhook_url,
+            kyro_api_key,
+            resend_api_key,
+            notification_email
+        });
+        showToast('Integrations updated successfully!', 'success');
+    } catch (err) {
+        showToast('Failed to save integrations: ' + err.message, 'error');
+    }
+}
+
+// ── Request Recommendation Email Modal ─────────────────────────
+function openRequestRecommendationModal() {
+    const html = `
+        <div class="form-group">
+            <label>Teacher / Recommender Name *</label>
+            <input type="text" name="teacher_name" placeholder="e.g. Mr. David Vance" required>
+        </div>
+        <div class="form-group">
+            <label>Teacher Email Address *</label>
+            <input type="email" name="teacher_email" placeholder="e.g. dvance@school.edu" required>
+        </div>
+        <div class="form-group">
+            <label>Course / Subject / Context</label>
+            <input type="text" name="course_or_context" placeholder="e.g. AP Computer Science Principles &amp; FBLA Advisor">
+        </div>
+    `;
+
+    openModal('📩 Send Recommendation Request Email', html, async (formData) => {
+        try {
+            const res = await apiCall('/admin/recommendations/request', 'POST', formData);
+            if (res.success) {
+                showToast(res.message, res.emailSent ? 'success' : 'error');
+                closeModal();
+                
+                // Show a dialog/alert with the request link so the user can also copy it directly
+                if (res.formUrl) {
+                    setTimeout(() => {
+                        prompt('Recommendation Request Link (copied to clipboard if needed):', res.formUrl);
+                    }, 300);
+                }
+            } else {
+                showToast(res.error || 'Failed to send request.', 'error');
+            }
+        } catch (err) {
+            showToast('Error: ' + err.message, 'error');
+        }
+    });
+}
+// ── Email Templates Handler ─────────────────────────────────────
+async function loadEmailTemplates() {
+    try {
+        const data = await apiCall('/admin/settings/email-templates');
+        if (!data) return;
+
+        const contactSub = document.getElementById('contact-subject-input');
+        const contactTpl = document.getElementById('contact-template-input');
+        const replySub = document.getElementById('reply-subject-input');
+        const replyTpl = document.getElementById('reply-template-input');
+        const recSub = document.getElementById('rec-subject-input');
+        const recTpl = document.getElementById('rec-template-input');
+
+        if (contactSub && data.contact_email_subject !== undefined) contactSub.value = data.contact_email_subject || '';
+        if (contactTpl && data.contact_email_template !== undefined) contactTpl.value = data.contact_email_template || '';
+        if (replySub && data.reply_email_subject !== undefined) replySub.value = data.reply_email_subject || '';
+        if (replyTpl && data.reply_email_template !== undefined) replyTpl.value = data.reply_email_template || '';
+        if (recSub && data.recommendation_email_subject !== undefined) recSub.value = data.recommendation_email_subject || '';
+        if (recTpl && data.recommendation_email_template !== undefined) recTpl.value = data.recommendation_email_template || '';
+    } catch (e) {
+        console.error('Failed to load email templates:', e.message);
+    }
+}
+
+async function handleEmailTemplatesSave(e) {
+    e.preventDefault();
+    const payload = {
+        contact_email_subject: document.getElementById('contact-subject-input')?.value || '',
+        contact_email_template: document.getElementById('contact-template-input')?.value || '',
+        reply_email_subject: document.getElementById('reply-subject-input')?.value || '',
+        reply_email_template: document.getElementById('reply-template-input')?.value || '',
+        recommendation_email_subject: document.getElementById('rec-subject-input')?.value || '',
+        recommendation_email_template: document.getElementById('rec-template-input')?.value || ''
+    };
+
+    try {
+        await apiCall('/admin/settings/email-templates', 'PUT', payload);
+        showToast('Email templates and subjects saved successfully!', 'success');
+    } catch (err) {
+        showToast('Failed to save email settings: ' + err.message, 'error');
+    }
+}
+
+// ── Contact Message Reply Handlers ──────────────────────────────
+async function handleReplySubmit(e) {
+    e.preventDefault();
+    const msgId = document.getElementById('reply-msg-id')?.value;
+    const reply_subject = document.getElementById('reply-subject')?.value || '';
+    const reply_text = document.getElementById('reply-body')?.value || '';
+    const sendBtn = document.getElementById('reply-send-btn');
+
+    if (!msgId || !reply_text.trim()) {
+        showToast('Please write a reply message.', 'error');
+        return;
+    }
+
+    if (sendBtn) {
+        sendBtn.textContent = 'Sending Email...';
+        sendBtn.disabled = true;
+    }
+
+    try {
+        const res = await apiCall(`/admin/messages/${msgId}/reply`, 'POST', {
+            reply_subject,
+            reply_text
+        });
+
+        if (res.success) {
+            showToast(res.message, res.emailSent ? 'success' : 'error');
+            document.getElementById('reply-modal-overlay')?.classList.add('hidden');
+            loadMessages();
+        } else {
+            showToast(res.error || 'Failed to send reply.', 'error');
+        }
+    } catch (err) {
+        showToast('Error sending reply: ' + err.message, 'error');
+    } finally {
+        if (sendBtn) {
+            sendBtn.textContent = 'Send Reply Email';
+            sendBtn.disabled = false;
+        }
+    }
+}
+
+async function handleAIDraftReply() {
+    const origMsg = document.getElementById('reply-original-msg')?.textContent || '';
+    const recipient = document.getElementById('reply-recipient')?.value || '';
+    const bodyTextarea = document.getElementById('reply-body');
+    const aiBtn = document.getElementById('ai-draft-reply-btn');
+
+    if (!origMsg || !bodyTextarea) return;
+
+    const origText = aiBtn ? aiBtn.textContent : '';
+    if (aiBtn) {
+        aiBtn.textContent = '⚡ Drafting with Kyro AI...';
+        aiBtn.disabled = true;
+    }
+
+    try {
+        const aiRes = await apiCall('/admin/ai/generate', 'POST', {
+            prompt: `Draft a friendly, polite, professional email response to this visitor message from ${recipient}: "${origMsg}"`,
+            systemPrompt: 'You are an articulate, professional student developer responding to a portfolio contact inquiry.',
+            model: 'kyro-ultra-70b'
+        });
+
+        if (aiRes.success && aiRes.text) {
+            bodyTextarea.value = aiRes.text.trim();
+            showToast('✨ AI response drafted!', 'success');
+        } else {
+            showToast(aiRes.error || 'AI draft failed.', 'error');
+        }
+    } catch (err) {
+        showToast('AI draft failed: ' + err.message, 'error');
+    } finally {
+        if (aiBtn) {
+            aiBtn.textContent = origText;
+            aiBtn.disabled = false;
+        }
+    }
+}
+
+// ── Universal Tag Inserter & AI Drafting Helpers ─────────────────
+function insertTag(textareaId, tag) {
+    const el = document.getElementById(textareaId);
+    if (!el) return;
+    const start = el.selectionStart || el.value.length;
+    const end = el.selectionEnd || el.value.length;
+    const val = el.value;
+    el.value = val.substring(0, start) + tag + val.substring(end);
+    el.selectionStart = el.selectionEnd = start + tag.length;
+    el.focus();
+}
+
+async function generateAIDraft(prompt, targetInputOrTextarea, systemPrompt = '') {
+    if (!prompt) {
+        showToast('Please enter a title, role, or topic first!', 'error');
+        return;
+    }
+    let targetEl = null;
+    if (typeof targetInputOrTextarea === 'string') {
+        targetEl = document.getElementById(targetInputOrTextarea);
+    } else {
+        targetEl = targetInputOrTextarea;
+    }
+    if (!targetEl) return;
+
+    const originalPlaceholder = targetEl.placeholder || '';
+    targetEl.placeholder = '✨ Kyro AI is drafting... Please wait...';
+    showToast('✨ Kyro AI is generating content...', 'success');
+
+    try {
+        const res = await apiCall('/admin/ai/generate', 'POST', {
+            prompt,
+            systemPrompt: systemPrompt || 'You are an elite portfolio copywriter, resume strategist, and student achievement editor.'
+        });
+        if (res && res.text) {
+            targetEl.value = res.text.trim();
+            showToast('✨ Draft generated with Kyro AI!', 'success');
+        }
+    } catch (err) {
+        showToast('AI Drafting failed: ' + err.message, 'error');
+    } finally {
+        targetEl.placeholder = originalPlaceholder;
+    }
+}
+
+async function handleAIDraftEmailTemplate(type) {
+    let targetId = '';
+    let prompt = '';
+    
+    if (type === 'contact') {
+        targetId = 'contact-template-input';
+        prompt = `Draft a modern, stylish HTML email notification template for a student portfolio owner when someone submits the contact form. Use these exact tags: {{name}}, {{email}}, {{message}}, {{date}}, {{student_name}}, {{site_title}}. Include clean dark/accent inline CSS styles. Output ONLY the raw HTML.`;
+    } else if (type === 'reply') {
+        targetId = 'reply-template-input';
+        prompt = `Draft a warm, polite HTML email reply template from student {{student_name}} to a visitor {{name}}. Use these exact tags: {{name}}, {{reply_text}}, {{original_message}}, {{email}}, {{student_name}}, {{date}}, {{site_title}}. Include clean inline CSS. Output ONLY the raw HTML.`;
+    } else if (type === 'recommendation') {
+        targetId = 'rec-template-input';
+        prompt = `Draft a respectful, formal HTML recommendation request email template from student {{student_name}} to teacher {{teacher_name}}. Use these exact tags: {{teacher_name}}, {{student_name}}, {{course_or_context}}, {{form_url}}, {{class_year}}, {{site_title}}. Include clean inline CSS and a call-to-action button linking to {{form_url}}. Output ONLY the raw HTML.`;
+    }
+
+    if (targetId) {
+        await generateAIDraft(prompt, targetId, 'You are an expert HTML email template designer.');
+    }
+}
+
+
+

@@ -48,7 +48,15 @@ app.use('/admin/spotify', require('./routes/spotify'));
 app.use('/api', require('./routes/api'));
 app.use('/admin', require('./routes/admin'));
 
-// Fallback — serve index.html for any unmatched route
+// Admin HTML navigation fallback for any /admin/* browser requests
+app.get(['/admin', '/admin/*'], (req, res, next) => {
+  if (req.headers.accept && req.headers.accept.includes('text/html')) {
+    return res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+  }
+  next();
+});
+
+// Fallback — serve index.html for any unmatched public route
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -56,5 +64,5 @@ app.get('*', (req, res) => {
 // Start server
 app.listen(port, () => {
   console.log(`\n  ✦ Portfolio running at http://localhost:${port}`);
-  console.log(`  ✦ Admin panel at http://localhost:${port}/admin.html\n`);
+  console.log(`  ✦ Admin panel running at http://localhost:${port}/admin/\n`);
 });

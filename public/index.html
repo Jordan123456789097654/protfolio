@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
 </head>
@@ -41,13 +42,6 @@
         </div>
     </div>
 
-    <!-- Custom Trailing Cursor & Magnetic Satellites -->
-    <div class="cursor-dot" id="cursor-dot"></div>
-    <div class="cursor-follower" id="cursor-follower">
-        <span class="satellite sat-1"></span>
-        <span class="satellite sat-2"></span>
-        <span class="satellite sat-3"></span>
-    </div>
     <div class="ambient-glow" id="ambient-glow"></div>
     
     <!-- Hero Fluid Mesh Orbs -->
@@ -58,35 +52,43 @@
         <div class="blob blob-aurora"></div>
     </div>
 
-    <!-- Floating Dynamic Island Navigation -->
+    <!-- Modern Glass Header Navigation -->
     <nav id="navbar">
         <div class="nav-container">
-            <a href="#hero" class="logo magnetic" id="nav-logo">Portfolio<span class="logo-dot">.</span></a>
-            <ul class="nav-links">
-                <li><a href="#about" class="magnetic scramble-link">About</a></li>
-                <li><a href="#experience" class="magnetic scramble-link">Clubs & Activities</a></li>
-                <li><a href="#achievements" class="magnetic scramble-link">Achievements</a></li>
-                <li><a href="#gallery" class="magnetic scramble-link">Gallery</a></li>
-                <li><a href="#skills" class="magnetic scramble-link">Strengths</a></li>
-                <li><a href="#contact" class="magnetic scramble-link">Contact</a></li>
-            </ul>
+            <a href="#hero" class="logo magnetic" id="nav-logo">
+                <span class="logo-badge">⚡ Portfolio</span>
+            </a>
+            
+            <div class="nav-center-pills">
+                <a href="#about" class="nav-pill active">About</a>
+                <a href="#experience" class="nav-pill">Experience</a>
+                <a href="#projects" class="nav-pill">Projects</a>
+                <a href="#certifications" class="nav-pill">Certifications</a>
+                <a href="#skills" class="nav-pill">Skills</a>
+                <a href="#achievements" class="nav-pill">Awards</a>
+                <a href="#gallery" class="nav-pill">Gallery</a>
+                <a href="#recommendations" class="nav-pill">Letters</a>
+                <a href="#contact" class="nav-pill">Contact</a>
+            </div>
+
             <div class="nav-right">
-                <!-- Radial Menu Trigger -->
-                <button id="radial-trigger" class="radial-btn magnetic" title="Quick Navigation Wheel">
-                    <i data-lucide="grid"></i>
-                </button>
-                <!-- Palette Mood Switcher Button -->
+                <!-- Theme Switcher -->
                 <button id="theme-toggle" class="theme-btn magnetic" title="Switch Color Mood">
                     <i data-lucide="palette"></i>
                 </button>
-                <!-- Sound FX Button with Audio Equalizer -->
-                <button id="sound-toggle" class="sound-btn magnetic" title="Toggle UI Sound FX">
+                <!-- Sound FX Button -->
+                <button id="sound-toggle" class="sound-btn magnetic" title="Toggle Sound FX">
                     <div class="eq-bars">
                         <span class="eq-bar bar-1"></span>
                         <span class="eq-bar bar-2"></span>
                         <span class="eq-bar bar-3"></span>
                     </div>
                 </button>
+                <!-- Resume Download CTA -->
+                <button id="download-pdf-btn" class="nav-resume-btn magnetic">
+                    <i data-lucide="file-text"></i> Resume
+                </button>
+                <!-- Mobile Hamburger -->
                 <div class="hamburger">
                     <span></span>
                     <span></span>
@@ -218,6 +220,20 @@
             </div>
         </section>
 
+        <!-- Certifications & Badges Shelf Section -->
+        <section id="certifications" class="certifications-section">
+            <div class="hollow-bg-text">CREDENTIALS</div>
+            <div class="section-container reveal">
+                <div class="section-header">
+                    <span class="section-tag laser-tag">04 // VERIFIED CREDENTIALS</span>
+                    <h2 class="section-title scramble-link">Certifications & Badges Shelf</h2>
+                </div>
+                <div class="certifications-grid" id="certifications-grid">
+                    <!-- Certifications injected dynamically -->
+                </div>
+            </div>
+        </section>
+
         <!-- Gallery / Photos Section -->
         <section id="gallery" class="gallery-section">
             <div class="hollow-bg-text">GALLERY</div>
@@ -257,7 +273,35 @@
             </div>
         </section>
 
-        <!-- Contact Section -->
+        <!-- Teacher & Advisor Recommendations Section -->
+        <section id="recommendations" class="recommendations-section">
+            <div class="hollow-bg-text">LETTERS</div>
+            <div class="section-container reveal">
+                <div class="section-header">
+                    <span class="section-tag laser-tag">06 // ENDORSEMENTS</span>
+                    <h2 class="section-title scramble-link">Teacher &amp; Advisor Recommendations</h2>
+                </div>
+                <div class="recommendations-grid" id="recommendations-grid">
+                    <!-- Recommendations cards injected dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive FAQ Accordion Section -->
+        <section id="faq" class="faq-section">
+            <div class="hollow-bg-text">QUESTIONS</div>
+            <div class="section-container reveal">
+                <div class="section-header">
+                    <span class="section-tag laser-tag">07 // FREQUENTLY ASKED</span>
+                    <h2 class="section-title scramble-link">Frequently Asked Questions</h2>
+                </div>
+                <div class="faq-accordion" id="faq-accordion">
+                    <!-- FAQ accordion items injected dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section (Pinned at bottom of page) -->
         <section id="contact" class="contact-section">
             <div class="hollow-bg-text">CONTACT</div>
             <div class="section-container reveal">

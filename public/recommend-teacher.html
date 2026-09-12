@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Recommendation Form</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      background: radial-gradient(circle at 50% 20%, rgba(108, 99, 255, 0.15) 0%, rgba(10, 10, 15, 1) 70%);
+    }
+    .form-container {
+      width: 100%;
+      max-width: 650px;
+      background: rgba(18, 18, 26, 0.75);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+    .form-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .form-header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #6c63ff, #00d4ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .form-header p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="email"],
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(108, 99, 255, 0.3);
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .form-group textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+    .file-drop-area {
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.02);
+      cursor: pointer;
+      transition: border-color 0.3s ease;
+    }
+    .file-drop-area:hover {
+      border-color: var(--accent);
+      background: rgba(108, 99, 255, 0.05);
+    }
+    .file-drop-area p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 0.88rem;
+    }
+    .file-drop-area input[type="file"] {
+      display: none;
+    }
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+      color: #fff;
+      font-weight: 600;
+      font-size: 1rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      margin-top: 10px;
+    }
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(108, 99, 255, 0.4);
+    }
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .status-msg {
+      margin-top: 20px;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .status-msg.error {
+      background: rgba(255, 71, 87, 0.15);
+      border: 1px solid rgba(255, 71, 87, 0.3);
+      color: #ff4757;
+    }
+    .status-msg.success {
+      background: rgba(46, 213, 115, 0.15);
+      border: 1px solid rgba(46, 213, 115, 0.3);
+      color: #2ed573;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <div class="form-header">
+      <h1 id="header-title">Teacher Recommendation Form</h1>
+      <p id="header-sub">Submit your recommendation excerpt or letter of recommendation.</p>
+    </div>
+
+    <form id="recommendation-form">
+      <div class="form-group">
+        <label for="recommender_name">Your Full Name *</label>
+        <input type="text" id="recommender_name" name="recommender_name" placeholder="e.g. Dr. Jane Smith" required>
+      </div>
+
+      <div class="form-group">
+        <label for="recommender_title">Title / Role</label>
+        <input type="text" id="recommender_title" name="recommender_title" placeholder="e.g. AP Computer Science Teacher, FBLA Advisor">
+      </div>
+
+      <div class="form-group">
+        <label for="school_or_org">School or Organization</label>
+        <input type="text" id="school_or_org" name="school_or_org" placeholder="e.g. Oakridge High School">
+      </div>
+
+      <div class="form-group">
+        <label for="quote_excerpt">Quote Excerpt / Key Recommendation *</label>
+        <textarea id="quote_excerpt" name="quote_excerpt" placeholder="Write or paste a brief endorsement quote highlighting key strengths, achievements, or character..." required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Full Letter of Recommendation (Optional PDF)</label>
+        <div class="file-drop-area" id="file-drop-area">
+          <p id="file-drop-text">📄 Drag & drop PDF letter here, or <strong>click to browse</strong></p>
+          <input type="file" id="pdf_file" accept=".pdf,application/pdf">
+        </div>
+        <input type="hidden" id="letter_pdf_url" name="letter_pdf_url">
+      </div>
+
+      <button type="submit" class="btn-submit" id="submit-btn">Submit Recommendation</button>
+      <div class="status-msg" id="status-msg"></div>
+    </form>
+  </div>
+
+  <script src="js/recommend-teacher.js"></script>
+</body>
+</html>

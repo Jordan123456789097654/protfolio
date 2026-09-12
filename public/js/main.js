@@ -29,6 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Set current year in footer
     document.getElementById('current-year').textContent = new Date().getFullYear();
 
+    // Log page view event for analytics
+    fetch('/api/analytics/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event_type: 'page_view', details: window.location.pathname })
+    }).catch(() => {});
+
     // Mobile nav toggle
     const hamburger = document.querySelector('.hamburger');
     const navLinks = document.querySelector('.nav-links');
@@ -254,6 +261,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // PDF Download event listener
+    const downloadPdfBtn = document.getElementById('download-pdf-btn');
+    if (downloadPdfBtn) {
+        downloadPdfBtn.addEventListener('click', () => {
+            generatePDFResume();
+        });
+    }
+
     // Fetch data and render portfolio sections
     async function fetchData() {
         try {
@@ -264,7 +279,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 '/api/achievements',
                 '/api/gallery',
                 '/api/skills',
-                '/api/testimonials'
+                '/api/testimonials',
+                '/api/recommendations',
+                '/api/faqs',
+                '/api/sections',
+                '/api/certifications'
             ];
 
             const promises = endpoints.map(url => fetch(url).then(res => {
@@ -275,7 +294,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return null;
             }));
 
-            const [config, experience, social, achievements, gallery, skills, testimonials] = await Promise.all(promises);
+            const [config, experience, social, achievements, gallery, skills, testimonials, recommendations, faqs, sections, certifications] = await Promise.all(promises);
+
+            window.portfolioData = { config, experience, social, achievements, gallery, skills, testimonials, recommendations, faqs, sections, certifications };
 
             if (config) renderHero(config);
             if (config) renderAbout(config);
@@ -283,10 +304,18 @@ document.addEventListener('DOMContentLoaded', () => {
             renderExperience(experience || []);
             renderSocial(social || []);
             renderAchievements(achievements || []);
+            renderCertifications(certifications || []);
             renderGallery(gallery || []);
             renderSkills(skills || []);
             renderTestimonials(testimonials || []);
+            renderRecommendations(recommendations || []);
+            renderFAQs(faqs || []);
             renderStats(config || {}, experience || []);
+            initSpotifyWidget();
+
+            if (sections && Array.isArray(sections)) {
+                applySectionOrdering(sections);
+            }
 
             // Re-observe new elements
             document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
@@ -296,6 +325,420 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('Error loading portfolio data.', true);
         }
     }
+
+    function toggleSectionVisibility(sectionId, hasData) {
+        const sectionEl = document.getElementById(sectionId);
+        const navLink = document.querySelector(`.nav-links a[href="#${sectionId}"]`);
+        const navItem = navLink ? navLink.closest('li') : null;
+
+        if (sectionEl) {
+            sectionEl.style.display = hasData ? '' : 'none';
+        }
+        if (navItem) {
+            navItem.style.display = hasData ? '' : 'none';
+        }
+    }
+
+    function applySectionOrdering(sections) {
+        const main = document.querySelector('main');
+        if (!main) return;
+        
+        const orderedSections = sections.filter(sec => sec.section_id !== 'hero' && sec.section_id !== 'contact');
+
+        orderedSections.forEach(sec => {
+            const el = document.getElementById(sec.section_id);
+            const navLink = document.querySelector(`.nav-links a[href="#${sec.section_id}"]`);
+            const navItem = navLink ? navLink.closest('li') : null;
+
+            if (el && el.parentElement === main) {
+                if (sec.is_visible === false) {
+                    el.style.display = 'none';
+                    if (navItem) navItem.style.display = 'none';
+                } else {
+                    main.appendChild(el);
+                }
+            }
+        });
+
+        // Always pin Contact section at the very end of <main>
+        const contactEl = document.getElementById('contact');
+        if (contactEl && contactEl.parentElement === main) {
+            main.appendChild(contactEl);
+        }
+    }
+
+    function renderRecommendations(recommendations) {
+        const hasData = Array.isArray(recommendations) && recommendations.length > 0;
+        toggleSectionVisibility('recommendations', hasData);
+
+        const grid = document.getElementById('recommendations-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        if (!hasData) return;
+
+        recommendations.forEach(rec => {
+            const card = document.createElement('div');
+            card.className = 'rec-card tilt-card reveal';
+            card.innerHTML = `
+                <div class="rec-quote">"${rec.quote_excerpt}"</div>
+                <div class="rec-author">
+                    <span class="rec-name">${rec.recommender_name}</span>
+                    <span class="rec-title">${rec.recommender_title || ''}</span>
+                    ${rec.school_or_org ? `<span class="rec-org">${rec.school_or_org}</span>` : ''}
+                    ${rec.letter_pdf_url ? `<a href="${rec.letter_pdf_url}" target="_blank" rel="noopener noreferrer" class="rec-download-btn"><i data-lucide="file-text"></i> Download Full Letter (PDF)</a>` : ''}
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function renderFAQs(faqs) {
+        const hasData = Array.isArray(faqs) && faqs.length > 0;
+        toggleSectionVisibility('faq', hasData);
+
+        const container = document.getElementById('faq-accordion');
+        if (!container) return;
+        container.innerHTML = '';
+
+        if (!hasData) return;
+
+        faqs.forEach((faq) => {
+            const item = document.createElement('div');
+            item.className = 'faq-item reveal';
+            item.innerHTML = `
+                <button class="faq-header" aria-expanded="false">
+                    <span>${faq.question}</span>
+                    <i data-lucide="chevron-down" class="faq-icon"></i>
+                </button>
+                <div class="faq-body">
+                    <div class="faq-answer">${faq.answer}</div>
+                </div>
+            `;
+
+            const btn = item.querySelector('.faq-header');
+            btn.addEventListener('click', () => {
+                const isActive = item.classList.contains('active');
+                container.querySelectorAll('.faq-item').forEach(i => {
+                    i.classList.remove('active');
+                    i.querySelector('.faq-header').setAttribute('aria-expanded', 'false');
+                });
+
+                if (!isActive) {
+                    item.classList.add('active');
+                    btn.setAttribute('aria-expanded', 'true');
+                }
+            });
+
+            container.appendChild(item);
+        });
+
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function renderCertifications(certifications) {
+        const hasData = Array.isArray(certifications) && certifications.length > 0;
+        toggleSectionVisibility('certifications', hasData);
+
+        const grid = document.getElementById('certifications-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        if (!hasData) return;
+
+        certifications.forEach((cert) => {
+            const card = document.createElement('div');
+            card.className = 'cert-card tilt-card reveal';
+            
+            const badgeContent = cert.badge_image_url
+                ? `<img src="${cert.badge_image_url}" alt="${cert.title} badge">`
+                : `<i data-lucide="award"></i>`;
+
+            card.innerHTML = `
+                <div class="cert-card-header">
+                    <div class="cert-badge-wrap">
+                        ${badgeContent}
+                    </div>
+                    <div class="cert-meta">
+                        <span class="cert-category-badge">${cert.category || 'Certification'}</span>
+                        <h3 class="cert-title">${cert.title}</h3>
+                        <span class="cert-issuer">${cert.issuer}</span>
+                    </div>
+                </div>
+                ${cert.description ? `<p class="cert-description">${cert.description}</p>` : ''}
+                <div class="cert-footer">
+                    <span class="cert-date">${cert.issue_date ? `Issued: ${cert.issue_date}` : 'Verified Credential'}</span>
+                    ${cert.credential_url ? `<a href="${cert.credential_url}" target="_blank" rel="noopener noreferrer" class="cert-verify-link">Verify Credential <i data-lucide="external-link"></i></a>` : ''}
+                </div>
+            `;
+
+            grid.appendChild(card);
+        });
+
+        if (window.lucide) lucide.createIcons();
+    }
+
+    async function initSpotifyWidget() {
+        const widget = document.getElementById('spotify-widget');
+        const art = document.getElementById('spotify-art');
+        const track = document.getElementById('spotify-track');
+        const artist = document.getElementById('spotify-artist');
+        if (!widget || !art || !track || !artist) return;
+
+        async function updateSpotifyStatus() {
+            try {
+                const res = await fetch('/api/spotify/now-playing');
+                const data = await res.json();
+
+                if (data && data.isPlaying && data.title) {
+                    art.src = data.albumImageUrl || data.album_art || '';
+                    track.textContent = data.title;
+                    track.href = data.songUrl || data.song_url || '#';
+                    artist.textContent = data.artist || '';
+                    widget.classList.remove('hidden');
+                } else {
+                    widget.classList.add('hidden');
+                }
+            } catch (err) {
+                widget.classList.add('hidden');
+            }
+        }
+
+        updateSpotifyStatus();
+        setInterval(updateSpotifyStatus, 15000);
+    }
+
+    function renderTestimonials(testimonials) {
+        const track = document.getElementById('testimonials-track');
+        const dotsContainer = document.getElementById('testimonial-dots');
+        const prevBtn = document.getElementById('testimonial-prev-btn');
+        const nextBtn = document.getElementById('testimonial-next-btn');
+
+        if (!track) return;
+        track.innerHTML = '';
+        if (dotsContainer) dotsContainer.innerHTML = '';
+
+        if (!testimonials || testimonials.length === 0) {
+            track.innerHTML = emptyStateHTML('quote', 'No Testimonials Yet', 'Quotes and endorsements will appear here.');
+            if (prevBtn) prevBtn.style.display = 'none';
+            if (nextBtn) nextBtn.style.display = 'none';
+            return;
+        }
+
+        if (prevBtn) prevBtn.style.display = '';
+        if (nextBtn) nextBtn.style.display = '';
+
+        let currentIndex = 0;
+
+        testimonials.forEach((item, index) => {
+            const slide = document.createElement('div');
+            slide.className = `testimonial-card-slide ${index === 0 ? 'active' : ''}`;
+            slide.style.display = index === 0 ? 'flex' : 'none';
+            
+            const initial = (item.author_name || 'A').charAt(0).toUpperCase();
+
+            slide.innerHTML = `
+                <div class="testimonial-quote-body">"${item.quote}"</div>
+                <div class="testimonial-author-row">
+                    <div class="testimonial-avatar-placeholder">${initial}</div>
+                    <div class="testimonial-author-info">
+                        <span class="testimonial-author-name">${item.author_name}</span>
+                        <span class="testimonial-author-role">${item.author_role || ''}</span>
+                    </div>
+                </div>
+            `;
+            track.appendChild(slide);
+
+            if (dotsContainer) {
+                const dot = document.createElement('div');
+                dot.className = `carousel-dot ${index === 0 ? 'active' : ''}`;
+                dot.addEventListener('click', () => goToSlide(index));
+                dotsContainer.appendChild(dot);
+            }
+        });
+
+        function goToSlide(index) {
+            const slides = track.querySelectorAll('.testimonial-card-slide');
+            const dots = dotsContainer ? dotsContainer.querySelectorAll('.carousel-dot') : [];
+
+            slides.forEach((s, i) => {
+                s.style.display = i === index ? 'flex' : 'none';
+            });
+            dots.forEach((d, i) => {
+                d.classList.toggle('active', i === index);
+            });
+            currentIndex = index;
+        }
+
+        if (prevBtn) {
+            prevBtn.onclick = () => {
+                const nextIdx = (currentIndex - 1 + testimonials.length) % testimonials.length;
+                goToSlide(nextIdx);
+            };
+        }
+
+        if (nextBtn) {
+            nextBtn.onclick = () => {
+                const nextIdx = (currentIndex + 1) % testimonials.length;
+                goToSlide(nextIdx);
+            };
+        }
+    }
+
+    function generatePDFResume() {
+        const data = window.portfolioData || {};
+        const config = data.config || {};
+        const experience = data.experience || [];
+        const skills = data.skills || [];
+        const social = data.social || [];
+
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+            showToast('PDF generator library loading... Please try again in a moment.', true);
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 40;
+        let y = 50;
+
+        // Background header banner
+        doc.setFillColor(18, 18, 26);
+        doc.rect(0, 0, pageWidth, 110, 'F');
+
+        // Accent bar
+        doc.setFillColor(108, 99, 255);
+        doc.rect(0, 0, 6, 110, 'F');
+
+        // Name & Title
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(22);
+        doc.text(config.name || 'Your Name', margin, 45);
+
+        doc.setTextColor(0, 212, 255);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(12);
+        doc.text(config.title || 'Developer & Creator', margin, 65);
+
+        // Contact info line in header
+        doc.setTextColor(160, 160, 176);
+        doc.setFontSize(9);
+        const contactLine = [
+            config.class_year ? `Graduation: ${config.class_year}` : '',
+            social.map(s => s.url).filter(Boolean).slice(0, 2).join('  |  ')
+        ].filter(Boolean).join('   •   ');
+        if (contactLine) {
+            doc.text(contactLine, margin, 88);
+        }
+
+        y = 135;
+
+        // Helper for section headings
+        function addHeading(title) {
+            if (y > pageHeight - 60) { doc.addPage(); y = 50; }
+            doc.setFillColor(108, 99, 255);
+            doc.rect(margin, y, 4, 16, 'F');
+            doc.setTextColor(18, 18, 26);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(13);
+            doc.text(title.toUpperCase(), margin + 12, y + 13);
+            y += 22;
+            doc.setDrawColor(230, 230, 240);
+            doc.setLineWidth(0.75);
+            doc.line(margin, y, pageWidth - margin, y);
+            y += 15;
+        }
+
+        // Bio / Summary
+        if (config.about_bio) {
+            addHeading('Executive Summary');
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(50, 50, 60);
+            const bioClean = config.about_bio.replace(/<[^>]*>/g, '');
+            const splitBio = doc.splitTextToSize(bioClean, pageWidth - margin * 2);
+            doc.text(splitBio, margin, y);
+            y += splitBio.length * 14 + 15;
+        }
+
+        // Experience / Activities
+        if (experience && experience.length > 0) {
+            addHeading('Experience & Activities');
+            experience.forEach(exp => {
+                if (y > pageHeight - 80) { doc.addPage(); y = 50; }
+                
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(11);
+                doc.setTextColor(20, 20, 30);
+                doc.text(exp.job_title || 'Role', margin, y);
+
+                const dateStr = exp.is_current ? `${exp.start_date || ''} – Present` : `${exp.start_date || ''} – ${exp.end_date || ''}`;
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(9);
+                doc.setTextColor(108, 99, 255);
+                doc.text(dateStr, pageWidth - margin, y, { align: 'right' });
+                y += 14;
+
+                if (exp.company) {
+                    doc.setFont('helvetica', 'oblique');
+                    doc.setFontSize(9.5);
+                    doc.setTextColor(80, 80, 100);
+                    doc.text(exp.company, margin, y);
+                    y += 14;
+                }
+
+                if (exp.description) {
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(9);
+                    doc.setTextColor(60, 60, 75);
+                    const descClean = exp.description.replace(/<[^>]*>/g, '');
+                    const splitDesc = doc.splitTextToSize(descClean, pageWidth - margin * 2);
+                    doc.text(splitDesc, margin, y);
+                    y += splitDesc.length * 13 + 12;
+                } else {
+                    y += 8;
+                }
+            });
+        }
+
+        // Technical Skills & Strengths
+        if (skills && skills.length > 0) {
+            addHeading('Skills & Technical Proficiencies');
+            const categories = {};
+            skills.forEach(s => {
+                const cat = s.category || 'General';
+                if (!categories[cat]) categories[cat] = [];
+                categories[cat].push(s.name);
+            });
+
+            Object.keys(categories).forEach(cat => {
+                if (y > pageHeight - 50) { doc.addPage(); y = 50; }
+                const catTitle = `${cat}: `;
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(9.5);
+                doc.setTextColor(30, 30, 45);
+                doc.text(catTitle, margin, y);
+
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(70, 70, 85);
+                const skillsStr = categories[cat].join(', ');
+                const maxSkillWidth = pageWidth - margin * 2 - 140;
+                const splitSkills = doc.splitTextToSize(skillsStr, maxSkillWidth);
+                doc.text(splitSkills, margin + 140, y);
+                y += Math.max(splitSkills.length * 13, 16) + 6;
+            });
+        }
+
+        const filename = `${(config.name || 'Portfolio').replace(/\s+/g, '_')}_Resume.pdf`;
+        doc.save(filename);
+        showToast('📄 Resume PDF downloaded!');
+    }
+
 
     // ── Empty state helper — used across all dynamic sections ────
     function emptyStateHTML(icon, title, subtitle, inline = false) {
@@ -412,12 +855,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderExperience(experience) {
+        const hasData = Array.isArray(experience) && experience.length > 0;
+        toggleSectionVisibility('experience', hasData);
+
         const container = document.getElementById('experience-timeline');
-        if (!experience || experience.length === 0) {
-            container.innerHTML = emptyStateHTML('users', 'Nothing on the timeline yet', 'Add a club, activity, or leadership role from the admin panel to build your timeline.');
-            if (window.lucide) window.lucide.createIcons();
-            return;
-        }
+        if (!container || !hasData) return;
 
         experience.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
@@ -468,13 +910,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Achievements & Awards ────────────────────────────────────
     function renderAchievements(achievements) {
+        const hasData = Array.isArray(achievements) && achievements.length > 0;
+        toggleSectionVisibility('achievements', hasData);
+
         const container = document.getElementById('achievements-grid');
-        if (!container) return;
-        if (!achievements || achievements.length === 0) {
-            container.innerHTML = emptyStateHTML('trophy', 'Your achievements will shine here', 'Honor roll, competition wins, certificates — add your first one from the admin panel.');
-            if (window.lucide) window.lucide.createIcons();
-            return;
-        }
+        if (!container || !hasData) return;
 
         achievements.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
@@ -513,13 +953,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Gallery / Photos ──────────────────────────────────────────
     function renderGallery(items) {
+        const hasData = Array.isArray(items) && items.length > 0;
+        toggleSectionVisibility('gallery', hasData);
+
         const container = document.getElementById('gallery-grid');
-        if (!container) return;
-        if (!items || items.length === 0) {
-            container.innerHTML = emptyStateHTML('image', 'No photos yet', 'Event photos, competition shots, and club activities will show up here once you add some.');
-            if (window.lucide) window.lucide.createIcons();
-            return;
-        }
+        if (!container || !hasData) return;
 
         items.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
@@ -589,9 +1027,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Strengths & Technical Skills ─────────────────────────────
     function renderSkills(skills) {
+        const hasData = Array.isArray(skills) && skills.length > 0;
+        toggleSectionVisibility('skills', hasData);
+
         const strengthsContainer = document.getElementById('strengths-pills');
         const technicalContainer = document.getElementById('technical-skills');
-        if (!strengthsContainer || !technicalContainer) return;
+        if (!strengthsContainer || !technicalContainer || !hasData) return;
 
         const strengthIcons = {
             leadership: 'crown', teamwork: 'users', communication: 'message-circle',
@@ -766,64 +1207,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ── Cursor, Click Shockwave & Magnetic Snap ─────────────────
-    const cursorDot = document.getElementById('cursor-dot');
-    const cursorFollower = document.getElementById('cursor-follower');
-    
-    let mouseX = window.innerWidth / 2;
-    let mouseY = window.innerHeight / 2;
-    let followerX = mouseX;
-    let followerY = mouseY;
-    let mouseTicking = false;
-
+    // ── Mouse position tracking for background ambient glow ─────
     window.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-
-        if (!mouseTicking) {
-            mouseTicking = true;
-            requestAnimationFrame(() => {
-                if (cursorDot) {
-                    cursorDot.style.left = `${mouseX}px`;
-                    cursorDot.style.top = `${mouseY}px`;
-                }
-                document.documentElement.style.setProperty('--mouse-x', `${mouseX}px`);
-                document.documentElement.style.setProperty('--mouse-y', `${mouseY}px`);
-                mouseTicking = false;
-            });
-        }
+        document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+        document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
     }, { passive: true });
-
-    // Click Shockwave Liquid Ripple
-    window.addEventListener('pointerdown', (e) => {
-        const ripple = document.createElement('div');
-        ripple.className = 'click-ripple';
-        ripple.style.left = `${e.clientX}px`;
-        ripple.style.top = `${e.clientY}px`;
-        document.body.appendChild(ripple);
-        setTimeout(() => ripple.remove(), 600);
-    });
-
-    function animateCursor() {
-        followerX += (mouseX - followerX) * 0.14;
-        followerY += (mouseY - followerY) * 0.14;
-
-        if (cursorFollower) {
-            cursorFollower.style.left = `${followerX}px`;
-            cursorFollower.style.top = `${followerY}px`;
-        }
-
-        requestAnimationFrame(animateCursor);
-    }
-    animateCursor();
-
-    function initCursorHover() {
-        const interactiveElements = document.querySelectorAll('a, button, input, textarea, select, .tilt-card, .magnetic');
-        interactiveElements.forEach(el => {
-            el.addEventListener('mouseenter', () => cursorFollower?.classList.add('hovered'));
-            el.addEventListener('mouseleave', () => cursorFollower?.classList.remove('hovered'));
-        });
-    }
 
     // ── 3D Parallax Tilt & Color-Shifting Tint ───────────────────
     function init3DTilt() {
@@ -892,36 +1280,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ── Matrix Decrypt Text Scramble ──────────────────────────────
-    function initTextScramble() {
-        const scrambleElements = document.querySelectorAll('.scramble-link');
-        const matrixChars = '01@#$&%*!<>?/~';
-
-        scrambleElements.forEach(el => {
-            const originalText = el.textContent;
-            let interval = null;
-
-            el.addEventListener('mouseenter', () => {
-                let iteration = 0;
-                clearInterval(interval);
-
-                interval = setInterval(() => {
-                    el.textContent = originalText
-                        .split('')
-                        .map((char, index) => {
-                            if (index < iteration) return originalText[index];
-                            return matrixChars[Math.floor(Math.random() * matrixChars.length)];
-                        })
-                        .join('');
-
-                    if (iteration >= originalText.length) {
-                        clearInterval(interval);
-                    }
-                    iteration += 1 / 2;
-                }, 30);
-            });
-        });
-    }
+    // ── Text Scramble Disabled for Clean Hover Typography ────────
+    function initTextScramble() {}
 
     // ── Palette Mood Theme Switcher ───────────────────────────────
     function initThemeSwitcher() {
@@ -1124,6 +1484,8 @@ document.addEventListener('DOMContentLoaded', () => {
         poll();
         setInterval(poll, 15000);
     }
+
+    function initCursorHover() {}
 
     // Start everything
     fetchData().then(() => {

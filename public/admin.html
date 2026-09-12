@@ -1,12 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel</title>
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body>
     <div id="login-screen" class="screen">
@@ -22,319 +27,687 @@
 
     <div id="dashboard-screen" class="screen hidden">
         <header class="top-bar">
-            <h1>Admin Panel</h1>
+            <div class="top-bar-brand">
+                <h1>Admin Panel</h1>
+                <span class="status-badge">Live System</span>
+            </div>
             <div class="top-bar-actions">
-                <a href="/" class="btn-outline">View Site</a>
+                <a href="/" class="btn-outline" target="_blank">View Live Site ↗</a>
                 <button id="logout-btn" class="btn-danger">Logout</button>
             </div>
         </header>
 
-        <nav class="tabs">
-            <button class="tab-btn active" data-tab="config">Site Config</button>
-            <button class="tab-btn" data-tab="projects">Projects</button>
-            <button class="tab-btn" data-tab="skills">Skills &amp; Strengths</button>
-            <button class="tab-btn" data-tab="experience">Clubs &amp; Activities</button>
-            <button class="tab-btn" data-tab="achievements">Achievements</button>
-            <button class="tab-btn" data-tab="gallery">Gallery</button>
-            <button class="tab-btn" data-tab="testimonials">Testimonials</button>
-            <button class="tab-btn" data-tab="social">Social Links</button>
-            <button class="tab-btn" data-tab="messages">Messages</button>
-            <button class="tab-btn" data-tab="settings">Settings</button>
-        </nav>
+        <div class="admin-layout">
+            <aside class="sidebar">
+                <div class="nav-group">
+                    <div class="nav-group-title">📌 Overview &amp; Layout</div>
+                    <button class="tab-btn active" data-tab="config">⚙️ Site Config</button>
+                    <button class="tab-btn" data-tab="sections">📌 Section Order</button>
+                    <button class="tab-btn" data-tab="ai">✨ Kyro AI Studio</button>
+                </div>
 
-        <main class="content">
-            <!-- Site Config -->
-            <section id="tab-config" class="tab-panel active">
-                <h2>Site Configuration</h2>
-                <form id="config-form">
-                    <div class="form-group">
-                        <label for="config-name">Name</label>
-                        <input type="text" id="config-name" name="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="config-title">Title</label>
-                        <input type="text" id="config-title" name="title" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="config-tagline">Tagline</label>
-                        <input type="text" id="config-tagline" name="tagline">
-                    </div>
-                    <div class="form-group">
-                        <label for="config-class-year">Class Year</label>
-                        <input type="text" id="config-class-year" name="class_year" placeholder="e.g. 2027">
-                    </div>
-                    <div class="form-group">
-                        <label for="config-bio-editor">About Bio</label>
-                        <div class="richtext-toolbar" data-target="config-bio-editor">
-                            <button type="button" class="rt-btn" data-cmd="bold" title="Bold"><b>B</b></button>
-                            <button type="button" class="rt-btn" data-cmd="italic" title="Italic"><i>I</i></button>
-                            <button type="button" class="rt-btn" data-cmd="insertUnorderedList" title="Bullet list">&bull; List</button>
-                            <button type="button" class="rt-btn" data-cmd="insertOrderedList" title="Numbered list">1. List</button>
-                            <button type="button" class="rt-btn" data-cmd="formatBlock" data-value="pre" title="Code block">&lt;/&gt;</button>
-                            <button type="button" class="rt-btn" data-cmd="removeFormat" title="Clear formatting">Clear</button>
+                <div class="nav-group">
+                    <div class="nav-group-title">📝 Content Manager</div>
+                    <button class="tab-btn" data-tab="projects">💻 Projects</button>
+                    <button class="tab-btn" data-tab="experience">🚀 Clubs &amp; Activities</button>
+                    <button class="tab-btn" data-tab="certifications">🎖️ Certifications</button>
+                    <button class="tab-btn" data-tab="skills">💪 Skills &amp; Strengths</button>
+                    <button class="tab-btn" data-tab="achievements">🏆 Achievements</button>
+                    <button class="tab-btn" data-tab="gallery">🖼️ Gallery</button>
+                </div>
+
+                <div class="nav-group">
+                    <div class="nav-group-title">💬 Interactions</div>
+                    <button class="tab-btn" data-tab="messages">📬 Messages</button>
+                    <button class="tab-btn" data-tab="recommendations">📄 Recommendations</button>
+                    <button class="tab-btn" data-tab="testimonials">💬 Testimonials</button>
+                    <button class="tab-btn" data-tab="faqs">❓ FAQ</button>
+                </div>
+
+                <div class="nav-group">
+                    <div class="nav-group-title">🎨 Assets &amp; Settings</div>
+                    <button class="tab-btn" data-tab="media">📁 Media Gallery</button>
+                    <button class="tab-btn" data-tab="social">🔗 Social Links</button>
+                    <button class="tab-btn" data-tab="email-templates">✉️ Email Templates</button>
+                    <button class="tab-btn" data-tab="settings">⚙️ Settings &amp; Backup</button>
+                </div>
+            </aside>
+
+            <main class="content">
+                <!-- Site Config -->
+                <section id="tab-config" class="tab-panel active">
+                    <h2>Site Configuration &amp; Analytics Overview</h2>
+
+                    <!-- Analytics Stats Cards -->
+                    <div class="stats-overview-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:1rem;margin-bottom:1.5rem;">
+                        <div class="stat-card" style="background:var(--bg-secondary);padding:14px;border-radius:10px;border:1px solid var(--border);">
+                            <span style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;">Page Views</span>
+                            <h3 id="stat-page-views" style="margin:4px 0 0;font-size:1.4rem;color:#00d4ff;">0</h3>
                         </div>
-                        <div id="config-bio-editor" class="richtext-editor" contenteditable="true"></div>
-                        <textarea id="config-bio" name="about_bio" class="hidden"></textarea>
+                        <div class="stat-card" style="background:var(--bg-secondary);padding:14px;border-radius:10px;border:1px solid var(--border);">
+                            <span style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;">Project Clicks</span>
+                            <h3 id="stat-project-clicks" style="margin:4px 0 0;font-size:1.4rem;color:#6c63ff;">0</h3>
+                        </div>
+                        <div class="stat-card" style="background:var(--bg-secondary);padding:14px;border-radius:10px;border:1px solid var(--border);">
+                            <span style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;">Messages</span>
+                            <h3 id="stat-messages-count" style="margin:4px 0 0;font-size:1.4rem;color:#2ed573;">0</h3>
+                        </div>
+                        <div class="stat-card" style="background:var(--bg-secondary);padding:14px;border-radius:10px;border:1px solid var(--border);">
+                            <span style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;">PDF Downloads</span>
+                            <h3 id="stat-downloads-count" style="margin:4px 0 0;font-size:1.4rem;color:#ffa502;">0</h3>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="config-photo">About Photo</label>
-                        <div class="dropzone" id="config-photo-dropzone">
-                            <img id="config-photo-preview" class="dropzone-preview hidden" alt="Preview">
-                            <div class="dropzone-hint">
-                                <span>Drag & drop an image, or click to browse</span>
-                                <input type="file" id="config-photo-file" accept="image/*" class="hidden">
+
+                    <form id="config-form">
+                        <div class="form-group">
+                            <label for="config-name">Name</label>
+                            <input type="text" id="config-name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="config-title">Title</label>
+                            <input type="text" id="config-title" name="title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="config-tagline">Tagline</label>
+                            <input type="text" id="config-tagline" name="tagline">
+                        </div>
+                        <div class="form-group">
+                            <label for="config-class-year">Graduation / Class Year</label>
+                            <input type="text" id="config-class-year" name="class_year" placeholder="e.g. Class of 2026 or 2026">
+                        </div>
+                        <div class="form-group">
+                            <label for="config-photo">About Photo URL</label>
+                            <div class="photo-input-group">
+                                <input type="text" id="config-photo" name="about_photo_url" placeholder="https://... or /uploads/...">
+                                <label for="photo-file-input" class="btn-outline upload-btn" title="Upload an image from your computer">Upload</label>
+                                <input type="file" id="photo-file-input" accept="image/*" class="hidden">
                             </div>
                         </div>
-                        <input type="text" id="config-photo" name="about_photo_url" placeholder="Or paste an image URL">
-                    </div>
-                    <h3 class="form-subhead">Featured Quote</h3>
-                    <p class="settings-desc">Shown in the About section. If you add Testimonials below, they'll rotate in and take over from this one automatically.</p>
-                    <div class="form-group">
-                        <label for="config-quote-text">Quote</label>
-                        <textarea id="config-quote-text" name="quote_text" rows="3" placeholder="e.g. Passionate about building things that matter."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="config-quote-author">Attribution</label>
-                        <input type="text" id="config-quote-author" name="quote_author" placeholder="e.g. — Robotics Club Advisor (optional)">
-                    </div>
-                    <h3 class="form-subhead">Counter Stats</h3>
-                    <p class="settings-desc">These power the animated counter numbers on the public site.</p>
-                    <div class="form-group row">
-                        <label>Years Involved</label>
-                        <input type="number" id="config-stat-years" name="stat_years_involved" min="0" style="margin-left:auto;width:120px">
-                    </div>
-                    <div class="form-group row">
-                        <label>Clubs Joined</label>
-                        <input type="number" id="config-stat-clubs" name="stat_clubs_joined" min="0" style="margin-left:auto;width:120px">
-                    </div>
-                    <button type="submit" class="btn-primary">Save Configuration</button>
-                </form>
-            </section>
-
-            <!-- Projects -->
-            <section id="tab-projects" class="tab-panel">
-                <div class="panel-header">
-                    <h2>Projects</h2>
-                    <button id="add-project-btn" class="btn-primary">Add Project</button>
-                </div>
-                <div class="table-responsive">
-                    <table id="projects-table">
-                        <thead>
-                            <tr>
-                                <th>Title</th>
-                                <th>Dates</th>
-                                <th>Published</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Skills -->
-            <section id="tab-skills" class="tab-panel">
-                <div class="panel-header">
-                    <h2>Skills &amp; Strengths</h2>
-                    <button id="add-skill-btn" class="btn-primary">Add Skill / Strength</button>
-                </div>
-                <p class="settings-desc">Add both technical skills (e.g. Python, Photoshop) and strengths (e.g. Leadership, Teamwork) — they'll show in separate groups on the public site.</p>
-                <div class="table-responsive">
-                    <table id="skills-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Type</th>
-                                <th>Category</th>
-                                <th>Proficiency</th>
-                                <th>Published</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Achievements / Awards -->
-            <section id="tab-achievements" class="tab-panel">
-                <div class="panel-header">
-                    <h2>Achievements &amp; Awards</h2>
-                    <button id="add-achievement-btn" class="btn-primary">Add Achievement</button>
-                </div>
-                <p class="settings-desc">Honor roll, competition placements, certificates &mdash; anything worth showing off.</p>
-                <div class="table-responsive">
-                    <table id="achievements-table">
-                        <thead>
-                            <tr>
-                                <th>Title</th>
-                                <th>Issuer</th>
-                                <th>Category</th>
-                                <th>Date</th>
-                                <th>Published</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Gallery / Photos -->
-            <section id="tab-gallery" class="tab-panel">
-                <div class="panel-header">
-                    <h2>Gallery &amp; Photos</h2>
-                    <button id="add-gallery-btn" class="btn-primary">Add Photo</button>
-                </div>
-                <p class="settings-desc">Event photos, competition shots, and club activities &mdash; shown as a visual grid on the public site.</p>
-                <div class="table-responsive">
-                    <table id="gallery-table">
-                        <thead>
-                            <tr>
-                                <th>Photo</th>
-                                <th>Caption</th>
-                                <th>Category</th>
-                                <th>Published</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Testimonials -->
-            <section id="tab-testimonials" class="tab-panel">
-                <div class="panel-header">
-                    <h2>Testimonials</h2>
-                    <button id="add-testimonial-btn" class="btn-primary">Add Testimonial</button>
-                </div>
-                <p class="settings-desc">Quotes from teachers, coaches, or club advisors. These rotate through the quote card on the public site.</p>
-                <div class="table-responsive">
-                    <table id="testimonials-table">
-                        <thead>
-                            <tr>
-                                <th>Quote</th>
-                                <th>Author</th>
-                                <th>Role</th>
-                                <th>Published</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Clubs & Activities -->
-            <section id="tab-experience" class="tab-panel">
-                <div class="panel-header">
-                    <h2>Clubs &amp; Activities</h2>
-                    <button id="add-experience-btn" class="btn-primary">Add Activity</button>
-                </div>
-                <div class="table-responsive">
-                    <table id="experience-table">
-                        <thead>
-                            <tr>
-                                <th>Role / Position</th>
-                                <th>Club / Organization</th>
-                                <th>Dates</th>
-                                <th>Published</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Social Links -->
-            <section id="tab-social" class="tab-panel">
-                <div class="panel-header">
-                    <h2>Social Links</h2>
-                    <button id="add-social-btn" class="btn-primary">Add Link</button>
-                </div>
-                <div class="table-responsive">
-                    <table id="social-table">
-                        <thead>
-                            <tr>
-                                <th>Platform</th>
-                                <th>URL</th>
-                                <th>Icon</th>
-                                <th>Published</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Messages -->
-            <section id="tab-messages" class="tab-panel">
-                <div class="panel-header">
-                    <h2>Messages</h2>
-                </div>
-                <div class="table-responsive">
-                    <table id="messages-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Message</th>
-                                <th>Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Settings -->
-            <section id="tab-settings" class="tab-panel">
-                <h2>Settings</h2>
-
-                <div class="settings-card">
-                    <h3>Spotify &mdash; Now Playing</h3>
-                    <p class="settings-desc">Connect your Spotify account to show what you're currently listening to on the live site.</p>
-                    <div class="settings-row">
-                        <span id="spotify-status-pill" class="status-pill">Checking&hellip;</span>
-                        <button id="spotify-connect-btn" class="btn-primary hidden">Connect Spotify</button>
-                        <button id="spotify-disconnect-btn" class="btn-danger hidden">Disconnect</button>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <h3>Admin Password</h3>
-                    <p class="settings-desc">Change the password used to log in to this admin panel.</p>
-                    <form id="password-form">
                         <div class="form-group">
-                            <label for="current-password">Current Password</label>
-                            <input type="password" id="current-password" name="currentPassword" required>
+                            <label for="config-bio">About Bio</label>
+                            <div class="wysiwyg-toolbar">
+                                <button type="button" class="wysiwyg-btn" data-cmd="bold" title="Bold"><b>B</b></button>
+                                <button type="button" class="wysiwyg-btn" data-cmd="italic" title="Italic"><i>I</i></button>
+                                <button type="button" class="wysiwyg-btn" data-cmd="insertUnorderedList" title="Bullet List">• List</button>
+                                <button type="button" class="wysiwyg-btn" data-cmd="createLink" title="Insert Link">🔗 Link</button>
+                                <button type="button" class="wysiwyg-btn" data-cmd="formatBlock" data-param="pre" title="Code Block">&lt;/&gt;</button>
+                            </div>
+                            <div id="wysiwyg-editor" class="wysiwyg-editor" contenteditable="true"></div>
+                            <textarea id="config-bio" name="about_bio" class="hidden"></textarea>
+                        </div>
+                        <h3 class="form-subhead">Featured Quote</h3>
+                        <p class="settings-desc">Displayed in the About section on the live site.</p>
+                        <div class="form-group">
+                            <label for="config-quote-text">Quote Text</label>
+                            <textarea id="config-quote-text" name="quote_text" rows="2" placeholder="An inspiring quote..."></textarea>
                         </div>
                         <div class="form-group">
-                            <label for="new-password">New Password</label>
-                            <input type="password" id="new-password" name="newPassword" minlength="6" required>
+                            <label for="config-quote-author">Attribution</label>
+                            <input type="text" id="config-quote-author" name="quote_author" placeholder="e.g. — Robotics Club Advisor (optional)">
                         </div>
-                        <div class="form-group">
-                            <label for="confirm-password">Confirm New Password</label>
-                            <input type="password" id="confirm-password" required>
+                        <h3 class="form-subhead">Counter Stats</h3>
+                        <p class="settings-desc">These power the animated counter numbers on the public site.</p>
+                        <div class="form-group row">
+                            <label>Years Involved</label>
+                            <input type="number" id="config-stat-years" name="stat_years_involved" min="0" style="margin-left:auto;width:120px">
                         </div>
-                        <button type="submit" class="btn-primary">Update Password</button>
+                        <div class="form-group row">
+                            <label>Clubs Joined</label>
+                            <input type="number" id="config-stat-clubs" name="stat_clubs_joined" min="0" style="margin-left:auto;width:120px">
+                        </div>
+                        <button type="submit" class="btn-primary">Save Configuration</button>
                     </form>
-                </div>
+                </section>
 
-                <div class="settings-card">
-                    <h3>Database Backup</h3>
-                    <p class="settings-desc">Download a full JSON export of your portfolio data (config, projects, skills, experience, achievements, testimonials, social links, and messages).</p>
-                    <button id="export-btn" class="btn-outline">Download Backup (.json)</button>
-                </div>
-            </section>
-        </main>
+                <!-- Kyro AI Studio -->
+                <section id="tab-ai" class="tab-panel">
+                    <h2>✨ Kyro AI Studio</h2>
+                    <p class="settings-desc">Powered by <strong>Kyro AI Gateway</strong> (Llama 3.3 70B &amp; Qwen 2.5 Coder 32B). Generate polished bios, optimize experience bullet points, or prompt your AI copilot.</p>
+
+                    <div class="ai-studio-grid">
+                        <!-- Bio Generator -->
+                        <div class="settings-card">
+                            <h3>✍️ AI Bio Generator &amp; Polisher</h3>
+                            <div class="form-group">
+                                <label>Target Tone</label>
+                                <select id="ai-bio-tone" class="form-control">
+                                    <option value="Professional & Executive">Professional &amp; Executive</option>
+                                    <option value="Creative & Modern">Creative &amp; Modern</option>
+                                    <option value="High-Tech Developer">High-Tech Developer</option>
+                                    <option value="Concise & Impactful">Concise &amp; Impactful</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Key Focus / Highlight Notes</label>
+                                <textarea id="ai-bio-notes" rows="2" placeholder="e.g. Highlight full-stack web development, open source contributions, and student leadership"></textarea>
+                            </div>
+                            <button id="ai-generate-bio-btn" class="btn-primary">Generate Bio</button>
+                            <div id="ai-bio-result" class="ai-output-box hidden" style="margin-top:12px;">
+                                <textarea id="ai-bio-output" rows="4"></textarea>
+                                <button id="ai-apply-bio-btn" class="btn-outline" style="margin-top:8px;">Apply to Site Config Bio</button>
+                            </div>
+                        </div>
+
+                        <!-- Bullet Optimizer -->
+                        <div class="settings-card">
+                            <h3>⚡ Experience Bullet Point Optimizer</h3>
+                            <div class="form-group">
+                                <label>Role / Title</label>
+                                <input type="text" id="ai-bullet-title" placeholder="e.g. Lead Software Engineer">
+                            </div>
+                            <div class="form-group">
+                                <label>Raw Notes / Responsibilities</label>
+                                <textarea id="ai-bullet-notes" rows="3" placeholder="e.g. Built Node.js API server, created Supabase database tables, added dark mode glassmorphism UI"></textarea>
+                            </div>
+                            <button id="ai-generate-bullets-btn" class="btn-primary">Optimize Bullets</button>
+                            <div id="ai-bullets-result" class="ai-output-box hidden" style="margin-top:12px;">
+                                <textarea id="ai-bullets-output" rows="4"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- AI Resume Studio Card -->
+                        <div class="settings-card full-width">
+                            <h3>📄 AI Resume PDF Generator &amp; Multi-Style Tailor</h3>
+                            <p class="settings-desc">Generate an AI-tailored resume using Kyro AI or download a standard formatted PDF resume directly from your live database content.</p>
+                            <div class="form-group" style="margin-bottom:14px;">
+                                <label for="pdf-theme-select">Select PDF Layout Style Template</label>
+                                <select id="pdf-theme-select" class="form-control" style="max-width:360px;">
+                                    <option value="modern">👔 Modern Minimalist (Purple Header & Accent Bars)</option>
+                                    <option value="classic">📜 Executive Classic (Traditional Serif & Formal Lines)</option>
+                                    <option value="developer">💻 Tech Developer (Dark Monospace Tags & Tech Grid)</option>
+                                </select>
+                            </div>
+                            <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center;">
+                                <button id="admin-ai-resume-btn" class="btn-primary">⚡ Generate AI-Tailored Resume PDF</button>
+                                <button id="admin-std-resume-btn" class="btn-outline">📥 Download Standard Resume PDF</button>
+                            </div>
+                        </div>
+
+                        <!-- Copilot Chat -->
+                        <div class="settings-card full-width">
+                            <h3>💬 Kyro AI Copilot Console</h3>
+                            <div class="settings-row" style="margin-bottom:12px;">
+                                <label style="margin-right:10px;">Select Model:</label>
+                                <select id="ai-chat-model" class="form-control" style="width:260px;">
+                                    <option value="kyro-coder-pro">kyro-coder-pro (Qwen 2.5 Coder 32B)</option>
+                                    <option value="kyro-ultra-70b">kyro-ultra-70b (Llama 3.3 70B)</option>
+                                    <option value="kyro-flash-8b">kyro-flash-8b (Llama 3.1 8B Instant)</option>
+                                </select>
+                            </div>
+                            <div id="ai-chat-log" class="ai-chat-log">
+                                <div class="chat-msg system">Kyro AI Copilot ready. Ask me code questions, resume strategy, or copy edits!</div>
+                            </div>
+                            <div class="ai-chat-input-wrap">
+                                <input type="text" id="ai-chat-input" placeholder="Type your message or prompt to Kyro AI...">
+                                <button id="ai-chat-send-btn" class="btn-primary">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section Order & Visibility -->
+                <section id="tab-sections" class="tab-panel">
+                    <h2>📌 Section Order &amp; Visibility</h2>
+                    <p class="settings-desc">Customize section titles, order, and toggle section visibility on your public website.</p>
+                    <div id="sections-manager-list" class="sections-list"></div>
+                    <button id="save-sections-btn" class="btn-primary" style="margin-top:16px;">Save Section Layout</button>
+                </section>
+
+                <!-- Media Gallery -->
+                <section id="tab-media" class="tab-panel">
+                    <div class="panel-header">
+                        <h2>🖼️ Media Gallery &amp; Asset Manager</h2>
+                        <label for="media-upload-input" class="btn-primary" style="cursor:pointer;">
+                            Upload &amp; Crop New Image
+                        </label>
+                        <input type="file" id="media-upload-input" accept="image/*" class="hidden">
+                    </div>
+                    <p class="settings-desc">Manage, crop, inspect, and copy image links.</p>
+
+                    <div id="media-grid" class="media-grid"></div>
+
+                    <!-- Cropper Modal -->
+                    <div id="cropper-modal" class="modal-overlay hidden">
+                        <div class="modal-card cropper-card">
+                            <h3>Crop Image Before Upload</h3>
+                            <div class="cropper-container">
+                                <img id="cropper-target-img" src="" alt="Crop target">
+                            </div>
+                            <div class="cropper-aspect-controls">
+                                <button type="button" class="btn-outline crop-ratio-btn active" data-ratio="1">1:1 Square (Avatar)</button>
+                                <button type="button" class="btn-outline crop-ratio-btn" data-ratio="1.7777">16:9 Banner</button>
+                                <button type="button" class="btn-outline crop-ratio-btn" data-ratio="0">Freeform</button>
+                            </div>
+                            <div class="modal-actions">
+                                <button type="button" id="cropper-cancel-btn" class="btn-outline">Cancel</button>
+                                <button type="button" id="cropper-save-btn" class="btn-primary">Save &amp; Upload Cropped</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Projects -->
+                <section id="tab-projects" class="tab-panel">
+                    <div class="panel-header">
+                        <h2>Projects</h2>
+                        <button id="add-project-btn" class="btn-primary">Add Project</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="projects-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Dates</th>
+                                    <th>Published</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+                <!-- Certifications & Badges Shelf -->
+                <section id="tab-certifications" class="tab-panel">
+                    <div class="panel-header">
+                        <h2>Certifications &amp; Badges Shelf</h2>
+                        <button id="add-certification-btn" class="btn-primary">Add Certification</button>
+                    </div>
+                    <p class="settings-desc">Add verified certificates, badges, exams, and professional credentials with verification links.</p>
+                    <div class="table-responsive">
+                        <table id="certifications-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Issuer</th>
+                                    <th>Category</th>
+                                    <th>Issue Date</th>
+                                    <th>Published</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Skills -->
+                <section id="tab-skills" class="tab-panel">
+                    <div class="panel-header">
+                        <h2>Skills &amp; Strengths</h2>
+                        <button id="add-skill-btn" class="btn-primary">Add Skill / Strength</button>
+                    </div>
+                    <p class="settings-desc">Add both technical skills (e.g. Python, Photoshop) and strengths (e.g. Leadership, Teamwork) &mdash; they'll show in separate groups on the public site.</p>
+                    <div class="table-responsive">
+                        <table id="skills-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Category</th>
+                                    <th>Proficiency</th>
+                                    <th>Published</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Achievements / Awards -->
+                <section id="tab-achievements" class="tab-panel">
+                    <div class="panel-header">
+                        <h2>Achievements &amp; Awards</h2>
+                        <button id="add-achievement-btn" class="btn-primary">Add Achievement</button>
+                    </div>
+                    <p class="settings-desc">Honor roll, competition placements, certificates &mdash; anything worth showing off.</p>
+                    <div class="table-responsive">
+                        <table id="achievements-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Issuer</th>
+                                    <th>Category</th>
+                                    <th>Date</th>
+                                    <th>Published</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Gallery / Photos -->
+                <section id="tab-gallery" class="tab-panel">
+                    <div class="panel-header">
+                        <h2>Gallery &amp; Photos</h2>
+                        <button id="add-gallery-btn" class="btn-primary">Add Photo</button>
+                    </div>
+                    <p class="settings-desc">Event photos, competition shots, and club activities &mdash; shown as a visual grid on the public site.</p>
+                    <div class="table-responsive">
+                        <table id="gallery-table">
+                            <thead>
+                                <tr>
+                                    <th>Photo</th>
+                                    <th>Caption</th>
+                                    <th>Category</th>
+                                    <th>Published</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Testimonials -->
+                <section id="tab-testimonials" class="tab-panel">
+                    <div class="panel-header">
+                        <h2>Testimonials</h2>
+                        <button id="add-testimonial-btn" class="btn-primary">Add Testimonial</button>
+                    </div>
+                    <p class="settings-desc">Quotes from teachers, coaches, or club advisors. These rotate through the quote card on the public site.</p>
+                    <div class="table-responsive">
+                        <table id="testimonials-table">
+                            <thead>
+                                <tr>
+                                    <th>Quote</th>
+                                    <th>Author</th>
+                                    <th>Role</th>
+                                    <th>Published</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Clubs & Activities -->
+                <section id="tab-experience" class="tab-panel">
+                    <div class="panel-header">
+                        <h2>Clubs &amp; Activities</h2>
+                        <button id="add-experience-btn" class="btn-primary">Add Activity</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="experience-table">
+                            <thead>
+                                <tr>
+                                    <th>Role / Position</th>
+                                    <th>Club / Organization</th>
+                                    <th>Dates</th>
+                                    <th>Published</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Recommendations -->
+                <section id="tab-recommendations" class="tab-panel">
+                    <div class="panel-header">
+                        <h2>Teacher &amp; Advisor Recommendations</h2>
+                        <div>
+                            <button id="request-recommendation-btn" class="btn-outline" style="margin-right:8px;">📩 Request via Email</button>
+                            <button id="add-recommendation-btn" class="btn-primary">Add Recommendation</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="recommendations-table">
+                            <thead>
+                                <tr>
+                                    <th>Recommender</th>
+                                    <th>Title / Org</th>
+                                    <th>Quote Excerpt</th>
+                                    <th>Letter PDF</th>
+                                    <th>Published</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- FAQ -->
+                <section id="tab-faqs" class="tab-panel">
+                    <div class="panel-header">
+                        <h2>Frequently Asked Questions (FAQ)</h2>
+                        <button id="add-faq-btn" class="btn-primary">Add Question</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="faqs-table">
+                            <thead>
+                                <tr>
+                                    <th>Question</th>
+                                    <th>Category</th>
+                                    <th>Answer</th>
+                                    <th>Published</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Social Links -->
+                <section id="tab-social" class="tab-panel">
+                    <div class="panel-header">
+                        <h2>Social Links</h2>
+                        <button id="add-social-btn" class="btn-primary">Add Link</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="social-table">
+                            <thead>
+                                <tr>
+                                    <th>Platform</th>
+                                    <th>URL</th>
+                                    <th>Icon</th>
+                                    <th>Published</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Messages -->
+                <section id="tab-messages" class="tab-panel">
+                    <div class="panel-header">
+                        <h2>Contact Messages &amp; Replies</h2>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="messages-table">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Message</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Email Templates & Customization -->
+                <section id="tab-email-templates" class="tab-panel">
+                    <h2>✉️ Email Templates &amp; Customization</h2>
+                    <p class="settings-desc">Customize subject lines and HTML/text body templates. Click any tag pill below to insert it into the template, or use Kyro AI to draft custom templates!</p>
+
+                    <form id="email-templates-form">
+                        <div class="settings-card">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <h3 style="margin:0;">📬 1. Admin Contact Notification Email (Sent to You)</h3>
+                                <button type="button" class="btn-outline ai-draft-tpl-btn" data-type="contact" style="font-size:0.8rem;padding:4px 10px;">✨ Kyro AI Draft</button>
+                            </div>
+                            <p class="settings-desc" style="margin-top:6px;">Sent to your email when a visitor submits the contact form.</p>
+                            
+                            <div class="form-group">
+                                <label for="contact-subject-input">Subject Line</label>
+                                <input type="text" id="contact-subject-input" name="contact_email_subject" placeholder="📬 New Portfolio Message from {{name}}">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="contact-template-input">Email Body / HTML Template</label>
+                                <div class="tag-pills-container">
+                                    <span class="tag-pill" onclick="insertTag('contact-template-input', '{{name}}')">{{name}}</span>
+                                    <span class="tag-pill" onclick="insertTag('contact-template-input', '{{email}}')">{{email}}</span>
+                                    <span class="tag-pill" onclick="insertTag('contact-template-input', '{{message}}')">{{message}}</span>
+                                    <span class="tag-pill" onclick="insertTag('contact-template-input', '{{date}}')">{{date}}</span>
+                                    <span class="tag-pill" onclick="insertTag('contact-template-input', '{{student_name}}')">{{student_name}}</span>
+                                    <span class="tag-pill" onclick="insertTag('contact-template-input', '{{site_title}}')">{{site_title}}</span>
+                                </div>
+                                <textarea id="contact-template-input" name="contact_email_template" rows="6" placeholder="Enter custom HTML or plain text template..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <h3 style="margin:0;">💬 2. Visitor Reply Email (Sent to Visitor)</h3>
+                                <button type="button" class="btn-outline ai-draft-tpl-btn" data-type="reply" style="font-size:0.8rem;padding:4px 10px;">✨ Kyro AI Draft</button>
+                            </div>
+                            <p class="settings-desc" style="margin-top:6px;">Sent to visitors when you respond to their message in the admin panel.</p>
+
+                            <div class="form-group">
+                                <label for="reply-subject-input">Default Reply Subject Line</label>
+                                <input type="text" id="reply-subject-input" name="reply_email_subject" placeholder="Re: Portfolio Contact Message from {{name}}">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="reply-template-input">Email Body / HTML Template</label>
+                                <div class="tag-pills-container">
+                                    <span class="tag-pill" onclick="insertTag('reply-template-input', '{{name}}')">{{name}}</span>
+                                    <span class="tag-pill" onclick="insertTag('reply-template-input', '{{reply_text}}')">{{reply_text}}</span>
+                                    <span class="tag-pill" onclick="insertTag('reply-template-input', '{{original_message}}')">{{original_message}}</span>
+                                    <span class="tag-pill" onclick="insertTag('reply-template-input', '{{email}}')">{{email}}</span>
+                                    <span class="tag-pill" onclick="insertTag('reply-template-input', '{{student_name}}')">{{student_name}}</span>
+                                    <span class="tag-pill" onclick="insertTag('reply-template-input', '{{date}}')">{{date}}</span>
+                                    <span class="tag-pill" onclick="insertTag('reply-template-input', '{{site_title}}')">{{site_title}}</span>
+                                </div>
+                                <textarea id="reply-template-input" name="reply_email_template" rows="6" placeholder="Enter custom HTML or plain text template..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <h3 style="margin:0;">📄 3. Teacher Recommendation Request Email</h3>
+                                <button type="button" class="btn-outline ai-draft-tpl-btn" data-type="recommendation" style="font-size:0.8rem;padding:4px 10px;">✨ Kyro AI Draft</button>
+                            </div>
+                            <p class="settings-desc" style="margin-top:6px;">Sent to teachers/counselors when requesting a recommendation letter.</p>
+
+                            <div class="form-group">
+                                <label for="rec-subject-input">Subject Line</label>
+                                <input type="text" id="rec-subject-input" name="recommendation_email_subject" placeholder="Letter of Recommendation Request for {{student_name}}">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="rec-template-input">Email Body / HTML Template</label>
+                                <div class="tag-pills-container">
+                                    <span class="tag-pill" onclick="insertTag('rec-template-input', '{{teacher_name}}')">{{teacher_name}}</span>
+                                    <span class="tag-pill" onclick="insertTag('rec-template-input', '{{student_name}}')">{{student_name}}</span>
+                                    <span class="tag-pill" onclick="insertTag('rec-template-input', '{{course_or_context}}')">{{course_or_context}}</span>
+                                    <span class="tag-pill" onclick="insertTag('rec-template-input', '{{form_url}}')">{{form_url}}</span>
+                                    <span class="tag-pill" onclick="insertTag('rec-template-input', '{{class_year}}')">{{class_year}}</span>
+                                    <span class="tag-pill" onclick="insertTag('rec-template-input', '{{site_title}}')">{{site_title}}</span>
+                                </div>
+                                <textarea id="rec-template-input" name="rec_template_input" rows="7" placeholder="Enter custom HTML or plain text template..."></textarea>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-primary" style="margin-top:10px;">Save Email Settings</button>
+                    </form>
+                </section>
+
+                <!-- Settings -->
+                <section id="tab-settings" class="tab-panel">
+                    <h2>Settings &amp; Integrations</h2>
+
+                    <div class="settings-card">
+                        <h3>Spotify &mdash; Now Playing</h3>
+                        <p class="settings-desc">Connect your Spotify account to show what you're currently listening to on the live site.</p>
+                        <div class="settings-row">
+                            <span id="spotify-status-pill" class="status-pill">Checking&hellip;</span>
+                            <button id="spotify-connect-btn" class="btn-primary hidden">Connect Spotify</button>
+                            <button id="spotify-disconnect-btn" class="btn-danger hidden">Disconnect</button>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <h3>Admin Password</h3>
+                        <p class="settings-desc">Change the password used to log in to this admin panel.</p>
+                        <form id="password-form">
+                            <div class="form-group">
+                                <label for="current-password">Current Password</label>
+                                <input type="password" id="current-password" name="currentPassword" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="new-password">New Password</label>
+                                <input type="password" id="new-password" name="newPassword" minlength="6" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirm-password">Confirm New Password</label>
+                                <input type="password" id="confirm-password" required>
+                            </div>
+                            <button type="submit" class="btn-primary">Update Password</button>
+                        </form>
+                    </div>
+
+                    <div class="settings-card">
+                        <h3>🔗 API Keys &amp; Webhooks</h3>
+                        <p class="settings-desc">Configure external API keys for email notifications, Kyro AI, and Discord webhooks.</p>
+                        <form id="integrations-form">
+                            <div class="form-group">
+                                <label for="discord-webhook-input">Discord Webhook URL</label>
+                                <input type="url" id="discord-webhook-input" name="discord_webhook_url" placeholder="https://discord.com/api/webhooks/...">
+                            </div>
+                            <div class="form-group">
+                                <label for="kyro-key-input">Kyro AI API Key</label>
+                                <input type="password" id="kyro-key-input" name="kyro_api_key" placeholder="kyro_sk_live_...">
+                            </div>
+                            <div class="form-group">
+                                <label for="resend-key-input">Resend API Key (Email Sender)</label>
+                                <input type="password" id="resend-key-input" name="resend_api_key" placeholder="re_...">
+                            </div>
+                            <div class="form-group">
+                                <label for="notification-email-input">Notification Email Address</label>
+                                <input type="email" id="notification-email-input" name="notification_email" placeholder="jordan.lmmsfbla@outlook.com">
+                            </div>
+                            <button type="submit" class="btn-primary">Save Integrations</button>
+                        </form>
+                    </div>
+
+                    <div class="settings-card">
+                        <h3>📱 One-Click Portfolio QR Code Generator</h3>
+                        <p class="settings-desc">Generate and download a high-res QR code linked to your live portfolio for printed resumes, posters, business cards, or science fair displays.</p>
+                        <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;margin-top:12px;">
+                            <div id="qrcode-box" style="background:#ffffff;padding:12px;border-radius:10px;display:inline-block;box-shadow:0 4px 12px rgba(0,0,0,0.3);"></div>
+                            <div style="flex:1;min-width:220px;">
+                                <p id="qr-target-url" style="font-family:monospace;font-size:0.88rem;color:#00d4ff;margin-bottom:12px;word-break:break-all;"></p>
+                                <button id="download-qr-btn" class="btn-primary">📥 Download High-Res QR Code (.png)</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <h3>Database Backup</h3>
+                        <p class="settings-desc">Download a full JSON export of your portfolio data (config, projects, skills, experience, achievements, testimonials, social links, and messages).</p>
+                        <button id="export-btn" class="btn-outline">Download Backup (.json)</button>
+                    </div>
+                </section>
+            </main>
+        </div>
     </div>
 
-    <!-- Modal -->
+    <!-- General Modal -->
     <div id="modal-overlay" class="modal-overlay hidden">
         <div class="modal-card">
             <h3 id="modal-title">Title</h3>
@@ -348,9 +721,42 @@
         </div>
     </div>
 
+    <!-- Message Reply Modal -->
+    <div id="reply-modal-overlay" class="modal-overlay hidden">
+        <div class="modal-card" style="max-width:620px;">
+            <h3>✉️ Reply to Contact Message</h3>
+            <form id="reply-form">
+                <input type="hidden" id="reply-msg-id">
+                <div class="form-group">
+                    <label>Recipient</label>
+                    <input type="text" id="reply-recipient" readonly style="opacity:0.8;background:rgba(255,255,255,0.03);">
+                </div>
+                <div class="form-group">
+                    <label>Original Message</label>
+                    <div id="reply-original-msg" style="padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;font-size:0.88rem;max-height:100px;overflow-y:auto;color:var(--text-secondary);"></div>
+                </div>
+                <div class="form-group">
+                    <label for="reply-subject">Email Subject Line</label>
+                    <input type="text" id="reply-subject" name="reply_subject" required>
+                </div>
+                <div class="form-group">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                        <label for="reply-body">Your Response Message *</label>
+                        <button type="button" id="ai-draft-reply-btn" class="btn-outline" style="font-size:0.8rem;padding:4px 10px;cursor:pointer;">✨ AI Draft Reply</button>
+                    </div>
+                    <textarea id="reply-body" name="reply_text" rows="5" placeholder="Write your response email..." required></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="reply-cancel-btn" class="btn-outline">Cancel</button>
+                    <button type="submit" id="reply-send-btn" class="btn-primary">Send Reply Email</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Toasts -->
     <div id="toast-container"></div>
 
-    <script src="js/admin.js"></script>
+    <script src="/js/admin.js"></script>
 </body>
 </html>
