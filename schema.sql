@@ -31,7 +31,7 @@ ALTER TABLE site_config ADD COLUMN IF NOT EXISTS quote_author VARCHAR(255) DEFAU
 -- Integrations: Discord Webhook, Kyro AI API Key, Resend Email
 ALTER TABLE site_config ADD COLUMN IF NOT EXISTS discord_webhook_url TEXT DEFAULT 'https://discord.com/api/webhooks/1543661253698781335/P65nZ2XKxeWxDP4fiNUMLVRysGU0tt-iOFqihSd2rZUC16yTvTkqdp6DllFn4Q0nB5OB';
 ALTER TABLE site_config ADD COLUMN IF NOT EXISTS kyro_api_key VARCHAR(255) DEFAULT 'kyro_sk_live_7H64A9P3jEmDr7RRiLOasMF7SjDSLYPB';
-ALTER TABLE site_config ADD COLUMN IF NOT EXISTS resend_api_key VARCHAR(255) DEFAULT '';
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS resend_api_key VARCHAR(255) DEFAULT 're_kRnSzQiD_PET41BvpZbzvjhmMy4S7hC7';
 ALTER TABLE site_config ADD COLUMN IF NOT EXISTS notification_email VARCHAR(255) DEFAULT 'jordan.lmmsfbla@outlook.com';
 
 -- Customizable Email Templates & Subjects
@@ -173,16 +173,19 @@ CREATE TABLE IF NOT EXISTS spotify_auth (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Recommendation Requests (Sent to Teachers)
+-- Recommendation Requests (Sent to Teachers, Mentors & Therapists)
 CREATE TABLE IF NOT EXISTS recommendation_requests (
   id SERIAL PRIMARY KEY,
   teacher_name VARCHAR(255) NOT NULL,
   teacher_email VARCHAR(255) NOT NULL,
   course_or_context VARCHAR(255),
+  recipient_type VARCHAR(50) DEFAULT 'teacher',
   token VARCHAR(100) UNIQUE NOT NULL,
   status VARCHAR(50) DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT NOW()
 );
+
+ALTER TABLE recommendation_requests ADD COLUMN IF NOT EXISTS recipient_type VARCHAR(50) DEFAULT 'teacher';
 
 -- Recommendations & Letters (Teachers, Counselors, Advisors)
 CREATE TABLE IF NOT EXISTS recommendations (

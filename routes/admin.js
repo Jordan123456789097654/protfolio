@@ -1126,9 +1126,9 @@ router.post('/recommendations/request', async (req, res) => {
 
     const token = crypto.randomBytes(16).toString('hex');
     const { rows } = await req.app.locals.pool.query(
-      `INSERT INTO recommendation_requests (teacher_name, teacher_email, course_or_context, token, status)
-       VALUES ($1, $2, $3, $4, 'pending') RETURNING *`,
-      [teacher_name.trim(), teacher_email.trim(), course_or_context || '', token]
+      `INSERT INTO recommendation_requests (teacher_name, teacher_email, course_or_context, recipient_type, token, status)
+       VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING *`,
+      [teacher_name.trim(), teacher_email.trim(), course_or_context || '', recipient_type || 'teacher', token]
     );
 
     const { rows: configRows } = await req.app.locals.pool.query(

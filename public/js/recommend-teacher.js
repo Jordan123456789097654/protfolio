@@ -30,10 +30,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const { request, studentName } = data;
-    headerTitle.textContent = `Recommendation for ${studentName}`;
-    headerSub.textContent = request.course_or_context 
-      ? `Request regarding: ${request.course_or_context}`
-      : `Please submit your quote excerpt and optional PDF letter.`;
+    const isMentor = request.recipient_type === 'mentor';
+
+    if (isMentor) {
+      document.title = `Mentor & Advisor Endorsement — ${studentName}`;
+      headerTitle.textContent = `Mentor & Advisor Endorsement`;
+      headerTitle.style.background = 'linear-gradient(135deg, #10b981, #00d4ff)';
+      headerTitle.style.webkitBackgroundClip = 'text';
+      headerTitle.style.webkitTextFillColor = 'transparent';
+      headerSub.textContent = request.course_or_context 
+        ? `Mentorship / Focus Area: ${request.course_or_context}`
+        : `Please submit a short personal endorsement or letter for ${studentName}.`;
+      
+      document.getElementById('lbl-quote-excerpt').textContent = 'Endorsement Excerpt / Personal Growth Quote *';
+      document.getElementById('quote_excerpt').placeholder = 'Share a brief endorsement quote highlighting growth, leadership, mindset, or personal character...';
+      document.getElementById('lbl-school-or-org').textContent = 'Organization, Practice, or Firm';
+      document.getElementById('submit-btn').textContent = 'Submit Mentor Endorsement';
+      document.getElementById('submit-btn').style.background = 'linear-gradient(135deg, #10b981, #00d4ff)';
+    } else {
+      headerTitle.textContent = `Teacher Recommendation for ${studentName}`;
+      headerSub.textContent = request.course_or_context 
+        ? `Academic Context / Subject: ${request.course_or_context}`
+        : `Please submit your quote excerpt or recommendation letter.`;
+    }
 
     if (request.teacher_name) {
       document.getElementById('recommender_name').value = request.teacher_name;
