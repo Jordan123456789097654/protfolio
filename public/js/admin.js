@@ -370,8 +370,10 @@ async function handleConfigSave(e) {
 // Table rendering helpers
 function renderTable(tableId, data, renderRow) {
     const tbody = document.querySelector(`#${tableId} tbody`);
+    if (!tbody) return;
     tbody.innerHTML = '';
-    data.forEach(item => {
+    const items = Array.isArray(data) ? data : [];
+    items.forEach(item => {
         const tr = document.createElement('tr');
         tr.innerHTML = renderRow(item);
         tbody.appendChild(tr);
@@ -2028,6 +2030,7 @@ function openFAQModal(faq = null) {
 async function loadIntegrations() {
     try {
         const data = await apiCall('/admin/settings/integrations');
+        if (!data) return;
         const discordInput = document.getElementById('discord-webhook-input');
         const kyroInput = document.getElementById('kyro-key-input');
         const resendInput = document.getElementById('resend-key-input');
