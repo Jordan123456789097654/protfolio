@@ -18,8 +18,8 @@ async function initDB() {
     dns.lookup(hostname, { family: 4, all: false }, callback);
   }
 
-  const primaryUrl = (process.env.DATABASE_URL || 'postgresql://postgres.yawerazplomaixydplyh:Swr0zw7CSc0yaaId@aws-0-us-west-2.pooler.supabase.com:5432/postgres').trim();
-  const fallbackUrl = 'postgresql://postgres.yawerazplomaixydplyh:Swr0zw7CSc0yaaId@aws-0-us-west-2.pooler.supabase.com:6543/postgres';
+  const primaryUrl = (process.env.DATABASE_URL || 'postgresql://postgres.yawerazplomaixydplyh:Swr0zw7CSc0yaaId@aws-0-us-west-2.pooler.supabase.com:6543/postgres').trim();
+  const fallbackUrl = 'postgresql://postgres.yawerazplomaixydplyh:Swr0zw7CSc0yaaId@aws-0-us-west-2.pooler.supabase.com:5432/postgres';
 
   async function tryConnect(url) {
     const cleanUrl = url.replace(/[?&]sslmode=[^&]*/g, '');
@@ -27,7 +27,8 @@ async function initDB() {
       connectionString: cleanUrl,
       ssl: { rejectUnauthorized: false },
       lookup: ipv4Lookup,
-      connectionTimeoutMillis: 10000
+      max: 3,
+      connectionTimeoutMillis: 5000
     });
     const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
     await pool.query(schema);

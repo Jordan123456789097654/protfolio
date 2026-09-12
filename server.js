@@ -23,8 +23,8 @@ function ipv4Lookup(hostname, options, callback) {
   dns.lookup(hostname, { family: 4, all: false }, callback);
 }
 
-const primaryUrl = (process.env.DATABASE_URL || 'postgresql://postgres.yawerazplomaixydplyh:Swr0zw7CSc0yaaId@aws-0-us-west-2.pooler.supabase.com:5432/postgres').trim();
-const fallbackUrl = 'postgresql://postgres.yawerazplomaixydplyh:Swr0zw7CSc0yaaId@aws-0-us-west-2.pooler.supabase.com:6543/postgres';
+const primaryUrl = (process.env.DATABASE_URL || 'postgresql://postgres.yawerazplomaixydplyh:Swr0zw7CSc0yaaId@aws-0-us-west-2.pooler.supabase.com:6543/postgres').trim();
+const fallbackUrl = 'postgresql://postgres.yawerazplomaixydplyh:Swr0zw7CSc0yaaId@aws-0-us-west-2.pooler.supabase.com:5432/postgres';
 
 function createPool(url) {
   const cleanUrl = url.replace(/[?&]sslmode=[^&]*/g, '');
@@ -32,8 +32,10 @@ function createPool(url) {
     connectionString: cleanUrl,
     ssl: { rejectUnauthorized: false },
     lookup: ipv4Lookup,
-    connectionTimeoutMillis: 10000,
-    idleTimeoutMillis: 30000
+    max: 5, // Keep connection count well under Supabase 15 client limit
+    connectionTimeoutMillis: 5000,
+    idleTimeoutMillis: 10000,
+    maxUses: 75 // Close and recycle socket after 75 queries to prevent session accumulation
   });
 }
 
