@@ -250,9 +250,10 @@ nav.scrolled {
 
 .nav-container {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
+    position: relative;
 }
 
 .logo-badge {
