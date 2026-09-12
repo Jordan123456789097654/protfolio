@@ -11,130 +11,163 @@ const upload = multer({
 // ── GET site config ──────────────────────────────────────────────
 router.get('/config', async (req, res) => {
   try {
-    const { rows } = await req.app.locals.pool.query('SELECT * FROM site_config LIMIT 1');
+    const pool = req.app.locals.pool;
+    if (!pool) return res.json({});
+    const { rows } = await pool.query('SELECT * FROM site_config LIMIT 1');
     res.json(rows[0] || {});
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('/api/config error:', err.message);
+    res.json({ name: 'Portfolio', title: 'Developer & Creator' });
   }
 });
 
 // ── GET projects ─────────────────────────────────────────────────
 router.get('/projects', async (req, res) => {
   try {
-    const { rows } = await req.app.locals.pool.query(
+    const pool = req.app.locals.pool;
+    if (!pool) return res.json([]);
+    const { rows } = await pool.query(
       'SELECT * FROM projects WHERE is_published = true ORDER BY sort_order ASC, created_at DESC'
     );
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('/api/projects error:', err.message);
+    res.json([]);
   }
 });
 
 // ── GET skills ───────────────────────────────────────────────────
 router.get('/skills', async (req, res) => {
   try {
-    const { rows } = await req.app.locals.pool.query(
+    const pool = req.app.locals.pool;
+    if (!pool) return res.json([]);
+    const { rows } = await pool.query(
       'SELECT * FROM skills WHERE is_published = true ORDER BY category ASC, sort_order ASC'
     );
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('/api/skills error:', err.message);
+    res.json([]);
   }
 });
 
 // ── GET experience ───────────────────────────────────────────────
 router.get('/experience', async (req, res) => {
   try {
-    const { rows } = await req.app.locals.pool.query(
+    const pool = req.app.locals.pool;
+    if (!pool) return res.json([]);
+    const { rows } = await pool.query(
       'SELECT * FROM experience WHERE is_published = true ORDER BY sort_order ASC'
     );
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('/api/experience error:', err.message);
+    res.json([]);
   }
 });
 
 // ── GET achievements ──────────────────────────────────────────────
 router.get('/achievements', async (req, res) => {
   try {
-    const { rows } = await req.app.locals.pool.query(
+    const pool = req.app.locals.pool;
+    if (!pool) return res.json([]);
+    const { rows } = await pool.query(
       'SELECT * FROM achievements WHERE is_published = true ORDER BY sort_order ASC, created_at DESC'
     );
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('/api/achievements error:', err.message);
+    res.json([]);
   }
 });
 
 // ── GET gallery photos ───────────────────────────────────────────
 router.get('/gallery', async (req, res) => {
   try {
-    const { rows } = await req.app.locals.pool.query(
+    const pool = req.app.locals.pool;
+    if (!pool) return res.json([]);
+    const { rows } = await pool.query(
       'SELECT * FROM gallery WHERE is_published = true ORDER BY sort_order ASC, created_at DESC'
     );
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('/api/gallery error:', err.message);
+    res.json([]);
   }
 });
 
 // ── GET testimonials ─────────────────────────────────────────────
 router.get('/testimonials', async (req, res) => {
   try {
-    const { rows } = await req.app.locals.pool.query(
+    const pool = req.app.locals.pool;
+    if (!pool) return res.json([]);
+    const { rows } = await pool.query(
       'SELECT * FROM testimonials WHERE is_published = true ORDER BY sort_order ASC, created_at DESC'
     );
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('/api/testimonials error:', err.message);
+    res.json([]);
   }
 });
 
 // ── GET social links ─────────────────────────────────────────────
 router.get('/social', async (req, res) => {
   try {
-    const { rows } = await req.app.locals.pool.query(
+    const pool = req.app.locals.pool;
+    if (!pool) return res.json([]);
+    const { rows } = await pool.query(
       'SELECT * FROM social_links WHERE is_published = true ORDER BY sort_order ASC'
     );
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('/api/social error:', err.message);
+    res.json([]);
   }
 });
 
 // ── GET recommendations ──────────────────────────────────────────
 router.get('/recommendations', async (req, res) => {
   try {
-    const { rows } = await req.app.locals.pool.query(
+    const pool = req.app.locals.pool;
+    if (!pool) return res.json([]);
+    const { rows } = await pool.query(
       'SELECT * FROM recommendations WHERE is_published = true ORDER BY sort_order ASC, created_at DESC'
     );
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('/api/recommendations error:', err.message);
+    res.json([]);
   }
 });
 
 // ── GET faqs ─────────────────────────────────────────────────────
 router.get('/faqs', async (req, res) => {
   try {
-    const { rows } = await req.app.locals.pool.query(
+    const pool = req.app.locals.pool;
+    if (!pool) return res.json([]);
+    const { rows } = await pool.query(
       'SELECT * FROM faqs WHERE is_published = true ORDER BY sort_order ASC, created_at DESC'
     );
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('/api/faqs error:', err.message);
+    res.json([]);
   }
 });
 
 // ── GET certifications ───────────────────────────────────────────
 router.get('/certifications', async (req, res) => {
   try {
-    const { rows } = await req.app.locals.pool.query(
+    const pool = req.app.locals.pool;
+    if (!pool) return res.json([]);
+    const { rows } = await pool.query(
       'SELECT * FROM certifications WHERE is_published = true ORDER BY sort_order ASC, created_at DESC'
     );
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('/api/certifications error:', err.message);
+    res.json([]);
   }
 });
 
@@ -142,7 +175,9 @@ router.get('/certifications', async (req, res) => {
 // ── GET Spotify now-playing ───────────────────────────────────────
 router.get('/spotify/now-playing', async (req, res) => {
   try {
-    const data = await getNowPlaying(req.app.locals.pool);
+    const pool = req.app.locals.pool;
+    if (!pool) return res.json({ connected: false, isPlaying: false });
+    const data = await getNowPlaying(pool);
     res.json(data);
   } catch (err) {
     // Never break the public site over a Spotify hiccup.
@@ -153,12 +188,15 @@ router.get('/spotify/now-playing', async (req, res) => {
 // ── GET sections order & visibility ──────────────────────────────
 router.get('/sections', async (req, res) => {
   try {
-    const { rows } = await req.app.locals.pool.query(
+    const pool = req.app.locals.pool;
+    if (!pool) return res.json([]);
+    const { rows } = await pool.query(
       'SELECT * FROM sections WHERE is_visible = true ORDER BY sort_order ASC'
     );
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('/api/sections error:', err.message);
+    res.json([]);
   }
 });
 
