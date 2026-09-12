@@ -10,6 +10,14 @@ async function initDB() {
     dns.setDefaultResultOrder('ipv4first');
   }
 
+  function ipv4Lookup(hostname, options, callback) {
+    if (typeof options === 'function') {
+      callback = options;
+      options = {};
+    }
+    dns.lookup(hostname, { family: 4, all: false }, callback);
+  }
+
   const primaryUrl = (process.env.DATABASE_URL || 'postgresql://postgres.yawerazplomaixydplyh:3GMXT0DoRD1CNJ43@aws-0-us-east-1.pooler.supabase.com:6543/postgres').trim();
   const fallbackUrl = 'postgresql://postgres:3GMXT0DoRD1CNJ43@db.yawerazplomaixydplyh.supabase.co:5432/postgres';
 
@@ -18,6 +26,7 @@ async function initDB() {
     const pool = new Pool({
       connectionString: cleanUrl,
       ssl: { rejectUnauthorized: false },
+      lookup: ipv4Lookup,
       connectionTimeoutMillis: 10000
     });
     const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
