@@ -1736,6 +1736,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initCursorHover() {}
 
+    function initRealtimeSync() {
+        if (!window.EventSource) return;
+        const evtSource = new EventSource('/api/live-updates');
+        evtSource.onmessage = (e) => {
+            try {
+                const data = JSON.parse(e.data);
+                if (data && data.type === 'update') {
+                    fetchData();
+                }
+            } catch (err) {}
+        };
+    }
+
     // Start everything
     fetchData().then(() => {
         setTimeout(() => {
@@ -1748,6 +1761,7 @@ document.addEventListener('DOMContentLoaded', () => {
             initSoundEvents();
             initSpotifyWidget();
             initDynamicTimeAndWeather();
+            initRealtimeSync();
         }, 200);
     });
 });

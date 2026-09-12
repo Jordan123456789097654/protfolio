@@ -301,6 +301,39 @@ router.post('/recommendation-request/:token/upload-pdf', upload.single('file'), 
   }
 });
 
+// ── Server-Sent Events (SSE) Live Sync Endpoint ────────────────
+const sseClients = new Set();
+
+router.get('/live-updates', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders && res.flushHeaders();
+
+  sseClients.add(res);
+
+  // Send immediate connection ping
+  res.write(`data: ${JSON.stringify({ type: 'connected', timestamp: Date.now() })}\n\n`);
+
+  req.on('close', () => {
+    sseClients.delete(res);
+  });
+});
+
+function broadcastChange(type = 'update') {
+  const payload = `data: ${JSON.stringify({ type, timestamp: Date.now() })}\n\n`;
+  for (const client of sseClients) {
+    try {
+      client.write(payload);
+    } catch (err) {
+      sseClients.delete(client);
+    }
+  }
+}
+
+// Attach broadcast helper to router
+router.broadcastChange = broadcastChange;
+
 module.exports = router;
 
 

@@ -225,6 +225,7 @@ function showDashboard() {
     loadFAQs();
     loadAnalytics();
     initQRCode();
+    initAdminRealtimeSync();
     checkTabFromURL();
 }
 
@@ -2350,6 +2351,35 @@ async function handleAIDraftEmailTemplate(type) {
     if (targetId) {
         generateAIDraft(prompt, targetId, 'You are an expert HTML email designer and student communication strategist.');
     }
+}
+
+function initAdminRealtimeSync() {
+    if (!window.EventSource) return;
+    const evtSource = new EventSource('/api/live-updates');
+    evtSource.onmessage = (e) => {
+        try {
+            const data = JSON.parse(e.data);
+            if (data && data.type === 'update') {
+                // Silently reload dashboard tables without interrupting active editing modals
+                const activeModal = document.getElementById('modal-overlay');
+                if (activeModal && !activeModal.classList.contains('hidden')) return;
+
+                loadConfig();
+                loadProjects();
+                loadSkills();
+                loadExperience();
+                loadCertifications();
+                loadAchievements();
+                loadGallery();
+                loadTestimonials();
+                loadSocial();
+                loadMessages();
+                loadRecommendations();
+                loadFAQs();
+                loadAnalytics();
+            }
+        } catch (err) {}
+    };
 }
 
 

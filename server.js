@@ -77,9 +77,23 @@ app.locals.pool = pool;
 ensureBucket();
 
 // Mount routes — more specific paths first so they take priority over '/admin'
+const apiRouter = require('./routes/api');
 app.use('/admin/spotify', require('./routes/spotify'));
-app.use('/api', require('./routes/api'));
-app.use('/admin', require('./routes/admin'));
+app.use('/api', apiRouter);
+
+// Middleware to trigger real-time broadcast to connected browsers on admin data mutations
+app.use('/admin', (req, res, next) => {
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+    const originalJson = res.json.bind(res);
+    res.json = (body) => {
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        if (apiRouter.broadcastChange) apiRouter.broadcastChange('update');
+      }
+      return originalJson(body);
+    };
+  }
+  next();
+}, require('./routes/admin'));
 
 // Admin HTML navigation fallback for any /admin/* browser requests
 app.get(['/admin', '/admin/*'], (req, res, next) => {
