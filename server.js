@@ -8,27 +8,39 @@ const { ensureBucket } = require('./lib/supabaseStorage');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Database connection pool
+// Database connection pool with automatic pooler & direct fallback
 const dns = require('dns');
 if (dns.setDefaultResultOrder) {
   dns.setDefaultResultOrder('ipv4first');
 }
 
-const defaultDbUrl = 'postgresql://postgres:3GMXT0DoRD1CNJ43@db.yawerazplomaixydplyh.supabase.co:5432/postgres';
-const dbUrl = (process.env.DATABASE_URL || defaultDbUrl).trim();
-const connStr = dbUrl.replace(/[?&]sslmode=[^&]*/g, '');
+// Direct DB hostname vs Supabase Pooler hostname fallback
+const primaryUrl = (process.env.DATABASE_URL || 'postgresql://postgres.yawerazplomaixydplyh:3GMXT0DoRD1CNJ43@aws-0-us-east-1.pooler.supabase.com:6543/postgres').trim();
+const fallbackUrl = 'postgresql://postgres:3GMXT0DoRD1CNJ43@db.yawerazplomaixydplyh.supabase.co:5432/postgres';
 
-const pool = new Pool({
-  connectionString: connStr,
-  ssl: { rejectUnauthorized: false },
-  connectionTimeoutMillis: 10000,
-  idleTimeoutMillis: 30000
-});
+function createPool(url) {
+  const cleanUrl = url.replace(/[?&]sslmode=[^&]*/g, '');
+  return new Pool({
+    connectionString: cleanUrl,
+    ssl: { rejectUnauthorized: false },
+    connectionTimeoutMillis: 10000,
+    idleTimeoutMillis: 30000
+  });
+}
 
-// Verify DB connection on startup
+let pool = createPool(primaryUrl);
+
+// Verify DB connection on startup, fallback to direct hostname if pooler fails
 pool.query('SELECT NOW()')
-  .then(() => console.log('✓ Connected to database'))
-  .catch(err => console.error('✗ Database connection failed:', err.message));
+  .then(() => console.log('✓ Connected to database via primary URL'))
+  .catch(err => {
+    console.warn('⚠️ Primary DB connection failed:', err.message, '--> Trying fallback connection...');
+    pool = createPool(fallbackUrl);
+    app.locals.pool = pool;
+    pool.query('SELECT NOW()')
+      .then(() => console.log('✓ Connected to database via fallback URL'))
+      .catch(fallbackErr => console.error('✗ All database connections failed:', fallbackErr.message));
+  });
 
 // Middleware
 app.use(express.json());

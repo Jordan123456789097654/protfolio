@@ -10,25 +10,34 @@ async function initDB() {
     dns.setDefaultResultOrder('ipv4first');
   }
 
-  const defaultDbUrl = 'postgresql://postgres:3GMXT0DoRD1CNJ43@db.yawerazplomaixydplyh.supabase.co:5432/postgres';
-  const dbUrl = (process.env.DATABASE_URL || defaultDbUrl).trim();
-  const connStr = dbUrl.replace(/[?&]sslmode=[^&]*/g, '');
-  const pool = new Pool({
-    connectionString: connStr,
-    ssl: { rejectUnauthorized: false },
-    connectionTimeoutMillis: 10000
-  });
+  const primaryUrl = (process.env.DATABASE_URL || 'postgresql://postgres.yawerazplomaixydplyh:3GMXT0DoRD1CNJ43@aws-0-us-east-1.pooler.supabase.com:6543/postgres').trim();
+  const fallbackUrl = 'postgresql://postgres:3GMXT0DoRD1CNJ43@db.yawerazplomaixydplyh.supabase.co:5432/postgres';
+
+  async function tryConnect(url) {
+    const cleanUrl = url.replace(/[?&]sslmode=[^&]*/g, '');
+    const pool = new Pool({
+      connectionString: cleanUrl,
+      ssl: { rejectUnauthorized: false },
+      connectionTimeoutMillis: 10000
+    });
+    const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
+    await pool.query(schema);
+    await pool.end();
+  }
 
   try {
-    const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
-    console.log('Connecting to database...');
-    await pool.query(schema);
+    console.log('Connecting to database via primary URL...');
+    await tryConnect(primaryUrl);
     console.log('✓ Database schema initialized successfully!');
   } catch (err) {
-    console.error('✗ Failed to initialize database:', err.message);
-    process.exit(1);
-  } finally {
-    await pool.end();
+    console.warn('⚠️ Primary initialization failed:', err.message, '--> Retrying with direct fallback URL...');
+    try {
+      await tryConnect(fallbackUrl);
+      console.log('✓ Database schema initialized via fallback URL!');
+    } catch (fallbackErr) {
+      console.error('✗ Failed to initialize database:', fallbackErr.message);
+      process.exit(1);
+    }
   }
 }
 
