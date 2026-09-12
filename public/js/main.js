@@ -1519,33 +1519,43 @@ document.addEventListener('DOMContentLoaded', () => {
                     const tempC = data.current_weather.temperature;
                     const tempF = Math.round((tempC * 9/5) + 32);
                     const code = data.current_weather.weathercode;
+                    const isDay = data.current_weather.is_day !== 0;
 
                     let icon = '🌤️';
                     let condition = 'Clear Skies';
-                    let isRaining = false;
+                    let weatherType = 'clear';
 
-                    if (code >= 51 && code <= 67 || code >= 80 && code <= 82) {
+                    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
                         icon = '🌧️';
                         condition = 'Rainy';
-                        isRaining = true;
-                    } else if (code >= 71 && code <= 77 || code >= 85 && code <= 86) {
+                        weatherType = 'rain';
+                    } else if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) {
                         icon = '❄️';
                         condition = 'Snowing';
+                        weatherType = 'snow';
                     } else if (code >= 1 && code <= 3) {
-                        icon = '⛅';
+                        icon = isDay ? '⛅' : '☁️';
                         condition = 'Partly Cloudy';
+                        weatherType = 'clouds';
                     } else if (code >= 95) {
                         icon = '⛈️';
                         condition = 'Stormy';
-                        isRaining = true;
+                        weatherType = 'storm';
+                    } else if (!isDay) {
+                        icon = '🌙';
+                        condition = 'Clear Night';
+                        weatherType = 'stars';
+                    } else {
+                        icon = '☀️';
+                        condition = 'Sunny';
+                        weatherType = 'sunny';
                     }
 
                     if (weatherText) weatherText.textContent = `${tempF}°F • ${condition}`;
                     if (weatherIcon) weatherIcon.textContent = icon;
 
-                    if (isRaining) {
-                        startRainAnimation();
-                    }
+                    // Automatically launch corresponding transparent weather FX
+                    startWeatherFXAnimation(weatherType);
                 }
             } catch (e) {
                 if (weatherText) weatherText.textContent = '72°F • Clear';
@@ -1554,26 +1564,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         fetchWeather();
-
-        if (toggleRainBtn) {
-            toggleRainBtn.addEventListener('click', () => {
-                if (rainActive) {
-                    stopRainAnimation();
-                    showToast('Rain Animation Disabled');
-                } else {
-                    startRainAnimation();
-                    showToast('🌧️ Rain & Screen Blur FX Enabled!');
-                }
-            });
-        }
     }
 
-    function startRainAnimation() {
+    let weatherFxAnimationFrame = null;
+
+    function startWeatherFXAnimation(type) {
         const canvas = document.getElementById('rain-canvas');
         const blurOverlay = document.getElementById('rain-glass-blur');
         if (!canvas) return;
 
-        rainActive = true;
+        if (weatherFxAnimationFrame) cancelAnimationFrame(weatherFxAnimationFrame);
+
         canvas.classList.add('active');
         if (blurOverlay) blurOverlay.classList.add('active');
 
@@ -1586,56 +1587,116 @@ document.addEventListener('DOMContentLoaded', () => {
             height = canvas.height = window.innerHeight;
         });
 
-        const numDrops = 140;
-        const drops = [];
+        const particles = [];
+        const count = type === 'rain' || type === 'storm' ? 120 : (type === 'snow' ? 70 : 45);
 
-        for (let i = 0; i < numDrops; i++) {
-            drops.push({
-                x: Math.random() * width,
-                y: Math.random() * height,
-                length: Math.random() * 25 + 15,
-                speed: Math.random() * 10 + 12,
-                opacity: Math.random() * 0.4 + 0.35,
-                width: Math.random() * 1.5 + 0.8
-            });
+        for (let i = 0; i < count; i++) {
+            if (type === 'rain' || type === 'storm') {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    length: Math.random() * 22 + 12,
+                    speed: Math.random() * 12 + 10,
+                    opacity: Math.random() * 0.22 + 0.1, // transparent & subtle
+                    width: Math.random() * 1.2 + 0.6
+                });
+            } else if (type === 'snow') {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 2.5 + 1,
+                    speed: Math.random() * 1.5 + 0.8,
+                    drift: Math.random() * 1 - 0.5,
+                    opacity: Math.random() * 0.3 + 0.15
+                });
+            } else if (type === 'clouds') {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * (height * 0.4),
+                    radius: Math.random() * 120 + 80,
+                    speed: Math.random() * 0.3 + 0.1,
+                    opacity: Math.random() * 0.08 + 0.03
+                });
+            } else if (type === 'stars') {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * (height * 0.6),
+                    radius: Math.random() * 1.5 + 0.5,
+                    pulse: Math.random() * 0.03 + 0.01,
+                    opacity: Math.random() * 0.4 + 0.1
+                });
+            }
         }
 
-        function renderRain() {
-            if (!rainActive) return;
+        function renderFX() {
             ctx.clearRect(0, 0, width, height);
 
-            for (let i = 0; i < drops.length; i++) {
-                const d = drops[i];
-                d.y += d.speed;
-                d.x += 1.5; // slight wind angle
+            if (type === 'rain' || type === 'storm') {
+                for (let i = 0; i < particles.length; i++) {
+                    const p = particles[i];
+                    p.y += p.speed;
+                    p.x += type === 'storm' ? 3 : 1.2;
 
-                if (d.y > height) {
-                    d.y = -d.length;
-                    d.x = Math.random() * width;
+                    if (p.y > height) {
+                        p.y = -p.length;
+                        p.x = Math.random() * width;
+                    }
+
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p.x + (type === 'storm' ? 6 : 3), p.y + p.length);
+                    ctx.strokeStyle = type === 'storm' ? `rgba(140, 200, 255, ${p.opacity})` : `rgba(180, 225, 255, ${p.opacity})`;
+                    ctx.lineWidth = p.width;
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
                 }
+            } else if (type === 'snow') {
+                for (let i = 0; i < particles.length; i++) {
+                    const p = particles[i];
+                    p.y += p.speed;
+                    p.x += p.drift;
 
-                ctx.beginPath();
-                ctx.moveTo(d.x, d.y);
-                ctx.lineTo(d.x + 4, d.y + d.length);
-                ctx.strokeStyle = `rgba(180, 220, 255, ${d.opacity})`;
-                ctx.lineWidth = d.width;
-                ctx.lineCap = 'round';
-                ctx.stroke();
+                    if (p.y > height) {
+                        p.y = -10;
+                        p.x = Math.random() * width;
+                    }
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
+                    ctx.fill();
+                }
+            } else if (type === 'clouds') {
+                for (let i = 0; i < particles.length; i++) {
+                    const p = particles[i];
+                    p.x += p.speed;
+                    if (p.x - p.radius > width) p.x = -p.radius;
+
+                    const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
+                    grad.addColorStop(0, `rgba(255, 255, 255, ${p.opacity})`);
+                    grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                    ctx.beginPath();
+                    ctx.fillStyle = grad;
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            } else if (type === 'stars') {
+                for (let i = 0; i < particles.length; i++) {
+                    const p = particles[i];
+                    p.opacity += p.pulse;
+                    if (p.opacity > 0.5 || p.opacity < 0.1) p.pulse = -p.pulse;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
+                    ctx.fill();
+                }
             }
 
-            rainAnimationFrame = requestAnimationFrame(renderRain);
+            weatherFxAnimationFrame = requestAnimationFrame(renderFX);
         }
 
-        renderRain();
-    }
-
-    function stopRainAnimation() {
-        rainActive = false;
-        if (rainAnimationFrame) cancelAnimationFrame(rainAnimationFrame);
-        const canvas = document.getElementById('rain-canvas');
-        const blurOverlay = document.getElementById('rain-glass-blur');
-        if (canvas) canvas.classList.remove('active');
-        if (blurOverlay) blurOverlay.classList.remove('active');
+        renderFX();
     }
 
     function initSpotifyWidget() {

@@ -2472,7 +2472,7 @@ body.is-loading {
 }
 
 #rain-canvas.active {
-    opacity: 1;
+    opacity: 0.75;
 }
 
 .rain-glass-blur {
@@ -2487,9 +2487,9 @@ body.is-loading {
 }
 
 .rain-glass-blur.active {
-    backdrop-filter: blur(3px) brightness(0.92);
-    -webkit-backdrop-filter: blur(3px) brightness(0.92);
-    background: rgba(10, 15, 30, 0.18);
+    backdrop-filter: blur(1.5px) brightness(0.97);
+    -webkit-backdrop-filter: blur(1.5px) brightness(0.97);
+    background: rgba(10, 15, 30, 0.06);
 }
 
 .hero-widgets-row {
