@@ -983,7 +983,7 @@ router.get('/analytics', async (req, res) => {
 router.get('/settings/email-templates', async (req, res) => {
   try {
     const { rows } = await req.app.locals.pool.query(
-      `SELECT contact_email_subject, contact_email_template, recommendation_email_subject, recommendation_email_template FROM site_config LIMIT 1`
+      `SELECT contact_email_subject, contact_email_template, reply_email_subject, reply_email_template, recommendation_email_subject, recommendation_email_template, recommendation_teacher_email_subject, recommendation_teacher_email_template, recommendation_mentor_email_subject, recommendation_mentor_email_template FROM site_config LIMIT 1`
     );
     res.json(rows[0] || {});
   } catch (err) {
@@ -993,11 +993,26 @@ router.get('/settings/email-templates', async (req, res) => {
 
 router.put('/settings/email-templates', async (req, res) => {
   try {
-    const { contact_email_subject, contact_email_template, recommendation_email_subject, recommendation_email_template } = req.body;
+    const { 
+      contact_email_subject, contact_email_template, 
+      reply_email_subject, reply_email_template, 
+      recommendation_teacher_email_subject, recommendation_teacher_email_template, 
+      recommendation_mentor_email_subject, recommendation_mentor_email_template 
+    } = req.body;
+
     const { rows } = await req.app.locals.pool.query(
-      `UPDATE site_config SET contact_email_subject=$1, contact_email_template=$2, recommendation_email_subject=$3, recommendation_email_template=$4
-       WHERE id=(SELECT id FROM site_config LIMIT 1) RETURNING contact_email_subject, contact_email_template, recommendation_email_subject, recommendation_email_template`,
-      [contact_email_subject || '', contact_email_template || '', recommendation_email_subject || '', recommendation_email_template || '']
+      `UPDATE site_config SET 
+        contact_email_subject=$1, contact_email_template=$2, 
+        reply_email_subject=$3, reply_email_template=$4, 
+        recommendation_teacher_email_subject=$5, recommendation_teacher_email_template=$6, 
+        recommendation_mentor_email_subject=$7, recommendation_mentor_email_template=$8
+       WHERE id=(SELECT id FROM site_config LIMIT 1) RETURNING *`,
+      [
+        contact_email_subject || '', contact_email_template || '',
+        reply_email_subject || '', reply_email_template || '',
+        recommendation_teacher_email_subject || '', recommendation_teacher_email_template || '',
+        recommendation_mentor_email_subject || '', recommendation_mentor_email_template || ''
+      ]
     );
     res.json(rows[0] || {});
   } catch (err) {

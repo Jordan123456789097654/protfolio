@@ -40,6 +40,10 @@ ALTER TABLE site_config ADD COLUMN IF NOT EXISTS contact_email_template TEXT DEF
 ALTER TABLE site_config ADD COLUMN IF NOT EXISTS reply_email_subject TEXT DEFAULT 'Re: Portfolio Contact Message from {{name}}';
 ALTER TABLE site_config ADD COLUMN IF NOT EXISTS reply_email_template TEXT DEFAULT '';
 ALTER TABLE site_config ADD COLUMN IF NOT EXISTS recommendation_email_subject TEXT DEFAULT 'Letter of Recommendation Request for {{student_name}}';
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS recommendation_teacher_email_subject TEXT DEFAULT 'Teacher Recommendation Request for {{student_name}}';
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS recommendation_teacher_email_template TEXT DEFAULT '';
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS recommendation_mentor_email_subject TEXT DEFAULT 'Mentor Endorsement Request for {{student_name}}';
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS recommendation_mentor_email_template TEXT DEFAULT '';
 -- Analytics & Event Tracking
 CREATE TABLE IF NOT EXISTS analytics_events (
   id SERIAL PRIMARY KEY,
