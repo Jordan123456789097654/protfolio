@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
+</head>
+<body>
+    <!-- Intro Curtain Loader -->
+    <div id="intro-loader">
+        <span id="intro-loader-text">Portfolio<span class="logo-dot">.</span></span>
+    </div>
+
+    <!-- Form Submission Confetti Canvas -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Cinematic Film Grain & Scanline Overlay -->
+    <div class="grain-overlay"></div>
+    <div class="scanline-beam"></div>
+
+    <!-- Scroll Progress Bar -->
+    <div id="scroll-progress"></div>
+
+    <!-- Spotify Now Playing Widget -->
+    <div id="spotify-widget" class="spotify-widget hidden">
+        <div class="spotify-art-wrap">
+            <img id="spotify-art" class="spotify-art" src="" alt="Album art">
+            <div class="spotify-eq"><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="spotify-info">
+            <span class="spotify-label"><i data-lucide="music-2"></i> Now Playing</span>
+            <a id="spotify-track" class="spotify-track" href="#" target="_blank" rel="noopener noreferrer"></a>
+            <span id="spotify-artist" class="spotify-artist"></span>
+        </div>
+    </div>
+
+    <!-- Custom Trailing Cursor & Magnetic Satellites -->
+    <div class="cursor-dot" id="cursor-dot"></div>
+    <div class="cursor-follower" id="cursor-follower">
+        <span class="satellite sat-1"></span>
+        <span class="satellite sat-2"></span>
+        <span class="satellite sat-3"></span>
+    </div>
+    <div class="ambient-glow" id="ambient-glow"></div>
+    
+    <!-- Hero Fluid Mesh Orbs -->
+    <div class="hero-bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+        <div class="blob blob-aurora"></div>
+    </div>
+
+    <!-- Floating Dynamic Island Navigation -->
+    <nav id="navbar">
+        <div class="nav-container">
+            <a href="#hero" class="logo magnetic" id="nav-logo">Portfolio<span class="logo-dot">.</span></a>
+            <ul class="nav-links">
+                <li><a href="#about" class="magnetic scramble-link">About</a></li>
+                <li><a href="#experience" class="magnetic scramble-link">Clubs & Activities</a></li>
+                <li><a href="#achievements" class="magnetic scramble-link">Achievements</a></li>
+                <li><a href="#gallery" class="magnetic scramble-link">Gallery</a></li>
+                <li><a href="#skills" class="magnetic scramble-link">Strengths</a></li>
+                <li><a href="#contact" class="magnetic scramble-link">Contact</a></li>
+            </ul>
+            <div class="nav-right">
+                <!-- Radial Menu Trigger -->
+                <button id="radial-trigger" class="radial-btn magnetic" title="Quick Navigation Wheel">
+                    <i data-lucide="grid"></i>
+                </button>
+                <!-- Palette Mood Switcher Button -->
+                <button id="theme-toggle" class="theme-btn magnetic" title="Switch Color Mood">
+                    <i data-lucide="palette"></i>
+                </button>
+                <!-- Sound FX Button with Audio Equalizer -->
+                <button id="sound-toggle" class="sound-btn magnetic" title="Toggle UI Sound FX">
+                    <div class="eq-bars">
+                        <span class="eq-bar bar-1"></span>
+                        <span class="eq-bar bar-2"></span>
+                        <span class="eq-bar bar-3"></span>
+                    </div>
+                </button>
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Radial Wheel Popup Navigation -->
+    <div class="radial-menu" id="radial-menu">
+        <a href="#hero" class="radial-item item-1 magnetic" title="Hero"><i data-lucide="home"></i></a>
+        <a href="#about" class="radial-item item-2 magnetic" title="About"><i data-lucide="user"></i></a>
+        <a href="#experience" class="radial-item item-3 magnetic" title="Clubs & Activities"><i data-lucide="users"></i></a>
+        <a href="#achievements" class="radial-item item-4 magnetic" title="Achievements"><i data-lucide="award"></i></a>
+        <a href="#gallery" class="radial-item item-5 magnetic" title="Gallery"><i data-lucide="image"></i></a>
+        <a href="#skills" class="radial-item item-6 magnetic" title="Strengths"><i data-lucide="sparkles"></i></a>
+        <a href="#contact" class="radial-item item-7 magnetic" title="Contact"><i data-lucide="mail"></i></a>
+    </div>
+
+    <!-- Hero Section with Hyperspace Starfield & Particle Canvas -->
+    <header id="hero" class="hero-section">
+        <canvas id="hero-canvas"></canvas>
+        
+        <!-- Parallax Floating Badge Stickers -->
+        <div class="floating-badge badge-1 magnetic"></div>
+        <div class="floating-badge badge-2 magnetic">🎓 STUDENT LEADER</div>
+        <div class="floating-badge badge-3 magnetic">✨ CREATIVE MIND</div>
+
+        <div class="hero-content reveal">
+            <div class="status-badge magnetic">
+                <span class="status-dot"></span>
+                <span>Open to new opportunities</span>
+            </div>
+            <h1 id="hero-name" class="hero-title-text">Loading...</h1>
+            <h2 id="hero-title" class="hero-subtitle-text glitch-text"></h2>
+            <div id="hero-class-year" class="class-year-badge magnetic hidden">
+                <i data-lucide="graduation-cap"></i>
+                <span id="hero-class-year-text"></span>
+            </div>
+            <p id="hero-tagline" class="hero-desc-text typewriter-target"></p>
+            <div class="hero-cta-group">
+                <a href="#experience" class="btn btn-primary magnetic">View Activities <i data-lucide="arrow-down-right"></i></a>
+                <a href="#contact" class="btn btn-outline magnetic">Get In Touch</a>
+            </div>
+        </div>
+        <div class="scroll-indicator magnetic">
+            <a href="#about"><i data-lucide="chevron-down"></i></a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Animated Counter Stats -->
+        <section id="stats" class="stats-section">
+            <div class="section-container reveal">
+                <div class="stats-grid" id="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-number" data-target="0" id="stat-years">0</span>
+                        <span class="stat-label">Years Involved</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" data-target="0" id="stat-clubs">0</span>
+                        <span class="stat-label">Clubs Joined</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section with Wireframe Globe Canvas & Bento Grid -->
+        <section id="about" class="about-section">
+            <div class="hollow-bg-text">ABOUT</div>
+            <div class="section-container reveal">
+                <div class="section-header">
+                    <span class="section-tag laser-tag">01 // ABOUT ME</span>
+                    <h2 class="section-title scramble-link">Background & Passion</h2>
+                </div>
+                <div class="bento-grid">
+                    <div class="bento-item bento-main tilt-card reveal">
+                        <div class="about-content" id="about-content">
+                            <div class="about-photo-container">
+                                <img id="about-photo" src="" alt="Profile Photo" style="display: none;">
+                                <div id="about-photo-placeholder" class="photo-placeholder"></div>
+                                <div class="photo-glow-ring"></div>
+                            </div>
+                            <div class="about-bio" id="about-bio">
+                                <p>Loading...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Floating Quote / Testimonial Slider Card -->
+                    <div class="bento-item bento-quote tilt-card reveal">
+                        <div class="quote-content">
+                            <i data-lucide="quote" class="quote-icon"></i>
+                            <div>
+                                <p id="quote-text">Loading...</p>
+                                <span id="quote-author" class="quote-author"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Clubs & Activities Section -->
+        <section id="experience" class="experience-section">
+            <div class="hollow-bg-text">SCHOOL</div>
+            <div class="section-container reveal">
+                <div class="section-header">
+                    <span class="section-tag laser-tag">02 // SCHOOL TIMELINE</span>
+                    <h2 class="section-title scramble-link">Clubs & Activities</h2>
+                </div>
+                <div class="timeline" id="experience-timeline">
+                    <!-- Clubs & Activities injected dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Achievements & Awards Section -->
+        <section id="achievements" class="achievements-section">
+            <div class="hollow-bg-text">AWARDS</div>
+            <div class="section-container reveal">
+                <div class="section-header">
+                    <span class="section-tag laser-tag">03 // RECOGNITION</span>
+                    <h2 class="section-title scramble-link">Achievements & Awards</h2>
+                </div>
+                <div class="achievements-grid" id="achievements-grid">
+                    <!-- Achievements injected dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Gallery / Photos Section -->
+        <section id="gallery" class="gallery-section">
+            <div class="hollow-bg-text">GALLERY</div>
+            <div class="section-container reveal">
+                <div class="section-header">
+                    <span class="section-tag laser-tag">04 // IN PICTURES</span>
+                    <h2 class="section-title scramble-link">Gallery & Photos</h2>
+                </div>
+                <div class="gallery-grid" id="gallery-grid">
+                    <!-- Photos injected dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Strengths & Skills Section -->
+        <section id="skills" class="skills-section">
+            <div class="hollow-bg-text">SKILLS</div>
+            <div class="section-container reveal">
+                <div class="section-header">
+                    <span class="section-tag laser-tag">05 // WHAT I BRING</span>
+                    <h2 class="section-title scramble-link">Strengths & Skills</h2>
+                </div>
+                <div class="skills-layout">
+                    <div class="strengths-block">
+                        <h3 class="skills-subheading"><i data-lucide="sparkles"></i> Strengths</h3>
+                        <div class="strengths-pills" id="strengths-pills">
+                            <!-- Strengths injected dynamically -->
+                        </div>
+                    </div>
+                    <div class="technical-block">
+                        <h3 class="skills-subheading"><i data-lucide="code-2"></i> Technical Skills</h3>
+                        <div class="technical-skills" id="technical-skills">
+                            <!-- Technical skills injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="contact-section">
+            <div class="hollow-bg-text">CONTACT</div>
+            <div class="section-container reveal">
+                <div class="section-header">
+                    <span class="section-tag laser-tag">06 // GET IN TOUCH</span>
+                    <h2 class="section-title scramble-link">Let's Connect & Collaborate</h2>
+                </div>
+                <div class="contact-content bento-grid">
+                    <div class="contact-form-container tilt-card shutter-reveal">
+                        <form id="contact-form">
+                            <div class="form-group">
+                                <label for="name">Your Name</label>
+                                <input type="text" id="name" name="name" placeholder="John Doe" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Your Email</label>
+                                <input type="email" id="email" name="email" placeholder="john@example.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="message">Message</label>
+                                <textarea id="message" name="message" rows="5" placeholder="Tell me about your inquiry..." required></textarea>
+                            </div>
+                            <button type="submit" class="submit-btn magnetic keypress-btn">Send Message <i data-lucide="send"></i></button>
+                        </form>
+                    </div>
+                    <div class="contact-social" id="social-links">
+                        <!-- Social links injected dynamically -->
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-left">
+                <a href="#hero" class="footer-logo">Portfolio<span>.</span></a>
+                <p>&copy; <span id="current-year"></span>. All rights reserved.</p>
+            </div>
+            <a href="#hero" class="back-to-top magnetic" title="Back to top">
+                <i data-lucide="arrow-up"></i>
+            </a>
+        </div>
+    </footer>
+
+    <!-- Gallery Lightbox (populated dynamically on photo click) -->
+    <div id="gallery-lightbox" class="gallery-lightbox">
+        <div class="gallery-lightbox-content">
+            <button class="gallery-lightbox-close" id="gallery-lightbox-close" title="Close" aria-label="Close">
+                <i data-lucide="x"></i>
+            </button>
+            <img id="gallery-lightbox-img" src="" alt="">
+            <div id="gallery-lightbox-category" class="gallery-lightbox-category"></div>
+            <div id="gallery-lightbox-caption" class="gallery-lightbox-caption"></div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <div id="login-screen" class="screen">
+        <div class="login-card">
+            <h2>Admin Login</h2>
+            <form id="login-form">
+                <input type="password" id="password" placeholder="Password" required>
+                <div id="login-error" class="error-msg"></div>
+                <button type="submit" class="btn-primary">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="dashboard-screen" class="screen hidden">
+        <header class="top-bar">
+            <h1>Admin Panel</h1>
+            <div class="top-bar-actions">
+                <a href="/" class="btn-outline">View Site</a>
+                <button id="logout-btn" class="btn-danger">Logout</button>
+            </div>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="config">Site Config</button>
+            <button class="tab-btn" data-tab="projects">Projects</button>
+            <button class="tab-btn" data-tab="skills">Skills &amp; Strengths</button>
+            <button class="tab-btn" data-tab="experience">Clubs &amp; Activities</button>
+            <button class="tab-btn" data-tab="achievements">Achievements</button>
+            <button class="tab-btn" data-tab="gallery">Gallery</button>
+            <button class="tab-btn" data-tab="testimonials">Testimonials</button>
+            <button class="tab-btn" data-tab="social">Social Links</button>
+            <button class="tab-btn" data-tab="messages">Messages</button>
+            <button class="tab-btn" data-tab="settings">Settings</button>
+        </nav>
+
+        <main class="content">
+            <!-- Site Config -->
+            <section id="tab-config" class="tab-panel active">
+                <h2>Site Configuration</h2>
+                <form id="config-form">
+                    <div class="form-group">
+                        <label for="config-name">Name</label>
+                        <input type="text" id="config-name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="config-title">Title</label>
+                        <input type="text" id="config-title" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="config-tagline">Tagline</label>
+                        <input type="text" id="config-tagline" name="tagline">
+                    </div>
+                    <div class="form-group">
+                        <label for="config-class-year">Class Year</label>
+                        <input type="text" id="config-class-year" name="class_year" placeholder="e.g. 2027">
+                    </div>
+                    <div class="form-group">
+                        <label for="config-bio-editor">About Bio</label>
+                        <div class="richtext-toolbar" data-target="config-bio-editor">
+                            <button type="button" class="rt-btn" data-cmd="bold" title="Bold"><b>B</b></button>
+                            <button type="button" class="rt-btn" data-cmd="italic" title="Italic"><i>I</i></button>
+                            <button type="button" class="rt-btn" data-cmd="insertUnorderedList" title="Bullet list">&bull; List</button>
+                            <button type="button" class="rt-btn" data-cmd="insertOrderedList" title="Numbered list">1. List</button>
+                            <button type="button" class="rt-btn" data-cmd="formatBlock" data-value="pre" title="Code block">&lt;/&gt;</button>
+                            <button type="button" class="rt-btn" data-cmd="removeFormat" title="Clear formatting">Clear</button>
+                        </div>
+                        <div id="config-bio-editor" class="richtext-editor" contenteditable="true"></div>
+                        <textarea id="config-bio" name="about_bio" class="hidden"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="config-photo">About Photo</label>
+                        <div class="dropzone" id="config-photo-dropzone">
+                            <img id="config-photo-preview" class="dropzone-preview hidden" alt="Preview">
+                            <div class="dropzone-hint">
+                                <span>Drag & drop an image, or click to browse</span>
+                                <input type="file" id="config-photo-file" accept="image/*" class="hidden">
+                            </div>
+                        </div>
+                        <input type="text" id="config-photo" name="about_photo_url" placeholder="Or paste an image URL">
+                    </div>
+                    <h3 class="form-subhead">Featured Quote</h3>
+                    <p class="settings-desc">Shown in the About section. If you add Testimonials below, they'll rotate in and take over from this one automatically.</p>
+                    <div class="form-group">
+                        <label for="config-quote-text">Quote</label>
+                        <textarea id="config-quote-text" name="quote_text" rows="3" placeholder="e.g. Passionate about building things that matter."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="config-quote-author">Attribution</label>
+                        <input type="text" id="config-quote-author" name="quote_author" placeholder="e.g. — Robotics Club Advisor (optional)">
+                    </div>
+                    <h3 class="form-subhead">Counter Stats</h3>
+                    <p class="settings-desc">These power the animated counter numbers on the public site.</p>
+                    <div class="form-group row">
+                        <label>Years Involved</label>
+                        <input type="number" id="config-stat-years" name="stat_years_involved" min="0" style="margin-left:auto;width:120px">
+                    </div>
+                    <div class="form-group row">
+                        <label>Clubs Joined</label>
+                        <input type="number" id="config-stat-clubs" name="stat_clubs_joined" min="0" style="margin-left:auto;width:120px">
+                    </div>
+                    <button type="submit" class="btn-primary">Save Configuration</button>
+                </form>
+            </section>
+
+            <!-- Projects -->
+            <section id="tab-projects" class="tab-panel">
+                <div class="panel-header">
+                    <h2>Projects</h2>
+                    <button id="add-project-btn" class="btn-primary">Add Project</button>
+                </div>
+                <div class="table-responsive">
+                    <table id="projects-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Dates</th>
+                                <th>Published</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Skills -->
+            <section id="tab-skills" class="tab-panel">
+                <div class="panel-header">
+                    <h2>Skills &amp; Strengths</h2>
+                    <button id="add-skill-btn" class="btn-primary">Add Skill / Strength</button>
+                </div>
+                <p class="settings-desc">Add both technical skills (e.g. Python, Photoshop) and strengths (e.g. Leadership, Teamwork) — they'll show in separate groups on the public site.</p>
+                <div class="table-responsive">
+                    <table id="skills-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Category</th>
+                                <th>Proficiency</th>
+                                <th>Published</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Achievements / Awards -->
+            <section id="tab-achievements" class="tab-panel">
+                <div class="panel-header">
+                    <h2>Achievements &amp; Awards</h2>
+                    <button id="add-achievement-btn" class="btn-primary">Add Achievement</button>
+                </div>
+                <p class="settings-desc">Honor roll, competition placements, certificates &mdash; anything worth showing off.</p>
+                <div class="table-responsive">
+                    <table id="achievements-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Issuer</th>
+                                <th>Category</th>
+                                <th>Date</th>
+                                <th>Published</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Gallery / Photos -->
+            <section id="tab-gallery" class="tab-panel">
+                <div class="panel-header">
+                    <h2>Gallery &amp; Photos</h2>
+                    <button id="add-gallery-btn" class="btn-primary">Add Photo</button>
+                </div>
+                <p class="settings-desc">Event photos, competition shots, and club activities &mdash; shown as a visual grid on the public site.</p>
+                <div class="table-responsive">
+                    <table id="gallery-table">
+                        <thead>
+                            <tr>
+                                <th>Photo</th>
+                                <th>Caption</th>
+                                <th>Category</th>
+                                <th>Published</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Testimonials -->
+            <section id="tab-testimonials" class="tab-panel">
+                <div class="panel-header">
+                    <h2>Testimonials</h2>
+                    <button id="add-testimonial-btn" class="btn-primary">Add Testimonial</button>
+                </div>
+                <p class="settings-desc">Quotes from teachers, coaches, or club advisors. These rotate through the quote card on the public site.</p>
+                <div class="table-responsive">
+                    <table id="testimonials-table">
+                        <thead>
+                            <tr>
+                                <th>Quote</th>
+                                <th>Author</th>
+                                <th>Role</th>
+                                <th>Published</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Clubs & Activities -->
+            <section id="tab-experience" class="tab-panel">
+                <div class="panel-header">
+                    <h2>Clubs &amp; Activities</h2>
+                    <button id="add-experience-btn" class="btn-primary">Add Activity</button>
+                </div>
+                <div class="table-responsive">
+                    <table id="experience-table">
+                        <thead>
+                            <tr>
+                                <th>Role / Position</th>
+                                <th>Club / Organization</th>
+                                <th>Dates</th>
+                                <th>Published</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Social Links -->
+            <section id="tab-social" class="tab-panel">
+                <div class="panel-header">
+                    <h2>Social Links</h2>
+                    <button id="add-social-btn" class="btn-primary">Add Link</button>
+                </div>
+                <div class="table-responsive">
+                    <table id="social-table">
+                        <thead>
+                            <tr>
+                                <th>Platform</th>
+                                <th>URL</th>
+                                <th>Icon</th>
+                                <th>Published</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Messages -->
+            <section id="tab-messages" class="tab-panel">
+                <div class="panel-header">
+                    <h2>Messages</h2>
+                </div>
+                <div class="table-responsive">
+                    <table id="messages-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Message</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Settings -->
+            <section id="tab-settings" class="tab-panel">
+                <h2>Settings</h2>
+
+                <div class="settings-card">
+                    <h3>Spotify &mdash; Now Playing</h3>
+                    <p class="settings-desc">Connect your Spotify account to show what you're currently listening to on the live site.</p>
+                    <div class="settings-row">
+                        <span id="spotify-status-pill" class="status-pill">Checking&hellip;</span>
+                        <button id="spotify-connect-btn" class="btn-primary hidden">Connect Spotify</button>
+                        <button id="spotify-disconnect-btn" class="btn-danger hidden">Disconnect</button>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>Admin Password</h3>
+                    <p class="settings-desc">Change the password used to log in to this admin panel.</p>
+                    <form id="password-form">
+                        <div class="form-group">
+                            <label for="current-password">Current Password</label>
+                            <input type="password" id="current-password" name="currentPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-password">New Password</label>
+                            <input type="password" id="new-password" name="newPassword" minlength="6" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm-password">Confirm New Password</label>
+                            <input type="password" id="confirm-password" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Update Password</button>
+                    </form>
+                </div>
+
+                <div class="settings-card">
+                    <h3>Database Backup</h3>
+                    <p class="settings-desc">Download a full JSON export of your portfolio data (config, projects, skills, experience, achievements, testimonials, social links, and messages).</p>
+                    <button id="export-btn" class="btn-outline">Download Backup (.json)</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3 id="modal-title">Title</h3>
+            <form id="modal-form">
+                <div id="modal-content"></div>
+                <div class="modal-actions">
+                    <button type="button" id="modal-cancel" class="btn-outline">Cancel</button>
+                    <button type="submit" id="modal-save" class="btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toasts -->
+    <div id="toast-container"></div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>
