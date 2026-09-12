@@ -10,11 +10,13 @@ async function initDB() {
     dns.setDefaultResultOrder('ipv4first');
   }
 
-  const dbUrl = process.env.DATABASE_URL || '';
+  const defaultDbUrl = 'postgresql://postgres:3GMXT0DoRD1CNJ43@db.yawerazplomaixydplyh.supabase.co:5432/postgres';
+  const dbUrl = (process.env.DATABASE_URL || defaultDbUrl).trim();
   const connStr = dbUrl.replace(/[?&]sslmode=[^&]*/g, '');
   const pool = new Pool({
     connectionString: connStr,
-    ssl: dbUrl ? { rejectUnauthorized: false } : false
+    ssl: { rejectUnauthorized: false },
+    connectionTimeoutMillis: 10000
   });
 
   try {

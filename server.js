@@ -8,17 +8,21 @@ const { ensureBucket } = require('./lib/supabaseStorage');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Database connection pool — strip sslmode param to avoid self-signed cert issues
+// Database connection pool
 const dns = require('dns');
 if (dns.setDefaultResultOrder) {
   dns.setDefaultResultOrder('ipv4first');
 }
 
-const dbUrl = process.env.DATABASE_URL || '';
+const defaultDbUrl = 'postgresql://postgres:3GMXT0DoRD1CNJ43@db.yawerazplomaixydplyh.supabase.co:5432/postgres';
+const dbUrl = (process.env.DATABASE_URL || defaultDbUrl).trim();
 const connStr = dbUrl.replace(/[?&]sslmode=[^&]*/g, '');
+
 const pool = new Pool({
   connectionString: connStr,
-  ssl: dbUrl ? { rejectUnauthorized: false } : false
+  ssl: { rejectUnauthorized: false },
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 30000
 });
 
 // Verify DB connection on startup
