@@ -18,8 +18,8 @@ async function initDB() {
     dns.lookup(hostname, { family: 4, all: false }, callback);
   }
 
-  const primaryUrl = (process.env.DATABASE_URL || 'postgresql://postgres.yawerazplomaixydplyh:3GMXT0DoRD1CNJ43@aws-0-us-east-1.pooler.supabase.com:6543/postgres').trim();
-  const fallbackUrl = 'postgresql://postgres:3GMXT0DoRD1CNJ43@db.yawerazplomaixydplyh.supabase.co:5432/postgres';
+  const primaryUrl = (process.env.DATABASE_URL || 'postgresql://postgres.yawerazplomaixydplyh:Swr0zw7CSc0yaaId@aws-0-us-west-2.pooler.supabase.com:5432/postgres').trim();
+  const fallbackUrl = 'postgresql://postgres.yawerazplomaixydplyh:Swr0zw7CSc0yaaId@aws-0-us-west-2.pooler.supabase.com:6543/postgres';
 
   async function tryConnect(url) {
     const cleanUrl = url.replace(/[?&]sslmode=[^&]*/g, '');
