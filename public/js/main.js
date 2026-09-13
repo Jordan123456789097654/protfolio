@@ -2125,7 +2125,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const timeDisp = item.ev.start_time ? `${item.ev.start_time}${item.ev.end_time ? ' - ' + item.ev.end_time : ''}` : 'All Day';
 
                 eventPillsHtml += `
-                    <div class="gcal-event-pill ${catClass}" style="top:${item.topPx}px; height:${item.heightPx}px; left:${leftPct}%; width:${widthPct}%;" title="${escapeHTML(item.ev.title)} (${escapeHTML(timeDisp)})">
+                    <div class="gcal-event-pill ${catClass}" 
+                         style="top:${item.topPx}px; height:${item.heightPx}px; left:${leftPct}%; width:${widthPct}%;" 
+                         data-title="${escapeHTML(item.ev.title)}"
+                         data-category="${escapeHTML(item.ev.category || 'School Event')}"
+                         data-date="${escapeHTML(item.ev.event_date || fullDayName)}"
+                         data-time="${escapeHTML(timeDisp)}"
+                         data-location="${escapeHTML(item.ev.location || '')}"
+                         data-desc="${escapeHTML(item.ev.description || '')}"
+                         data-recurring="${item.ev.is_recurring ? 'true' : 'false'}"
+                         data-starttime="${escapeHTML(item.ev.start_time || '')}"
+                         data-endtime="${escapeHTML(item.ev.end_time || '')}">
                         <div class="gcal-event-title">${escapeHTML(item.ev.title)}</div>
                         <div class="gcal-event-time">${escapeHTML(timeDisp)}</div>
                     </div>
@@ -2146,6 +2156,150 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         gridContainer.innerHTML = daysHtml;
+
+        // Attach click listener to event pills for Google Calendar export modal
+        gridContainer.querySelectorAll('.gcal-event-pill').forEach(pill => {
+            pill.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openEventDetailModal(pill.dataset);
+            });
+        });
+    }
+
+    function openEventDetailModal(data) {
+        const overlay = document.getElementById('gcal-detail-modal-overlay');
+        if (!overlay) return;
+
+        document.getElementById('gcal-detail-title').textContent = data.title;
+        document.getElementById('gcal-detail-category').textContent = data.category;
+        document.getElementById('gcal-detail-date').textContent = data.date;
+        document.getElementById('gcal-detail-time').textContent = data.time;
+        
+        const locWrap = document.getElementById('gcal-detail-location-wrap');
+        if (data.location) {
+            document.getElementById('gcal-detail-location').textContent = data.location;
+            if (locWrap) locWrap.style.display = 'flex';
+        } else if (locWrap) {
+            locWrap.style.display = 'none';
+        }
+
+        const descEl = document.getElementById('gcal-detail-desc');
+        if (data.desc) {
+            descEl.textContent = data.desc;
+            descEl.style.display = 'block';
+        } else {
+            descEl.style.display = 'none';
+        }
+
+        const recEl = document.getElementById('gcal-detail-recurring');
+        if (recEl) recEl.style.display = data.recurring === 'true' ? 'inline-flex' : 'none';
+
+        // Generate Google Calendar Link
+        const gcalUrl = createGoogleCalendarUrl(data.title, data.desc, data.location, data.starttime, data.endtime);
+        const gcalBtn = document.getElementById('gcal-export-gcal');
+        if (gcalBtn) gcalBtn.href = gcalUrl;
+
+        // Setup iCal Download Button
+        const icalBtn = document.getElementById('gcal-export-ical');
+        if (icalBtn) {
+            icalBtn.onclick = () => downloadIcsFile(data.title, data.desc, data.location, data.starttime, data.endtime);
+        }
+
+        overlay.classList.remove('hidden');
+    }
+
+    // Modal Close button & Overlay listener
+    document.getElementById('gcal-detail-close')?.addEventListener('click', () => {
+        document.getElementById('gcal-detail-modal-overlay')?.classList.add('hidden');
+    });
+
+    document.getElementById('gcal-detail-modal-overlay')?.addEventListener('click', (e) => {
+        if (e.target.id === 'gcal-detail-modal-overlay') {
+            document.getElementById('gcal-detail-modal-overlay').classList.add('hidden');
+        }
+    });
+
+    function createGoogleCalendarUrl(title, details, location, startTimeStr, endTimeStr) {
+        const baseUrl = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
+        const textParam = `&text=${encodeURIComponent(title || 'Academic Event')}`;
+        const detailsParam = details ? `&details=${encodeURIComponent(details)}` : '';
+        const locParam = location ? `&location=${encodeURIComponent(location)}` : '';
+
+        // Formats current or target date into ISO string (YYYYMMDDTHHmmssZ)
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        
+        let startIso = `${year}${month}${day}T090000Z`;
+        let endIso = `${year}${month}${day}T100000Z`;
+
+        if (startTimeStr) {
+            const parts = startTimeStr.replace(/(am|pm)/i, '').trim().split(':');
+            let h = parseInt(parts[0], 10) || 9;
+            let m = parseInt(parts[1], 10) || 0;
+            if (/pm/i.test(startTimeStr) && h < 12) h += 12;
+            startIso = `${year}${month}${day}T${String(h).padStart(2, '0')}${String(m).padStart(2, '0')}00Z`;
+        }
+
+        if (endTimeStr) {
+            const parts = endTimeStr.replace(/(am|pm)/i, '').trim().split(':');
+            let h = parseInt(parts[0], 10) || 10;
+            let m = parseInt(parts[1], 10) || 0;
+            if (/pm/i.test(endTimeStr) && h < 12) h += 12;
+            endIso = `${year}${month}${day}T${String(h).padStart(2, '0')}${String(m).padStart(2, '0')}00Z`;
+        }
+
+        const datesParam = `&dates=${startIso}/${endIso}`;
+        return baseUrl + textParam + datesParam + detailsParam + locParam;
+    }
+
+    function downloadIcsFile(title, details, location, startTimeStr, endTimeStr) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+
+        let startIso = `${year}${month}${day}T090000Z`;
+        let endIso = `${year}${month}${day}T100000Z`;
+
+        if (startTimeStr) {
+            const parts = startTimeStr.replace(/(am|pm)/i, '').trim().split(':');
+            let h = parseInt(parts[0], 10) || 9;
+            let m = parseInt(parts[1], 10) || 0;
+            if (/pm/i.test(startTimeStr) && h < 12) h += 12;
+            startIso = `${year}${month}${day}T${String(h).padStart(2, '0')}${String(m).padStart(2, '0')}00Z`;
+        }
+
+        if (endTimeStr) {
+            const parts = endTimeStr.replace(/(am|pm)/i, '').trim().split(':');
+            let h = parseInt(parts[0], 10) || 10;
+            let m = parseInt(parts[1], 10) || 0;
+            if (/pm/i.test(endTimeStr) && h < 12) h += 12;
+            endIso = `${year}${month}${day}T${String(h).padStart(2, '0')}${String(m).padStart(2, '0')}00Z`;
+        }
+
+        const icsData = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//Jordan Portfolio Calendar//EN',
+            'BEGIN:VEVENT',
+            `SUMMARY:${title || 'Academic Event'}`,
+            `DESCRIPTION:${(details || '').replace(/\n/g, '\\n')}`,
+            `LOCATION:${location || 'School Campus'}`,
+            `DTSTART:${startIso}`,
+            `DTEND:${endIso}`,
+            'END:VEVENT',
+            'END:VCALENDAR'
+        ].join('\r\n');
+
+        const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.setAttribute('download', `${(title || 'event').toLowerCase().replace(/\s+/g, '_')}.ics`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
     // Run UI listeners immediately so buttons work instantly
