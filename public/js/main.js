@@ -821,16 +821,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const rawName = config.name || 'Portfolio';
         document.title = rawName ? `${rawName} — Portfolio` : 'Portfolio';
         
-        // Kinetic character roll-up text
-        let charHtml = '';
-        [...rawName].forEach((char, index) => {
-            const displayChar = char === ' ' ? '&nbsp;' : char;
-            charHtml += `<span class="char" style="animation-delay: ${index * 0.045}s">${displayChar}</span>`;
-        });
-        nameEl.innerHTML = charHtml;
+        nameEl.textContent = rawName;
 
         document.getElementById('hero-title').textContent = config.title || '';
         document.getElementById('hero-tagline').textContent = config.tagline || '';
+
 
         const classYearBadge = document.getElementById('hero-class-year');
         const classYearText = document.getElementById('hero-class-year-text');

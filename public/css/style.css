@@ -1713,30 +1713,42 @@ footer {
 }
 
 @media screen and (max-width: 768px) {
-    nav { width: 95%; top: 10px; padding: 10px 18px; }
+    nav { 
+        width: 92%; 
+        top: 10px; 
+        padding: 8px 14px; 
+    }
     
     .nav-links {
         position: fixed;
         right: -100%;
-        top: 70px;
+        top: 65px;
         flex-direction: column;
-        background: rgba(8, 8, 12, 0.95);
-        backdrop-filter: blur(24px);
-        width: 100%;
+        background: rgba(8, 12, 22, 0.96);
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        width: 90vw;
+        max-width: 380px;
         text-align: center;
-        padding: 40px 0;
-        transition: right 0.3s ease;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        padding: 30px 20px;
+        gap: 16px;
+        transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.6), 0 0 1px inset rgba(255,255,255,0.15);
+        border: 1px solid rgba(255,255,255,0.1);
         border-radius: 20px;
+        z-index: 9999;
     }
 
-    .nav-links.active { right: 0; }
+    .nav-links.active { right: 5vw; }
     .hamburger { display: flex; }
 
-    .hero-title-text { font-size: 3rem; }
-    .hero-subtitle-text { font-size: 1.5rem; }
-    .section-title { font-size: 2.1rem; }
-    .hollow-bg-text { font-size: 5rem; letter-spacing: 6px; }
+    .hero-title-text { font-size: clamp(2rem, 7vw, 3.2rem) !important; letter-spacing: -0.02em; }
+    .hero-subtitle-text { font-size: clamp(1.1rem, 4.5vw, 1.6rem) !important; }
+    .section-title { font-size: clamp(1.7rem, 6vw, 2.2rem) !important; }
+    .hollow-bg-text { font-size: clamp(3.5rem, 12vw, 5.5rem); letter-spacing: 4px; }
+
+    .hero-widgets-row { flex-direction: column; width: 100%; align-items: center; gap: 8px; }
+    .time-status-pill, .weather-status-pill { width: 100%; max-width: 320px; justify-content: center; }
 
     .about-content { flex-direction: column; }
     .floating-badge { display: none; }
@@ -1745,7 +1757,35 @@ footer {
     .timeline-item { width: 100%; padding-left: 70px; padding-right: 25px; }
     .timeline-item.right { left: 0; }
     .timeline-item::after { left: 23px !important; right: auto; }
+
+    .spotify-widget {
+        left: 16px;
+        bottom: 16px;
+        max-width: calc(100vw - 32px);
+        padding: 0.5rem 0.9rem 0.5rem 0.5rem;
+    }
+
+    .countdown-banner {
+        width: 100%;
+        max-width: 340px;
+        padding: 10px 14px;
+    }
+    .countdown-units {
+        gap: 10px;
+    }
+    .countdown-unit span {
+        font-size: 1.15rem;
+    }
 }
+
+@media screen and (max-width: 480px) {
+    body { font-size: 15px; }
+    .hero-cta-group { flex-direction: column; width: 100%; gap: 10px; }
+    .hero-cta-group .btn { width: 100%; justify-content: center; }
+    .section-header { margin-bottom: 25px; }
+    .cert-card, .achievement-card, .rec-card { padding: 20px 16px; }
+}
+
 
 /* ══════════════════════════════════════════════════════════════════
    Cinematic Split-Curtain Intro Loader
