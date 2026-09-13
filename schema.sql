@@ -282,4 +282,41 @@ SELECT 'Are you available for summer internships or STEM research projects?',
        'Availability', 3
 WHERE NOT EXISTS (SELECT 1 FROM faqs WHERE question LIKE '%summer internships%');
 
+-- Seasonal / Holiday Theme Override
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS seasonal_theme VARCHAR(50) DEFAULT 'auto';
 
+-- Scheduled Meetings & Calendar Booking
+CREATE TABLE IF NOT EXISTS meetings (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  role VARCHAR(100) DEFAULT 'Visitor', -- 'Teacher', 'Mentor', 'Advisor', 'Student', 'Visitor'
+  meeting_date VARCHAR(50) NOT NULL,
+  time_slot VARCHAR(50) NOT NULL,
+  topic TEXT NOT NULL,
+  status VARCHAR(50) DEFAULT 'confirmed', -- 'confirmed', 'declined', 'cancelled'
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Busy Schedule Recurring Blocks (e.g. FBLA Meetings, Robotics Build Season)
+CREATE TABLE IF NOT EXISTS busy_schedules (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  day_of_week VARCHAR(20) NOT NULL, -- 'Monday', 'Tuesday', etc.
+  start_time VARCHAR(20) NOT NULL, -- '15:00'
+  end_time VARCHAR(20) NOT NULL,   -- '17:00'
+  description VARCHAR(255) DEFAULT ''
+);
+
+-- Seed default busy schedule blocks if table is empty
+INSERT INTO busy_schedules (title, day_of_week, start_time, end_time, description)
+SELECT 'FBLA Chapter Officer Meeting', 'Monday', '15:00', '16:30', 'Weekly FBLA leadership planning'
+WHERE NOT EXISTS (SELECT 1 FROM busy_schedules);
+
+INSERT INTO busy_schedules (title, day_of_week, start_time, end_time, description)
+SELECT 'VEX Robotics Build Season Practice', 'Tuesday', '15:15', '17:00', 'Robotics team CAD & autonomous coding'
+WHERE NOT EXISTS (SELECT 1 FROM busy_schedules WHERE title LIKE '%Robotics%');
+
+INSERT INTO busy_schedules (title, day_of_week, start_time, end_time, description)
+SELECT 'VEX Robotics Build Season Practice', 'Thursday', '15:15', '17:00', 'Robotics team CAD & autonomous coding'
+WHERE NOT EXISTS (SELECT 1 FROM busy_schedules WHERE day_of_week = 'Thursday');

@@ -1728,6 +1728,134 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    async function initSeasonalTheme() {
+        try {
+            const res = await fetch('/api/theme/seasonal');
+            const data = await res.json();
+            if (data && data.effectiveSeason && data.effectiveSeason !== 'standard') {
+                document.body.setAttribute('data-theme', data.effectiveSeason);
+            }
+        } catch (e) {}
+    }
+
+    function initMeetingModal() {
+        const openBtn = document.getElementById('open-meeting-btn');
+        const modal = document.getElementById('meeting-modal-overlay');
+        const closeBtn = document.getElementById('meeting-modal-close');
+        const cancelBtn = document.getElementById('meeting-modal-cancel');
+        const dateInput = document.getElementById('meeting-date');
+        const slotsContainer = document.getElementById('meeting-slots-container');
+        const selectedSlotInput = document.getElementById('meeting-selected-slot');
+        const form = document.getElementById('meeting-booking-form');
+
+        if (!modal || !form) return;
+
+        function closeModal() {
+            modal.classList.add('hidden');
+        }
+
+        if (openBtn) openBtn.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+            // Set min date to today
+            if (dateInput) {
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.min = today;
+                if (!dateInput.value) {
+                    dateInput.value = today;
+                    fetchSlots(today);
+                }
+            }
+        });
+
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+        if (dateInput) {
+            dateInput.addEventListener('change', (e) => {
+                const selectedDate = e.target.value;
+                if (selectedDate) fetchSlots(selectedDate);
+            });
+        }
+
+        async function fetchSlots(dateStr) {
+            if (!slotsContainer) return;
+            slotsContainer.innerHTML = '<div class="time-slots-placeholder">Checking availability...</div>';
+            selectedSlotInput.value = '';
+
+            try {
+                const res = await fetch(`/api/meetings/availability?date=${dateStr}`);
+                const data = await res.json();
+
+                if (!data || !data.slots || data.slots.length === 0) {
+                    slotsContainer.innerHTML = '<div class="time-slots-placeholder">No slots available for this date.</div>';
+                    return;
+                }
+
+                slotsContainer.innerHTML = '';
+                data.slots.forEach(slot => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = `time-slot-btn ${slot.status}`;
+
+                    if (slot.status === 'available') {
+                        btn.innerHTML = `<span>${slot.displayTime}</span><span class="slot-reason">Available</span>`;
+                        btn.onclick = () => {
+                            slotsContainer.querySelectorAll('.time-slot-btn').forEach(b => b.classList.remove('selected'));
+                            btn.classList.add('selected');
+                            selectedSlotInput.value = slot.time;
+                        };
+                    } else if (slot.status === 'busy') {
+                        btn.disabled = true;
+                        btn.innerHTML = `<span>${slot.displayTime}</span><span class="slot-reason">${slot.busyReason || 'Busy'}</span>`;
+                    } else {
+                        btn.disabled = true;
+                        btn.innerHTML = `<span>${slot.displayTime}</span><span class="slot-reason">Booked</span>`;
+                    }
+
+                    slotsContainer.appendChild(btn);
+                });
+            } catch (e) {
+                slotsContainer.innerHTML = '<div class="time-slots-placeholder">Error loading slots.</div>';
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!selectedSlotInput.value) {
+                showToast('Please select an available time slot', 'error');
+                return;
+            }
+
+            const formData = new FormData(form);
+            const body = Object.fromEntries(formData.entries());
+
+            const submitBtn = document.getElementById('meeting-submit-btn');
+            const origText = submitBtn ? submitBtn.textContent : '';
+            if (submitBtn) { submitBtn.textContent = 'Booking...'; submitBtn.disabled = true; }
+
+            try {
+                const res = await fetch('/api/meetings/book', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    showToast(data.message || 'Meeting booked successfully!', 'success');
+                    form.reset();
+                    closeModal();
+                } else {
+                    showToast(data.error || 'Failed to book meeting', 'error');
+                }
+            } catch (err) {
+                showToast('Error booking meeting', 'error');
+            } finally {
+                if (submitBtn) { submitBtn.textContent = origText; submitBtn.disabled = false; }
+            }
+        });
+    }
+
     // Start everything
     fetchData().then(() => {
         setTimeout(() => {
@@ -1741,8 +1869,10 @@ document.addEventListener('DOMContentLoaded', () => {
             initSpotifyWidget();
             initDynamicTimeAndWeather();
             initCountdownWidget();
+            initSeasonalTheme();
+            initMeetingModal();
             initRealtimeSync();
-
         }, 200);
     });
 });
+

@@ -61,6 +61,7 @@
                 <div class="nav-group">
                     <div class="nav-group-title">💬 Interactions</div>
                     <button class="tab-btn" data-tab="messages">📬 Messages</button>
+                    <button class="tab-btn" data-tab="meetings">📅 Meetings &amp; Availability</button>
                     <button class="tab-btn" data-tab="recommendations">📄 Recommendations</button>
                     <button class="tab-btn" data-tab="testimonials">💬 Testimonials</button>
                     <button class="tab-btn" data-tab="faqs">❓ FAQ</button>
@@ -564,6 +565,77 @@
                     </div>
                 </section>
 
+                <!-- Meetings & Availability -->
+                <section id="tab-meetings" class="tab-panel">
+                    <div class="panel-header">
+                        <h2>📅 Booked Meetings &amp; Availability</h2>
+                    </div>
+                    <p class="settings-desc">Manage scheduled meetings from visitors/mentors and block out recurring busy times (e.g. FBLA or Robotics practices).</p>
+                    
+                    <div class="table-responsive">
+                        <table id="meetings-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email / Role</th>
+                                    <th>Date &amp; Time Slot</th>
+                                    <th>Topic</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <div class="panel-header" style="margin-top:36px;">
+                        <h3>🚫 Recurring Busy Schedule Blocks</h3>
+                    </div>
+                    <p class="settings-desc">Prevent meeting bookings on specific days and time ranges (e.g. Robotics Club on Tuesdays 3:30-5:00 PM).</p>
+                    
+                    <form id="add-busy-schedule-form" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+                        <div class="form-group" style="margin-bottom:0;flex:1;min-width:140px;">
+                            <label for="busy-title-input">Block Reason</label>
+                            <input type="text" id="busy-title-input" placeholder="e.g. FBLA Meeting" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;width:120px;">
+                            <label for="busy-day-input">Day of Week</label>
+                            <select id="busy-day-input" class="form-control">
+                                <option value="0">Sunday</option>
+                                <option value="1">Monday</option>
+                                <option value="2">Tuesday</option>
+                                <option value="3">Wednesday</option>
+                                <option value="4">Thursday</option>
+                                <option value="5">Friday</option>
+                                <option value="6">Saturday</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;width:120px;">
+                            <label for="busy-start-input">Start Time</label>
+                            <input type="time" id="busy-start-input" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;width:120px;">
+                            <label for="busy-end-input">End Time</label>
+                            <input type="time" id="busy-end-input" required>
+                        </div>
+                        <button type="submit" class="btn-primary" style="height:38px;">Add Busy Block</button>
+                    </form>
+
+                    <div class="table-responsive">
+                        <table id="busy-schedules-table">
+                            <thead>
+                                <tr>
+                                    <th>Reason / Title</th>
+                                    <th>Day of Week</th>
+                                    <th>Time Range</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+
                 <!-- Email Templates & Customization -->
                 <section id="tab-email-templates" class="tab-panel">
                     <h2>✉️ Email Templates &amp; Customization</h2>
@@ -680,6 +752,25 @@
                 <!-- Settings -->
                 <section id="tab-settings" class="tab-panel">
                     <h2>Settings &amp; Integrations</h2>
+
+                    <div class="settings-card">
+                        <h3>🎃 Seasonal &amp; Holiday Theme Mode</h3>
+                        <p class="settings-desc">Override or automate seasonal visual themes on your website (e.g. Halloween pumpkin sparkles, Winter holiday snowflakes, Spring blossoms, or Summer sun rays).</p>
+                        <form id="seasonal-theme-form">
+                            <div class="form-group">
+                                <label for="seasonal-theme-select">Theme Selection</label>
+                                <select id="seasonal-theme-select" class="form-control" style="max-width:360px;">
+                                    <option value="auto">Auto (Detects season by calendar date)</option>
+                                    <option value="standard">Standard (Default Dark Gold Theme)</option>
+                                    <option value="halloween">🎃 Halloween (Spooky Purple &amp; Pumpkin Orange)</option>
+                                    <option value="winter">🎄 Winter / Holidays (Ice Blue &amp; Snowflakes)</option>
+                                    <option value="spring">🌸 Spring (Sakura Pink &amp; Fresh Green)</option>
+                                    <option value="summer">☀️ Summer (Vibrant Cyan &amp; Sunshine Yellow)</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-primary">Save Seasonal Theme</button>
+                        </form>
+                    </div>
 
                     <div class="settings-card">
                         <h3>⏱️ Live Event Countdown Timer</h3>

@@ -324,26 +324,161 @@ router.post('/recommendation-request/:token/submit', async (req, res) => {
   }
 });
 
-// ── POST upload PDF for teacher recommendation ───────────────────
-router.post('/recommendation-request/:token/upload-pdf', upload.single('file'), async (req, res) => {
+// ── GET Seasonal / Holiday Theme Status ────────────────────────────
+function calculateAutoSeason() {
+  const date = new Date();
+  const month = date.getMonth() + 1; // 1-12
+  const day = date.getDate();
+
+  if (month === 10) return 'halloween'; // Oct 1 - Oct 31
+  if (month === 12 || (month === 1 && day <= 7)) return 'winter'; // Dec 1 - Jan 7
+  if ((month === 3 && day >= 20) || month === 4 || month === 5) return 'spring'; // Mar 20 - May 31
+  if (month >= 6 && month <= 8) return 'summer'; // June - August
+  return 'standard';
+}
+
+router.get('/theme/seasonal', async (req, res) => {
   try {
-    const { token } = req.params;
-    const { rows } = await req.app.locals.pool.query(
-      'SELECT id FROM recommendation_requests WHERE token = $1 LIMIT 1',
-      [token]
+    const { rows } = await safeQuery(req.app.locals.pool, 'SELECT seasonal_theme FROM site_config LIMIT 1');
+    const setting = rows[0]?.seasonal_theme || 'auto';
+    const effectiveSeason = (setting && setting !== 'auto') ? setting : calculateAutoSeason();
+    res.json({ setting, effectiveSeason });
+  } catch (err) {
+    res.status(500).json({ setting: 'auto', effectiveSeason: calculateAutoSeason() });
+  }
+});
+
+// ── GET Meeting Availability for a date ────────────────────────────
+router.get('/meetings/availability', async (req, res) => {
+  try {
+    const { date } = req.query; // YYYY-MM-DD
+    if (!date) return res.status(400).json({ error: 'Date parameter required (YYYY-MM-DD)' });
+
+    const selectedDate = new Date(date + 'T00:00:00');
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayName = days[selectedDate.getDay()];
+
+    // Fetch recurring busy schedules for this day of week
+    const { rows: busyBlocks } = await safeQuery(
+      req.app.locals.pool,
+      'SELECT * FROM busy_schedules WHERE day_of_week = $1',
+      [dayName]
     );
-    if (rows.length === 0) {
-      return res.status(404).json({ error: 'Invalid recommendation token.' });
-    }
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded.' });
-    }
-    const url = await uploadImage(req.file.buffer, req.file.originalname, req.file.mimetype);
-    res.json({ success: true, url });
+
+    // Fetch existing booked meetings for this specific date
+    const { rows: bookedMeetings } = await safeQuery(
+      req.app.locals.pool,
+      'SELECT time_slot FROM meetings WHERE meeting_date = $1 AND status != $2',
+      [date, 'declined']
+    );
+    const bookedSlotsSet = new Set(bookedMeetings.map(m => m.time_slot));
+
+    // Standard available hours (9:00 AM - 5:00 PM)
+    const baseSlots = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'];
+    const slots = baseSlots.map(timeStr => {
+      const [hourStr, minStr] = timeStr.split(':');
+      const slotHour = parseInt(hourStr, 10);
+
+      // Check if slot overlaps with any busy block
+      let busyReason = null;
+      for (const b of busyBlocks) {
+        const startH = parseInt(b.start_time.split(':')[0], 10);
+        const endH = parseInt(b.end_time.split(':')[0], 10);
+        if (slotHour >= startH && slotHour < endH) {
+          busyReason = b.title;
+          break;
+        }
+      }
+
+      const isBooked = bookedSlotsSet.has(timeStr);
+
+      let status = 'available';
+      if (isBooked) status = 'booked';
+      else if (busyReason) status = 'busy';
+
+      return {
+        time: timeStr,
+        displayTime: new Date(2000, 0, 1, slotHour, 0).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+        status,
+        busyReason
+      };
+    });
+
+    res.json({ date, dayName, slots, busyBlocks });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
+// ── POST Book a Meeting / Chat ─────────────────────────────────────
+router.post('/meetings/book', async (req, res) => {
+  try {
+    const { name, email, role, meeting_date, time_slot, topic } = req.body;
+    if (!name || !email || !meeting_date || !time_slot || !topic) {
+      return res.status(400).json({ error: 'Name, email, date, time slot, and topic are required.' });
+    }
+
+    const { rows } = await req.app.locals.pool.query(
+      `INSERT INTO meetings (name, email, role, meeting_date, time_slot, topic, status)
+       VALUES ($1, $2, $3, $4, $5, $6, 'confirmed') RETURNING *`,
+      [name.trim(), email.trim(), role || 'Visitor', meeting_date, time_slot, topic.trim()]
+    );
+    const meeting = rows[0];
+
+    // Fetch site config for notification email & discord webhook
+    const { rows: configRows } = await safeQuery(req.app.locals.pool, 'SELECT name, notification_email, discord_webhook_url FROM site_config LIMIT 1');
+    const config = configRows[0] || {};
+    const notifyEmail = config.notification_email || 'jordan.lmmsfbla@outlook.com';
+
+    // Format readable time display
+    const hour = parseInt(time_slot.split(':')[0], 10);
+    const timeDisplay = new Date(2000, 0, 1, hour, 0).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+    // Send email notification to user
+    sendEmail({
+      to: notifyEmail,
+      subject: `📅 New Meeting Booked: ${name.trim()} (${role || 'Visitor'})`,
+      html: `
+        <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#101726;color:#e2e8f0;padding:24px;border-radius:12px;">
+          <h2 style="color:#d8a53e;margin-top:0;">📅 New Meeting Scheduled</h2>
+          <p><strong>Visitor Name:</strong> ${name.trim()} (${role || 'Visitor'})</p>
+          <p><strong>Email:</strong> <a href="mailto:${email.trim()}" style="color:#6f9bd1;">${email.trim()}</a></p>
+          <p><strong>Date & Time:</strong> ${meeting_date} at ${timeDisplay}</p>
+          <p><strong>Topic / Discussion Agenda:</strong></p>
+          <blockquote style="background:#1a2336;border-left:4px solid #d8a53e;padding:12px 16px;margin:0;color:#cbd5e1;">${topic.trim().replace(/\n/g, '<br>')}</blockquote>
+        </div>
+      `
+    }).catch(e => console.error('Meeting email error:', e.message));
+
+    // Send Discord webhook notification if configured
+    if (config.discord_webhook_url) {
+      fetch(config.discord_webhook_url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          embeds: [{
+            title: '📅 New Portfolio Meeting Booked!',
+            color: 0xd8a53e,
+            fields: [
+              { name: 'Name', value: `${name.trim()} (${role || 'Visitor'})`, inline: true },
+              { name: 'Email', value: email.trim(), inline: true },
+              { name: 'Date & Time', value: `${meeting_date} @ ${timeDisplay}`, inline: false },
+              { name: 'Topic', value: topic.trim(), inline: false }
+            ],
+            timestamp: new Date().toISOString()
+          }]
+        })
+      }).catch(e => console.error('Discord webhook error:', e.message));
+    }
+
+    if (router.broadcastChange) router.broadcastChange('update');
+
+    res.json({ success: true, message: `Meeting confirmed for ${meeting_date} at ${timeDisplay}! Confirmation details sent to ${email.trim()}.`, meeting });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 // ── Server-Sent Events (SSE) Live Sync Endpoint ────────────────
 const sseClients = new Set();

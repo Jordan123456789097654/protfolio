@@ -142,8 +142,10 @@
             <p id="hero-tagline" class="hero-desc-text typewriter-target"></p>
             <div class="hero-cta-group">
                 <a href="#experience" class="btn btn-primary magnetic">View Activities <i data-lucide="arrow-down-right"></i></a>
+                <button id="open-meeting-btn" class="btn btn-outline magnetic"><i data-lucide="calendar"></i> Schedule a Meeting</button>
                 <a href="#contact" class="btn btn-outline magnetic">Get In Touch</a>
             </div>
+
         </div>
         <div class="scroll-indicator magnetic">
             <a href="#about"><i data-lucide="chevron-down"></i></a>
@@ -371,6 +373,68 @@
         </div>
     </div>
 
+    <!-- Interactive Meeting Booking Modal -->
+    <div id="meeting-modal-overlay" class="modal-overlay hidden">
+        <div class="meeting-modal-card">
+            <div class="meeting-modal-header">
+                <div>
+                    <h3 style="margin:0;font-size:1.3rem;color:var(--text-primary);">📅 Schedule a Chat / Meeting</h3>
+                    <p style="margin:4px 0 0 0;font-size:0.82rem;color:var(--text-secondary);">Select a date and pick an available time slot around Jordan's schedule.</p>
+                </div>
+                <button type="button" id="meeting-modal-close" class="modal-close-btn">&times;</button>
+            </div>
+
+            <form id="meeting-booking-form">
+                <div class="form-row-grid">
+                    <div class="form-group">
+                        <label for="meeting-name">Your Full Name *</label>
+                        <input type="text" id="meeting-name" name="name" placeholder="e.g. Dr. Jane Smith" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="meeting-email">Your Email Address *</label>
+                        <input type="email" id="meeting-email" name="email" placeholder="e.g. smith@school.edu" required>
+                    </div>
+                </div>
+
+                <div class="form-row-grid">
+                    <div class="form-group">
+                        <label for="meeting-role">Your Role / Affiliation</label>
+                        <select id="meeting-role" name="role" class="form-control">
+                            <option value="Teacher / Counselor">👨‍🏫 Teacher / Counselor</option>
+                            <option value="Club Advisor / Coach">🌿 Club Advisor / Coach</option>
+                            <option value="Mentor / Professional">💼 Mentor / Professional</option>
+                            <option value="Student / Friend">🎓 Student / Classmate</option>
+                            <option value="Visitor">👋 Visitor</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="meeting-date">Select Date *</label>
+                        <input type="date" id="meeting-date" name="meeting_date" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Available Time Slots (EST) *</label>
+                    <div id="meeting-slots-container" class="time-slots-grid">
+                        <div class="time-slots-placeholder">Please select a date above to check availability...</div>
+                    </div>
+                    <input type="hidden" id="meeting-selected-slot" name="time_slot" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="meeting-topic">Discussion Topic / Meeting Notes *</label>
+                    <textarea id="meeting-topic" name="topic" rows="3" placeholder="What would you like to discuss? (e.g., FBLA project guidance, college recommendation follow-up, robotics code review)" required></textarea>
+                </div>
+
+                <div class="meeting-modal-footer">
+                    <button type="button" id="meeting-modal-cancel" class="btn btn-outline">Cancel</button>
+                    <button type="submit" id="meeting-submit-btn" class="btn btn-primary">Confirm &amp; Book Meeting 📅</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="js/main.js"></script>
 </body>
 </html>
+

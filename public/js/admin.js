@@ -55,6 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Settings tab
     const countdownForm = document.getElementById('countdown-form');
     if (countdownForm) countdownForm.addEventListener('submit', handleCountdownSave);
+    const seasonalThemeForm = document.getElementById('seasonal-theme-form');
+    if (seasonalThemeForm) seasonalThemeForm.addEventListener('submit', handleSeasonalThemeSave);
+
+    // Meetings & Busy Schedules
+    const busyForm = document.getElementById('add-busy-schedule-form');
+    if (busyForm) busyForm.addEventListener('submit', handleBusyScheduleAdd);
 
     document.getElementById('password-form').addEventListener('submit', handlePasswordChange);
     document.getElementById('export-btn').addEventListener('click', handleExport);
@@ -243,6 +249,9 @@ function showDashboard() {
     loadIntegrations();
     loadEmailTemplates();
     loadRecommendations();
+    loadMeetings();
+    loadBusySchedules();
+    loadSeasonalTheme();
     loadFAQs();
     loadAnalytics();
     initQRCode();
@@ -2583,6 +2592,112 @@ function openStagingPreviewModal() {
 function closeStagingPreviewModal() {
     const modal = document.getElementById('preview-modal-overlay');
     if (modal) modal.classList.add('hidden');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// 📅 MEETINGS & BUSY SCHEDULE HANDLERS
+// ══════════════════════════════════════════════════════════════════
+async function loadMeetings() {
+    try {
+        const meetings = await apiCall('/admin/meetings');
+        renderTable('meetings-table', meetings, m => {
+            const statusBadge = m.status === 'confirmed' 
+                ? '<span style="color:#2ed573;font-weight:600;">✓ Confirmed</span>' 
+                : m.status === 'declined' 
+                ? '<span style="color:#ff4757;font-weight:600;">✕ Declined</span>' 
+                : '<span style="color:#ffa502;font-weight:600;">⏳ Pending</span>';
+            
+            return `
+                <td data-label="Name"><strong>${m.name}</strong></td>
+                <td data-label="Email / Role">${m.email}<br><small style="color:var(--text-secondary);">${m.role || 'Guest'}</small></td>
+                <td data-label="Date & Time Slot">${m.meeting_date}<br><small style="color:#00d4ff;">${m.time_slot}</small></td>
+                <td data-label="Topic">${m.topic || 'General Meeting'}</td>
+                <td data-label="Status">${statusBadge}</td>
+                <td data-label="Actions" class="actions-cell">
+                    ${m.status !== 'confirmed' ? `<button class="btn-sm btn-outline" style="color:#2ed573;border-color:#2ed573;" onclick="handleMeetingStatusUpdate(${m.id}, 'confirmed')">Confirm</button>` : ''}
+                    ${m.status !== 'declined' ? `<button class="btn-sm btn-outline" style="color:#ff4757;border-color:#ff4757;" onclick="handleMeetingStatusUpdate(${m.id}, 'declined')">Decline</button>` : ''}
+                    <button class="btn-sm btn-danger" onclick="deleteItem('/admin/meetings', ${m.id}, loadMeetings)">Delete</button>
+                </td>
+            `;
+        });
+    } catch (e) {
+        console.error('Meetings load error:', e);
+    }
+}
+
+async function handleMeetingStatusUpdate(id, status) {
+    try {
+        await apiCall(`/admin/meetings/${id}`, 'PUT', { status });
+        showToast(`Meeting ${status}`, 'success');
+        loadMeetings();
+    } catch (e) {
+        showToast('Failed to update meeting status', 'error');
+    }
+}
+
+async function loadBusySchedules() {
+    try {
+        const busy = await apiCall('/admin/busy-schedules');
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        renderTable('busy-schedules-table', busy, b => `
+            <td data-label="Reason / Title"><strong>${b.title}</strong></td>
+            <td data-label="Day of Week">${days[b.day_of_week] || 'Day ' + b.day_of_week}</td>
+            <td data-label="Time Range">${b.start_time} - ${b.end_time}</td>
+            <td data-label="Actions" class="actions-cell">
+                <button class="btn-sm btn-danger" onclick="deleteItem('/admin/busy-schedules', ${b.id}, loadBusySchedules)">Delete Block</button>
+            </td>
+        `);
+    } catch (e) {
+        console.error('Busy schedules load error:', e);
+    }
+}
+
+async function handleBusyScheduleAdd(e) {
+    e.preventDefault();
+    const title = document.getElementById('busy-title-input')?.value || '';
+    const day_of_week = parseInt(document.getElementById('busy-day-input')?.value || '0', 10);
+    const start_time = document.getElementById('busy-start-input')?.value || '';
+    const end_time = document.getElementById('busy-end-input')?.value || '';
+
+    if (!title || !start_time || !end_time) {
+        showToast('Please fill out all busy block fields.', 'error');
+        return;
+    }
+
+    try {
+        await apiCall('/admin/busy-schedules', 'POST', { title, day_of_week, start_time, end_time });
+        showToast('Busy schedule block added!', 'success');
+        document.getElementById('add-busy-schedule-form')?.reset();
+        loadBusySchedules();
+    } catch (err) {
+        showToast('Failed to add busy block: ' + err.message, 'error');
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// 🎃 SEASONAL THEME HANDLER
+// ══════════════════════════════════════════════════════════════════
+async function loadSeasonalTheme() {
+    try {
+        const res = await apiCall('/api/theme/seasonal');
+        if (res && res.theme) {
+            const select = document.getElementById('seasonal-theme-select');
+            if (select) select.value = res.theme;
+        }
+    } catch (e) {
+        console.error('Seasonal theme load error:', e);
+    }
+}
+
+async function handleSeasonalThemeSave(e) {
+    e.preventDefault();
+    const theme = document.getElementById('seasonal-theme-select')?.value || 'auto';
+    try {
+        await apiCall('/admin/theme/seasonal', 'PUT', { seasonal_theme: theme });
+        showToast(`Seasonal theme updated to: ${theme.toUpperCase()}`, 'success');
+    } catch (err) {
+        showToast('Failed to save seasonal theme: ' + err.message, 'error');
+    }
 }
 
 
