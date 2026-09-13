@@ -9,14 +9,36 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#d8a53e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
 </head>
 <body>
-    <!-- Intro Curtain Loader -->
+    <!-- Cinematic Intro Loader -->
     <div id="intro-loader">
-        <span id="intro-loader-text">Portfolio<span class="logo-dot">.</span></span>
+        <div class="loader-top-half"></div>
+        <div class="loader-bottom-half"></div>
+        <div class="loader-content">
+            <svg class="loader-logo-svg" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="60" cy="60" r="50" stroke="url(#loaderGrad)" stroke-width="2" stroke-dasharray="314" stroke-dashoffset="314" class="loader-circle"/>
+                <path d="M35 60 L55 78 L85 42" stroke="url(#loaderGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="80" stroke-dashoffset="80" class="loader-check"/>
+                <defs>
+                    <linearGradient id="loaderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#d8a53e"/>
+                        <stop offset="100%" stop-color="#6f9bd1"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <div class="loader-name">Jordan Daniels<span class="loader-dot">.</span></div>
+            <div class="loader-sub">Loading your experience...</div>
+            <div class="loader-bar-wrap">
+                <div class="loader-bar" id="loader-bar"></div>
+            </div>
+        </div>
     </div>
 
     <!-- Form Submission Confetti Canvas -->

@@ -1,0 +1,16 @@
+﻿{
+  "name": "Jordan's Portfolio",
+  "short_name": "Portfolio",
+  "description": "Personal academic portfolio and activity showcase",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a1220",
+  "theme_color": "#d8a53e",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

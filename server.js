@@ -56,6 +56,35 @@ pool.query('SELECT NOW()')
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// ── Security Headers ─────────────────────────────────────────────
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
+// ── Simple in-memory rate limiter (no npm needed) ─────────────────
+const rateLimitMap = new Map();
+function rateLimit(windowMs, max) {
+  return (req, res, next) => {
+    const key = req.ip || req.connection.remoteAddress;
+    const now = Date.now();
+    const record = rateLimitMap.get(key) || { count: 0, start: now };
+    if (now - record.start > windowMs) {
+      record.count = 0;
+      record.start = now;
+    }
+    record.count++;
+    rateLimitMap.set(key, record);
+    if (record.count > max) {
+      return res.status(429).json({ error: 'Too many requests, please slow down.' });
+    }
+    next();
+  };
+}
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(session({
@@ -80,6 +109,10 @@ ensureBucket();
 const apiRouter = require('./routes/api');
 app.use('/admin/spotify', require('./routes/spotify'));
 app.use('/api', apiRouter);
+
+// Apply rate limit to public form submission endpoints
+app.use('/api/contact', rateLimit(60000, 5));
+app.use('/api/recommendations/submit', rateLimit(60000, 3));
 
 // Middleware to trigger real-time broadcast to connected browsers on admin data mutations
 app.use('/admin', (req, res, next) => {

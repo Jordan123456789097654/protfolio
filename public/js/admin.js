@@ -1081,18 +1081,29 @@ function handleModalSubmit(e) {
 }
 
 // Toast System
-function showToast(message, type = 'success') {
+function showToast(message, type = 'success', title = null) {
     const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
+    const titles = { success: 'Success', error: 'Error', warning: 'Warning', info: 'Info' };
+
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.textContent = message;
+    toast.innerHTML = `
+        <span class="toast-icon">${icons[type] || '✓'}</span>
+        <div class="toast-body">
+            <div class="toast-title">${title || titles[type] || type}</div>
+            <div class="toast-msg">${message}</div>
+        </div>
+        <div class="toast-timer"></div>
+    `;
     container.appendChild(toast);
-    
+
     setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
+        toast.classList.add('removing');
+        setTimeout(() => toast.remove(), 320);
+    }, 3500);
 }
 
 // ══════════════════════════════════════════════════════════════════

@@ -1,14 +1,35 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // ── Intro Curtain Loader ──────────────────────────────────────
+    // ── Cinematic Split-Curtain Loader ────────────────────────────
     document.body.classList.add('is-loading');
     const introLoader = document.getElementById('intro-loader');
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            introLoader?.classList.add('loader-done');
-            document.body.classList.remove('is-loading');
-            setTimeout(() => introLoader?.remove(), 1000);
-        }, 500);
-    });
+    const loaderBar = document.getElementById('loader-bar');
+
+    // Animate progress bar from 0 → 100% over ~1.4s
+    if (loaderBar) {
+        let progress = 0;
+        const barInterval = setInterval(() => {
+            progress = Math.min(progress + (Math.random() * 12 + 4), 90);
+            loaderBar.style.width = progress + '%';
+        }, 80);
+
+        window.addEventListener('load', () => {
+            clearInterval(barInterval);
+            loaderBar.style.width = '100%';
+            setTimeout(() => {
+                introLoader?.classList.add('loader-done');
+                document.body.classList.remove('is-loading');
+                setTimeout(() => introLoader?.remove(), 950);
+            }, 300);
+        });
+    } else {
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                introLoader?.classList.add('loader-done');
+                document.body.classList.remove('is-loading');
+                setTimeout(() => introLoader?.remove(), 950);
+            }, 500);
+        });
+    }
 
     // ── Buttery Smooth Inertia Scrolling (Lenis) ───────────────────
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -483,35 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.lucide) lucide.createIcons();
     }
 
-    async function initSpotifyWidget() {
-        const widget = document.getElementById('spotify-widget');
-        const art = document.getElementById('spotify-art');
-        const track = document.getElementById('spotify-track');
-        const artist = document.getElementById('spotify-artist');
-        if (!widget || !art || !track || !artist) return;
-
-        async function updateSpotifyStatus() {
-            try {
-                const res = await fetch('/api/spotify/now-playing');
-                const data = await res.json();
-
-                if (data && data.isPlaying && data.title) {
-                    art.src = data.albumImageUrl || data.album_art || '';
-                    track.textContent = data.title;
-                    track.href = data.songUrl || data.song_url || '#';
-                    artist.textContent = data.artist || '';
-                    widget.classList.remove('hidden');
-                } else {
-                    widget.classList.add('hidden');
-                }
-            } catch (err) {
-                widget.classList.add('hidden');
-            }
-        }
-
-        updateSpotifyStatus();
-        setInterval(updateSpotifyStatus, 15000);
-    }
+    // initSpotifyWidget is defined below near the bottom (single canonical version)
 
     function renderTestimonials(testimonials) {
         const track = document.getElementById('testimonials-track');
@@ -842,27 +835,85 @@ document.addEventListener('DOMContentLoaded', () => {
             placeholderEl.textContent = config.name ? config.name.charAt(0).toUpperCase() : '?';
         }
 
-        // Featured quote — falls back to a friendly prompt if nothing's
-        // configured yet; overridden by rotating testimonials in renderTestimonials.
+        // Rotating quotes carousel — cycles through a list every 5s with a smooth crossfade
         const quoteText = document.getElementById('quote-text');
         const quoteAuthor = document.getElementById('quote-author');
+
+        const defaultQuotes = [
+            { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "— Winston Churchill" },
+            { text: "The future belongs to those who believe in the beauty of their dreams.", author: "— Eleanor Roosevelt" },
+            { text: "Education is the most powerful weapon which you can use to change the world.", author: "— Nelson Mandela" },
+            { text: "It always seems impossible until it's done.", author: "— Nelson Mandela" },
+            { text: "Opportunities don't happen. You create them.", author: "— Chris Grosser" }
+        ];
+
         if (quoteText) {
-            if (config.quote_text) {
-                quoteText.textContent = `"${config.quote_text}"`;
-                if (quoteAuthor) quoteAuthor.textContent = config.quote_author || '';
-            } else {
-                quoteText.textContent = 'Add a favorite quote from the admin panel to feature it here.';
-                if (quoteAuthor) quoteAuthor.textContent = '';
+            // Prepend the DB quote if it exists
+            const allQuotes = config.quote_text
+                ? [{ text: config.quote_text, author: config.quote_author || '' }, ...defaultQuotes]
+                : defaultQuotes;
+
+            let currentQuoteIndex = 0;
+
+            // Inject dot indicators beneath the quote card
+            const bentoQuote = quoteText.closest('.bento-item');
+            if (bentoQuote && !bentoQuote.querySelector('.quote-dots')) {
+                const dotsEl = document.createElement('div');
+                dotsEl.className = 'quote-dots';
+                allQuotes.forEach((_, i) => {
+                    const dot = document.createElement('span');
+                    dot.className = 'quote-dot' + (i === 0 ? ' active' : '');
+                    dotsEl.appendChild(dot);
+                });
+                bentoQuote.appendChild(dotsEl);
             }
+
+            function updateQuoteDots(idx) {
+                const dots = document.querySelectorAll('.quote-dot');
+                dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+            }
+
+            function showQuote(idx, animate = true) {
+                const q = allQuotes[idx];
+                if (!animate) {
+                    quoteText.textContent = `"${q.text}"`;
+                    if (quoteAuthor) quoteAuthor.textContent = q.author || '';
+                    updateQuoteDots(idx);
+                    return;
+                }
+                quoteText.style.opacity = '0';
+                quoteText.style.transform = 'translateY(8px)';
+                if (quoteAuthor) { quoteAuthor.style.opacity = '0'; quoteAuthor.style.transform = 'translateY(8px)'; }
+                setTimeout(() => {
+                    quoteText.textContent = `"${q.text}"`;
+                    if (quoteAuthor) quoteAuthor.textContent = q.author || '';
+                    quoteText.style.opacity = '1';
+                    quoteText.style.transform = 'translateY(0)';
+                    if (quoteAuthor) { quoteAuthor.style.opacity = '1'; quoteAuthor.style.transform = 'translateY(0)'; }
+                    updateQuoteDots(idx);
+                }, 350);
+            }
+
+            // Apply transition styles
+            quoteText.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+            if (quoteAuthor) quoteAuthor.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+
+            showQuote(0, false);
+            setInterval(() => {
+                currentQuoteIndex = (currentQuoteIndex + 1) % allQuotes.length;
+                showQuote(currentQuoteIndex);
+            }, 5500);
         }
-    }
+    } // end renderAbout
 
     function renderExperience(experience) {
+
         const hasData = Array.isArray(experience) && experience.length > 0;
         toggleSectionVisibility('experience', hasData);
 
         const container = document.getElementById('experience-timeline');
         if (!container || !hasData) return;
+
 
         experience.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 

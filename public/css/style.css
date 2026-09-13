@@ -476,36 +476,73 @@ nav.scrolled {
     border-radius: 24px;
     padding: 30px;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.4s ease;
+}
+
+.bento-quote:hover {
+    border-color: rgba(var(--accent-rgb), 0.3);
 }
 
 .quote-content {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 16px;
     color: var(--text-secondary);
     font-size: 1.05rem;
     font-style: italic;
+    min-height: 60px;
 }
 
 .quote-icon {
     font-size: 2rem;
     color: var(--accent);
     flex-shrink: 0;
+    margin-top: 4px;
 }
 
 #quote-text {
-    transition: opacity 0.3s ease;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    line-height: 1.65;
 }
 
 .quote-author {
     display: block;
-    margin-top: 8px;
+    margin-top: 10px;
     font-size: 0.85rem;
     font-style: normal;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: var(--accent);
+    letter-spacing: 0.02em;
+    transition: opacity 0.35s ease, transform 0.35s ease;
 }
+
+/* Rotating quote dot indicators */
+.quote-dots {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.quote-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transition: background 0.3s ease, width 0.3s ease;
+}
+
+.quote-dot.active {
+    background: var(--accent);
+    width: 18px;
+    border-radius: 3px;
+}
+
 
 /* ── Section Headers & Dual Laser Tags ────────────────────────── */
 section {
@@ -1711,38 +1748,113 @@ footer {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   Intro Curtain Loader
+   Cinematic Split-Curtain Intro Loader
    ══════════════════════════════════════════════════════════════════ */
 #intro-loader {
     position: fixed;
     inset: 0;
     z-index: 100000;
-    background: var(--bg-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.9s cubic-bezier(0.76, 0, 0.24, 1), opacity 0.6s ease;
+    pointer-events: all;
 }
 
-#intro-loader-text {
+.loader-top-half,
+.loader-bottom-half {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: var(--bg-primary);
+    transition: transform 0.85s cubic-bezier(0.76, 0, 0.24, 1);
+    z-index: 1;
+}
+.loader-top-half { top: 0; }
+.loader-bottom-half { bottom: 0; }
+
+#intro-loader.loader-done .loader-top-half {
+    transform: translateY(-100%);
+}
+#intro-loader.loader-done .loader-bottom-half {
+    transform: translateY(100%);
+}
+#intro-loader.loader-done {
+    pointer-events: none;
+}
+
+.loader-content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.loader-logo-svg {
+    width: 90px;
+    height: 90px;
+    filter: drop-shadow(0 0 18px rgba(216, 165, 62, 0.5));
+}
+
+.loader-circle {
+    animation: loaderCircleDraw 1s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+}
+
+.loader-check {
+    animation: loaderCircleDraw 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.9s forwards;
+}
+
+@keyframes loaderCircleDraw {
+    to { stroke-dashoffset: 0; }
+}
+
+.loader-name {
     font-family: var(--font-heading);
-    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    font-size: clamp(1.4rem, 4vw, 2rem);
     font-weight: 700;
     letter-spacing: -0.02em;
     color: var(--text-primary);
     opacity: 0;
-    transform: translateY(16px);
-    animation: introTextIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+    transform: translateY(10px);
+    animation: loaderFadeUp 0.6s ease 0.8s forwards;
 }
 
-@keyframes introTextIn {
+.loader-dot {
+    color: var(--accent);
+}
+
+.loader-sub {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0;
+    animation: loaderFadeUp 0.5s ease 1s forwards;
+}
+
+.loader-bar-wrap {
+    width: 180px;
+    height: 2px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 99px;
+    overflow: hidden;
+    opacity: 0;
+    animation: loaderFadeUp 0.4s ease 1.1s forwards;
+}
+
+.loader-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+    border-radius: 99px;
+    box-shadow: 0 0 10px var(--accent-glow);
+    transition: width 0.05s linear;
+}
+
+@keyframes loaderFadeUp {
     to { opacity: 1; transform: translateY(0); }
-}
-
-#intro-loader.loader-done {
-    transform: translateY(-100%);
-    opacity: 0.98;
-    pointer-events: none;
 }
 
 body.is-loading {
@@ -2526,4 +2638,188 @@ body.is-loading {
     text-transform: uppercase;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   🎨 VISUAL ANIMATION UPGRADES
+   ══════════════════════════════════════════════════════════════════ */
 
+/* ── Button micro press effect ─────────────────────────────────── */
+.btn:active, .submit-btn:active, .magnetic:active {
+    transform: scale(0.96) !important;
+    transition: transform 0.08s ease !important;
+}
+
+/* ── Card shimmer sweep on hover ───────────────────────────────── */
+.cert-card, .achievement-card, .bento-item, .rec-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.cert-card::before, .achievement-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+    transform: skewX(-15deg);
+    transition: none;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.cert-card:hover::before, .achievement-card:hover::before {
+    animation: shimmerSweep 0.7s ease forwards;
+}
+
+@keyframes shimmerSweep {
+    from { left: -100%; }
+    to   { left: 160%; }
+}
+
+/* ── Achievement card glow on hover ───────────────────────────── */
+.achievement-card:hover {
+    border-color: rgba(var(--accent-rgb), 0.45) !important;
+    box-shadow: 0 0 28px rgba(var(--accent-rgb), 0.18), 0 20px 40px rgba(0,0,0,0.4) !important;
+    transform: translateY(-5px) scale(1.01) !important;
+}
+
+/* ── Nav active pill glowing indicator ────────────────────────── */
+.nav-pill {
+    position: relative;
+}
+
+.nav-pill.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    animation: pulseNavDot 2s ease-in-out infinite;
+}
+
+@keyframes pulseNavDot {
+    0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+    50%       { opacity: 0.5; transform: translateX(-50%) scale(0.6); }
+}
+
+/* ── Hero title char roll-up improve ─────────────────────────── */
+.char {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(30px) rotateX(-40deg);
+    animation: charRollIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transform-origin: bottom center;
+}
+
+@keyframes charRollIn {
+    to {
+        opacity: 1;
+        transform: translateY(0) rotateX(0deg);
+    }
+}
+
+/* ── Section stagger delay utilities ──────────────────────────── */
+.reveal:nth-child(1) { transition-delay: 0ms; }
+.reveal:nth-child(2) { transition-delay: 80ms; }
+.reveal:nth-child(3) { transition-delay: 160ms; }
+.reveal:nth-child(4) { transition-delay: 240ms; }
+.reveal:nth-child(5) { transition-delay: 320ms; }
+.reveal:nth-child(6) { transition-delay: 400ms; }
+
+/* ── Timeline item alternating slide ─────────────────────────── */
+.timeline-item.left.reveal {
+    transform: translateX(-40px) translateY(30px);
+    filter: blur(6px);
+}
+.timeline-item.right.reveal {
+    transform: translateX(40px) translateY(30px);
+    filter: blur(6px);
+}
+.timeline-item.left.reveal.active,
+.timeline-item.right.reveal.active {
+    transform: translateX(0) translateY(0);
+    filter: blur(0);
+}
+
+/* ── Scroll progress bar gradient shift ─────────────────────── */
+#scroll-progress {
+    background: linear-gradient(90deg, var(--accent), var(--accent-secondary), var(--accent));
+    background-size: 200% 100%;
+    animation: progressShimmer 3s linear infinite;
+}
+
+@keyframes progressShimmer {
+    0%   { background-position: 200% center; }
+    100% { background-position: 0% center; }
+}
+
+/* ── Hero content lines fade-stagger ─────────────────────────── */
+.hero-widgets-row { animation: heroLineIn 0.7s cubic-bezier(0.16,1,0.3,1) 0.4s both; }
+.dynamic-greeting-banner { animation: heroLineIn 0.7s cubic-bezier(0.16,1,0.3,1) 0.6s both; }
+.hero-title-text { animation: heroLineIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.7s both; }
+.hero-subtitle-text { animation: heroLineIn 0.7s cubic-bezier(0.16,1,0.3,1) 0.85s both; }
+.class-year-badge { animation: heroLineIn 0.6s cubic-bezier(0.16,1,0.3,1) 1s both; }
+.hero-desc-text { animation: heroLineIn 0.6s cubic-bezier(0.16,1,0.3,1) 1.05s both; }
+.hero-cta-group { animation: heroLineIn 0.6s cubic-bezier(0.16,1,0.3,1) 1.2s both; }
+
+@keyframes heroLineIn {
+    from {
+        opacity: 0;
+        transform: translateY(22px);
+        filter: blur(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+}
+
+/* ── Back-to-top button bounce reveal ─────────────────────────── */
+.back-to-top {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+.back-to-top:hover {
+    transform: translateY(-4px) scale(1.12) !important;
+    box-shadow: 0 0 20px var(--accent-glow) !important;
+}
+
+/* ── Skill pill pop-in ─────────────────────────────────────────── */
+.strength-pill {
+    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease, background 0.25s ease;
+}
+.strength-pill:hover {
+    transform: translateY(-3px) scale(1.06);
+    box-shadow: 0 6px 20px rgba(var(--accent-rgb), 0.25);
+    background: rgba(var(--accent-rgb), 0.15) !important;
+    border-color: rgba(var(--accent-rgb), 0.5) !important;
+}
+
+/* ── Tilt card glow border on hover ──────────────────────────── */
+.tilt-card {
+    transition: box-shadow 0.4s ease, border-color 0.4s ease;
+}
+.tilt-card:hover {
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(var(--accent-rgb), 0.25), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+/* ── FAQ accordion smooth max-height transition ──────────────── */
+.faq-body {
+    transition: max-height 0.45s cubic-bezier(0.16,1,0.3,1), padding 0.3s ease;
+}
+
+/* ── Section hollow background text entrance ─────────────────── */
+.hollow-bg-text {
+    transition: opacity 1.2s ease, letter-spacing 1.2s ease;
+    letter-spacing: 4px;
+}
+section:has(.reveal.active) .hollow-bg-text {
+    letter-spacing: 18px;
+}
