@@ -1033,9 +1033,21 @@
                     <input type="text" id="event-title-input" required placeholder="e.g. FBLA State Leadership Conference">
                 </div>
                 <div class="form-group row" style="display:flex;gap:1rem;">
-                    <div style="flex:1;">
-                        <label for="event-date-input">Event Date *</label>
-                        <input type="date" id="event-date-input" required>
+                    <div style="flex:1;" id="event-date-wrap">
+                        <label for="event-date-input" id="event-date-label">Event Date</label>
+                        <input type="date" id="event-date-input">
+                    </div>
+                    <div style="flex:1;display:none;" id="event-day-wrap">
+                        <label for="event-day-input">Day of Week</label>
+                        <select id="event-day-input" class="form-control">
+                            <option value="Monday">Monday</option>
+                            <option value="Tuesday">Tuesday</option>
+                            <option value="Wednesday">Wednesday</option>
+                            <option value="Thursday">Thursday</option>
+                            <option value="Friday">Friday</option>
+                            <option value="Saturday">Saturday</option>
+                            <option value="Sunday">Sunday</option>
+                        </select>
                     </div>
                     <div style="flex:1;">
                         <label for="event-category-input">Category</label>

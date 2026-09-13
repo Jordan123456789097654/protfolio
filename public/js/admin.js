@@ -2994,35 +2994,71 @@ async function loadEvents() {
     }
 }
 
+function toggleEventRecurrenceUI() {
+    const isRecurring = document.getElementById('event-recurring-input')?.checked || document.getElementById('event-recurrence-input')?.value !== 'none';
+    const dayWrap = document.getElementById('event-day-wrap');
+    const dateLabel = document.getElementById('event-date-label');
+    const dateInput = document.getElementById('event-date-input');
+
+    if (dayWrap) dayWrap.style.display = isRecurring ? 'block' : 'none';
+    if (dateLabel) dateLabel.textContent = isRecurring ? 'Start Date (Optional)' : 'Event Date *';
+    if (dateInput) {
+        if (!isRecurring && !dateInput.value) {
+            dateInput.required = true;
+        } else {
+            dateInput.required = false;
+        }
+    }
+}
+
 function openEventModal(ev = null) {
     document.getElementById('event-id').value = ev ? ev.id : '';
     document.getElementById('event-title-input').value = ev ? ev.title : '';
-    document.getElementById('event-date-input').value = ev ? ev.event_date : new Date().toISOString().slice(0, 10);
+    document.getElementById('event-date-input').value = ev ? (ev.event_date || '') : '';
     document.getElementById('event-category-input').value = ev ? ev.category : 'School Event';
     document.getElementById('event-start-input').value = ev ? ev.start_time : '';
     document.getElementById('event-end-input').value = ev ? ev.end_time : '';
-    document.getElementById('event-recurring-input').checked = ev ? !!ev.is_recurring : false;
-    document.getElementById('event-recurrence-input').value = (ev && ev.recurrence_rule) ? ev.recurrence_rule : (ev && ev.is_recurring ? 'weekly' : 'none');
+    
+    const isRec = ev ? !!ev.is_recurring : false;
+    document.getElementById('event-recurring-input').checked = isRec;
+    document.getElementById('event-recurrence-input').value = (ev && ev.recurrence_rule) ? ev.recurrence_rule : (isRec ? 'weekly' : 'none');
+    
+    if (document.getElementById('event-day-input')) {
+        document.getElementById('event-day-input').value = (ev && ev.event_date && ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].includes(ev.event_date)) ? ev.event_date : 'Thursday';
+    }
+
     document.getElementById('event-location-input').value = ev ? ev.location : '';
     document.getElementById('event-desc-input').value = ev ? ev.description : '';
     document.getElementById('event-modal-title').textContent = ev ? 'Edit Calendar Event' : 'Add School / Public Calendar Event';
+    
+    toggleEventRecurrenceUI();
     document.getElementById('event-modal-overlay').classList.remove('hidden');
 }
+
+document.getElementById('event-recurring-input')?.addEventListener('change', toggleEventRecurrenceUI);
+document.getElementById('event-recurrence-input')?.addEventListener('change', toggleEventRecurrenceUI);
 
 async function handleEventSubmit(e) {
     e.preventDefault();
     const id = document.getElementById('event-id').value;
     const isRecurring = !!document.getElementById('event-recurring-input').checked;
     const recurrenceRule = document.getElementById('event-recurrence-input').value;
+    const isRec = isRecurring || recurrenceRule !== 'none';
+
+    let eventDate = document.getElementById('event-date-input').value;
+    if (isRec && !eventDate) {
+        const dayVal = document.getElementById('event-day-input')?.value || 'Weekly';
+        eventDate = `${dayVal}s`;
+    }
 
     const payload = {
         title: document.getElementById('event-title-input').value,
-        event_date: document.getElementById('event-date-input').value,
+        event_date: eventDate || 'Recurring',
         category: document.getElementById('event-category-input').value,
         start_time: document.getElementById('event-start-input').value,
         end_time: document.getElementById('event-end-input').value,
-        is_recurring: isRecurring || recurrenceRule !== 'none',
-        recurrence_rule: recurrenceRule !== 'none' ? recurrenceRule : (isRecurring ? 'weekly' : 'none'),
+        is_recurring: isRec,
+        recurrence_rule: recurrenceRule !== 'none' ? recurrenceRule : (isRec ? 'weekly' : 'none'),
         location: document.getElementById('event-location-input').value,
         description: document.getElementById('event-desc-input').value,
         is_published: true
