@@ -71,6 +71,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Meetings & Busy Schedules
     const busyForm = document.getElementById('add-busy-schedule-form');
     if (busyForm) busyForm.addEventListener('submit', handleBusyScheduleAdd);
+    const busyModalForm = document.getElementById('busy-modal-form');
+    if (busyModalForm) busyModalForm.addEventListener('submit', handleBusyModalSubmit);
+    const busyModalCancel = document.getElementById('busy-modal-cancel');
+    if (busyModalCancel) busyModalCancel.addEventListener('click', () => {
+        document.getElementById('busy-modal-overlay').classList.add('hidden');
+    });
     const meetingSettingsForm = document.getElementById('meeting-settings-form');
     if (meetingSettingsForm) meetingSettingsForm.addEventListener('submit', handleMeetingSettingsSave);
 
@@ -2687,23 +2693,90 @@ async function loadBusySchedules() {
     try {
         const busy = await apiCall('/admin/busy-schedules');
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        renderTable('busy-schedules-table', busy, b => `
-            <td data-label="Reason / Title"><strong>${b.title}</strong></td>
-            <td data-label="Day of Week">${days[b.day_of_week] || 'Day ' + b.day_of_week}</td>
-            <td data-label="Time Range">${b.start_time} - ${b.end_time}</td>
-            <td data-label="Actions" class="actions-cell">
-                <button class="btn-sm btn-danger" onclick="deleteItem('/admin/busy-schedules', ${b.id}, loadBusySchedules)">Delete Block</button>
-            </td>
-        `);
+        const tbody = document.querySelector('#busy-schedules-table tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (!busy || busy.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">No recurring busy holds added.</td></tr>';
+            return;
+        }
+
+        busy.forEach(b => {
+            const tr = document.createElement('tr');
+            const dayStr = typeof b.day_of_week === 'number' ? days[b.day_of_week] : b.day_of_week;
+            tr.innerHTML = `
+                <td data-label="Reason / Title"><strong>${escapeHTML(b.title)}</strong></td>
+                <td data-label="Day of Week">${escapeHTML(dayStr)}</td>
+                <td data-label="Time Range">${escapeHTML(b.start_time)} - ${escapeHTML(b.end_time)}</td>
+                <td data-label="Actions" class="actions-cell">
+                    <button class="btn-sm btn-outline edit-busy-btn" data-id="${b.id}">Edit</button>
+                    <button class="btn-sm btn-danger delete-busy-btn" data-id="${b.id}">Delete</button>
+                </td>
+            `;
+
+            tr.querySelector('.edit-busy-btn').addEventListener('click', () => openBusyModal(b));
+            tr.querySelector('.delete-busy-btn').addEventListener('click', async () => {
+                if (confirm(`Delete meeting hold "${b.title}"?`)) {
+                    try {
+                        await apiCall(`/admin/busy-schedules/${b.id}`, 'DELETE');
+                        showToast('Meeting hold deleted!', 'success');
+                        loadBusySchedules();
+                    } catch (err) {
+                        showToast('Failed to delete meeting hold: ' + err.message, 'error');
+                    }
+                }
+            });
+
+            tbody.appendChild(tr);
+        });
     } catch (e) {
         console.error('Busy schedules load error:', e);
+    }
+}
+
+function openBusyModal(b = null) {
+    document.getElementById('edit-busy-id').value = b ? b.id : '';
+    document.getElementById('edit-busy-title').value = b ? b.title : '';
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayName = typeof b?.day_of_week === 'number' ? days[b.day_of_week] : (b ? b.day_of_week : 'Monday');
+    document.getElementById('edit-busy-day').value = dayName;
+    document.getElementById('edit-busy-start').value = b ? b.start_time : '08:00';
+    document.getElementById('edit-busy-end').value = b ? b.end_time : '09:00';
+    document.getElementById('edit-busy-desc').value = b ? (b.description || '') : '';
+    document.getElementById('busy-modal-overlay').classList.remove('hidden');
+}
+
+async function handleBusyModalSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('edit-busy-id').value;
+    const payload = {
+        title: document.getElementById('edit-busy-title').value,
+        day_of_week: document.getElementById('edit-busy-day').value,
+        start_time: document.getElementById('edit-busy-start').value,
+        end_time: document.getElementById('edit-busy-end').value,
+        description: document.getElementById('edit-busy-desc').value
+    };
+
+    try {
+        if (id) {
+            await apiCall(`/admin/busy-schedules/${id}`, 'PUT', payload);
+            showToast('Meeting hold updated!', 'success');
+        } else {
+            await apiCall('/admin/busy-schedules', 'POST', payload);
+            showToast('Meeting hold created!', 'success');
+        }
+        document.getElementById('busy-modal-overlay').classList.add('hidden');
+        loadBusySchedules();
+    } catch (err) {
+        showToast('Failed to save meeting hold: ' + err.message, 'error');
     }
 }
 
 async function handleBusyScheduleAdd(e) {
     e.preventDefault();
     const title = document.getElementById('busy-title-input')?.value || '';
-    const day_of_week = parseInt(document.getElementById('busy-day-input')?.value || '0', 10);
+    const day_of_week = document.getElementById('busy-day-input')?.options[document.getElementById('busy-day-input')?.selectedIndex]?.text || 'Monday';
     const start_time = document.getElementById('busy-start-input')?.value || '';
     const end_time = document.getElementById('busy-end-input')?.value || '';
 

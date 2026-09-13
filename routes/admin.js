@@ -1642,6 +1642,21 @@ router.post('/busy-schedules', async (req, res) => {
   }
 });
 
+router.put('/busy-schedules/:id', async (req, res) => {
+  try {
+    const { title, day_of_week, start_time, end_time, description } = req.body;
+    const { rows } = await req.app.locals.pool.query(
+      `UPDATE busy_schedules SET title=$1, day_of_week=$2, start_time=$3, end_time=$4, description=$5
+       WHERE id=$6 RETURNING *`,
+      [title.trim(), day_of_week, start_time, end_time, description || '', req.params.id]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.delete('/busy-schedules/:id', async (req, res) => {
   try {
     await req.app.locals.pool.query('DELETE FROM busy_schedules WHERE id=$1', [req.params.id]);

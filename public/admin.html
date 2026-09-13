@@ -1075,6 +1075,50 @@
         </div>
     </div>
 
+    <!-- Busy Schedule / Meeting Hold Modal -->
+    <div id="busy-modal-overlay" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3 id="busy-modal-title">Edit Recurring Meeting Hold</h3>
+            <form id="busy-modal-form">
+                <input type="hidden" id="edit-busy-id">
+                <div class="form-group">
+                    <label for="edit-busy-title">Hold Reason / Title *</label>
+                    <input type="text" id="edit-busy-title" required placeholder="e.g. VEX Robotics Practice">
+                </div>
+                <div class="form-group">
+                    <label for="edit-busy-day">Day of Week *</label>
+                    <select id="edit-busy-day" class="form-control">
+                        <option value="Sunday">Sunday</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                    </select>
+                </div>
+                <div class="form-group row" style="display:flex;gap:1rem;">
+                    <div style="flex:1;">
+                        <label for="edit-busy-start">Start Time *</label>
+                        <input type="time" id="edit-busy-start" required>
+                    </div>
+                    <div style="flex:1;">
+                        <label for="edit-busy-end">End Time *</label>
+                        <input type="time" id="edit-busy-end" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="edit-busy-desc">Description / Notes</label>
+                    <input type="text" id="edit-busy-desc" placeholder="e.g. Tuesday & Thursday build season practice">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="busy-modal-cancel" class="btn-outline">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Meeting Hold</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Admin Media Crop, Rotate & Filter Suite Modal -->
     <div id="crop-modal-overlay" class="modal-overlay hidden">
         <div class="modal-card" style="max-width:800px;width:95%;">
