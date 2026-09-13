@@ -2010,12 +2010,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     if ((ev.title || '').toLowerCase().includes(fullDayName.toLowerCase()) || (ev.title || '').toLowerCase().includes(dayName.toLowerCase())) return true;
                 }
 
-                // Standard exact date match
-                if (ev.event_date) {
-                    const dateObj = new Date(ev.event_date);
-                    if (!isNaN(dateObj.getTime())) {
-                        return dateObj.toDateString() === dayDate.toDateString();
-                    }
+                // Standard exact date match (compare YYYY-MM-DD directly to prevent timezone shift)
+                if (ev.event_date && ev.event_date.length >= 10) {
+                    const targetISO = ev.event_date.slice(0, 10);
+                    const currentISO = dayDate.toISOString().slice(0, 10);
+                    if (targetISO === currentISO) return true;
                 }
 
                 return false;
