@@ -1524,6 +1524,8 @@ router.get('/meetings', async (req, res) => {
 router.put('/meetings/:id', async (req, res) => {
   try {
     const { status, notes } = req.body;
+    const { sendEmail } = require('../lib/email');
+
     let query = 'UPDATE meetings SET status=COALESCE($1, status)';
     const params = [status];
 
@@ -1537,7 +1539,52 @@ router.put('/meetings/:id', async (req, res) => {
 
     const { rows } = await req.app.locals.pool.query(query, params);
     if (rows.length === 0) return res.status(404).json({ error: 'Not found' });
-    res.json(rows[0]);
+    const meeting = rows[0];
+
+    // Trigger guest email notification on status update
+    if (meeting.email && (status === 'confirmed' || status === 'cancelled' || status === 'declined')) {
+      const hour = parseInt(meeting.time_slot.split(':')[0], 10);
+      const timeDisplay = isNaN(hour) ? meeting.time_slot : new Date(2000, 0, 1, hour, 0).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      const protocol = req.protocol || 'https';
+      const host = req.get('host') || 'localhost:3000';
+      const cancelUrl = `${protocol}://${host}/api/meetings/cancel/${meeting.cancel_token}`;
+
+      if (status === 'confirmed') {
+        sendEmail({
+          to: meeting.email,
+          subject: `✓ Meeting Confirmed: ${meeting.meeting_date} @ ${timeDisplay}`,
+          html: `
+            <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#101726;color:#e2e8f0;padding:24px;border-radius:12px;">
+              <h2 style="color:#22c55e;margin-top:0;">✓ Meeting Confirmed!</h2>
+              <p>Hi <strong>${meeting.name}</strong>,</p>
+              <p>Your meeting request has been officially accepted and scheduled!</p>
+              <div style="background:#1a2336;padding:16px;border-radius:8px;margin:16px 0;border:1px solid #2d3748;">
+                <p style="margin:4px 0;"><strong>Date:</strong> ${meeting.meeting_date}</p>
+                <p style="margin:4px 0;"><strong>Time:</strong> ${timeDisplay} (${meeting.guest_timezone || 'EST'})</p>
+                <p style="margin:4px 0;"><strong>Location:</strong> 📍 ${meeting.location_type || 'IRL Meeting'}</p>
+                <p style="margin:4px 0;"><strong>Topic:</strong> ${meeting.topic}</p>
+              </div>
+              <p style="font-size:0.9rem;color:#cbd5e1;">Need to cancel or reschedule? Click below:</p>
+              <p><a href="${cancelUrl}" style="display:inline-block;padding:8px 16px;background:#ef4444;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;font-size:0.85rem;">Cancel / Reschedule Meeting</a></p>
+            </div>
+          `
+        }).catch(e => console.error('Admin update guest email error:', e.message));
+      } else if (status === 'cancelled' || status === 'declined') {
+        sendEmail({
+          to: meeting.email,
+          subject: `✕ Meeting Update: ${meeting.meeting_date} @ ${timeDisplay}`,
+          html: `
+            <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#101726;color:#e2e8f0;padding:24px;border-radius:12px;">
+              <h2 style="color:#ef4444;margin-top:0;">✕ Meeting Status Update</h2>
+              <p>Hi <strong>${meeting.name}</strong>,</p>
+              <p>The meeting requested for <strong>${meeting.meeting_date} at ${timeDisplay}</strong> has been ${status}.</p>
+            </div>
+          `
+        }).catch(e => console.error('Admin update guest cancel email error:', e.message));
+      }
+    }
+
+    res.json(meeting);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
