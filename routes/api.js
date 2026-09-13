@@ -155,6 +155,19 @@ router.get('/spotify/now-playing', async (req, res) => {
   }
 });
 
+// ── GET FAQs endpoint ─────────────────────────────────────────────
+router.get('/faqs', async (req, res) => {
+  try {
+    const { rows } = await safeQuery(
+      req.app.locals.pool,
+      'SELECT * FROM faqs ORDER BY sort_order ASC, id ASC'
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── GET sections order & visibility ──────────────────────────────
 router.get('/sections', async (req, res) => {
   const { rows } = await safeQuery(
