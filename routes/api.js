@@ -610,11 +610,26 @@ router.all('/meetings/confirm/:token', async (req, res) => {
     const host = req.get('host') || 'localhost:3000';
     const cancelUrl = `${protocol}://${host}/api/meetings/cancel/${meeting.cancel_token}`;
 
-    // Send confirmation email to guest
-    sendEmail({
-      to: meeting.email,
-      subject: `✓ Meeting Confirmed: ${meeting.meeting_date} @ ${timeDisplay}`,
-      html: `
+    // Fetch site config for custom email template
+    const { rows: configRows } = await safeQuery(
+      req.app.locals.pool,
+      `SELECT name, meeting_email_subject, meeting_email_template FROM site_config LIMIT 1`
+    );
+    const config = configRows[0] || {};
+    const studentName = config.name || 'Jordan';
+
+    let guestHtml = config.meeting_email_template;
+    if (guestHtml && guestHtml.trim()) {
+      guestHtml = guestHtml
+        .replace(/\{\{name\}\}/g, meeting.name)
+        .replace(/\{\{student_name\}\}/g, studentName)
+        .replace(/\{\{meeting_date\}\}/g, meeting.meeting_date)
+        .replace(/\{\{time_slot\}\}/g, `${timeDisplay} (${meeting.guest_timezone || 'EST'})`)
+        .replace(/\{\{location\}\}/g, meeting.location_type || 'IRL Meeting')
+        .replace(/\{\{topic\}\}/g, meeting.topic)
+        .replace(/\{\{cancel_url\}\}/g, cancelUrl);
+    } else {
+      guestHtml = `
         <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#101726;color:#e2e8f0;padding:24px;border-radius:12px;">
           <h2 style="color:#22c55e;margin-top:0;">✓ Meeting Confirmed!</h2>
           <p>Hi <strong>${meeting.name}</strong>,</p>
@@ -628,7 +643,14 @@ router.all('/meetings/confirm/:token', async (req, res) => {
           <p style="font-size:0.9rem;color:#cbd5e1;">Need to cancel or reschedule? Click below:</p>
           <p><a href="${cancelUrl}" style="display:inline-block;padding:8px 16px;background:#ef4444;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;font-size:0.85rem;">Cancel / Reschedule Meeting</a></p>
         </div>
-      `
+      `;
+    }
+
+    // Send confirmation email to guest
+    sendEmail({
+      to: meeting.email,
+      subject: `✓ Meeting Confirmed: ${meeting.meeting_date} @ ${timeDisplay}`,
+      html: guestHtml
     }).catch(e => console.error('Guest confirmation update email error:', e.message));
 
     if (router.broadcastChange) router.broadcastChange('update');
