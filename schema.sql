@@ -355,11 +355,14 @@ ALTER TABLE meetings ADD COLUMN IF NOT EXISTS reschedule_token VARCHAR(100);
 ALTER TABLE meetings ADD COLUMN IF NOT EXISTS feedback_rating INTEGER;
 ALTER TABLE meetings ADD COLUMN IF NOT EXISTS feedback_comment TEXT;
 ALTER TABLE meetings ADD COLUMN IF NOT EXISTS post_feedback_sent BOOLEAN DEFAULT false;
-ALTER TABLE meetings ADD COLUMN IF NOT EXISTS pre_agenda_sent BOOLEAN DEFAULT false;
-
-SELECT 'VEX Robotics Build Season Practice', 'Tuesday', '15:15', '17:00', 'Robotics team CAD & autonomous coding'
-WHERE NOT EXISTS (SELECT 1 FROM busy_schedules WHERE title LIKE '%Robotics%');
+INSERT INTO busy_schedules (title, day_of_week, start_time, end_time, description)
+SELECT 'VEX Robotics Practice & Autonomous Coding', 'Tuesday', '07:45', '08:45', 'Tuesday morning robotics build team'
+WHERE NOT EXISTS (SELECT 1 FROM busy_schedules WHERE day_of_week = 'Tuesday' AND title LIKE '%Robotics%');
 
 INSERT INTO busy_schedules (title, day_of_week, start_time, end_time, description)
-SELECT 'VEX Robotics Build Season Practice', 'Thursday', '15:15', '17:00', 'Robotics team CAD & autonomous coding'
-WHERE NOT EXISTS (SELECT 1 FROM busy_schedules WHERE day_of_week = 'Thursday');
+SELECT 'VEX Robotics Practice & Autonomous Coding', 'Thursday', '07:45', '08:45', 'Thursday morning robotics build team'
+WHERE NOT EXISTS (SELECT 1 FROM busy_schedules WHERE day_of_week = 'Thursday' AND title LIKE '%Robotics%');
+
+INSERT INTO busy_schedules (title, day_of_week, start_time, end_time, description)
+SELECT 'FBLA Morning Chapter Officer Meeting', 'Thursday', '08:00', '08:30', 'Thursday morning FBLA officer meeting'
+WHERE NOT EXISTS (SELECT 1 FROM busy_schedules WHERE day_of_week = 'Thursday' AND title LIKE '%FBLA%');

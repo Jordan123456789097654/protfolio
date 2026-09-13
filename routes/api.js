@@ -489,16 +489,23 @@ router.get('/meetings/availability', async (req, res) => {
     const slots = baseSlots.map(timeStr => {
       const slotHour = parseInt(timeStr.split(':')[0], 10);
 
-      // Check if slot overlaps with any busy block
-      let busyReason = null;
+      // Check if slot overlaps with any busy block (using minute precision)
+      let busyReasons = [];
+      const slotStartMin = slotHour * 60;
+      const slotEndMin = (slotHour + 1) * 60;
+
       for (const b of busyBlocks) {
-        const startH = parseInt(b.start_time.split(':')[0], 10);
-        const endH = parseInt(b.end_time.split(':')[0], 10);
-        if (slotHour >= startH && slotHour < endH) {
-          busyReason = b.title;
-          break;
+        const [bStartH, bStartM] = b.start_time.split(':').map(n => parseInt(n, 10));
+        const [bEndH, bEndM] = b.end_time.split(':').map(n => parseInt(n, 10));
+        const bStartTotal = bStartH * 60 + (bStartM || 0);
+        const bEndTotal = bEndH * 60 + (bEndM || 0);
+
+        // Check if [slotStartMin, slotEndMin) overlaps with [bStartTotal, bEndTotal)
+        if (slotStartMin < bEndTotal && slotEndMin > bStartTotal) {
+          busyReasons.push(b.title);
         }
       }
+      const busyReason = busyReasons.length > 0 ? busyReasons.join(' & ') : null;
 
       const isBooked = bookedSlotsSet.has(timeStr);
 
