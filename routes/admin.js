@@ -1233,9 +1233,13 @@ router.post('/recommendations/request', async (req, res) => {
           </body>
           </html>
         `;
+      }
+    }
+
     // Append 1x1 transparent email read receipt tracking pixel
     const trackingPixelUrl = `${protocol}://${host}/api/recommendations/track/open/${token}`;
     htmlBody += `<img src="${trackingPixelUrl}" width="1" height="1" alt="" style="display:none !important; width:1px; height:1px; opacity:0; visibility:hidden;" />`;
+
 
     let emailSent = false;
     let emailError = null;
