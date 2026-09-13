@@ -192,16 +192,50 @@ router.post('/contact', async (req, res) => {
 
       sendEmail({
         to: toEmail,
-        subject: `📬 New Portfolio Message from ${name.trim()}`,
+        subject: `📬 New Detailed Message from ${name.trim()}`,
         html: `
-          <div style="font-family:sans-serif;padding:20px;color:#333;">
-            <h2 style="color:#6c63ff;">New Portfolio Contact Message</h2>
-            <p><strong>Name:</strong> ${name.trim()}</p>
-            <p><strong>Email:</strong> <a href="mailto:${email.trim()}">${email.trim()}</a></p>
-            <p><strong>Message:</strong></p>
-            <blockquote style="background:#f4f4f7;padding:15px;border-left:4px solid #6c63ff;margin:0;">${message.trim().replace(/\n/g, '<br>')}</blockquote>
-            <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
-            <p style="font-size:12px;color:#888;">Sent from your Portfolio Website</p>
+          <div style="background-color:#090d16; padding:40px 20px; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+            <div style="max-width:650px; margin:0 auto; background-color:#111827; border-radius:12px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.5); border:1px solid #1f2937; color:#e5e7eb;">
+              
+              <!-- Header -->
+              <div style="background: linear-gradient(135deg, #6c63ff 0%, #3b82f6 100%); padding: 30px; text-align: center;">
+                <h1 style="margin:0; color:#ffffff; font-size:24px; font-weight:800; letter-spacing:-0.5px;">
+                  📬 New Contact Message Received
+                </h1>
+                <p style="margin:6px 0 0 0; color:rgba(255,255,255,0.9); font-size:14px;">Direct inquiry from your portfolio website</p>
+              </div>
+
+              <!-- Content Body -->
+              <div style="padding:35px 30px;">
+                <p style="margin:0 0 16px 0; font-size:15px; color:#cbd5e1; line-height:1.7;">
+                  You have received a new direct communication inquiry submitted through your interactive portfolio contact modal. Below are the verified details of the sender and their complete message.
+                </p>
+
+                <!-- Details Card -->
+                <div style="background-color:#1f2937; border:1px solid #374151; border-radius:10px; padding:20px; margin-bottom:25px;">
+                  <h3 style="margin:0 0 12px 0; color:#818cf8; font-size:15px; font-weight:700; border-bottom:1px solid #374151; padding-bottom:8px;">👤 Sender Information</h3>
+                  <p style="margin:6px 0; font-size:15px; color:#e5e7eb;"><strong>Name:</strong> ${name.trim()}</p>
+                  <p style="margin:6px 0; font-size:15px; color:#e5e7eb;"><strong>Email:</strong> <a href="mailto:${email.trim()}" style="color:#60a5fa; text-decoration:underline;">${email.trim()}</a></p>
+                  <p style="margin:6px 0; font-size:13px; color:#9ca3af;"><strong>Received At:</strong> ${new Date().toLocaleString()}</p>
+                </div>
+
+                <!-- Message Box -->
+                <div style="background-color:#141d2b; border-left:4px solid #6366f1; padding:20px; border-radius:6px; margin-bottom:25px;">
+                  <h4 style="margin:0 0 10px 0; color:#a5b4fc; font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">💬 Message Body</h4>
+                  <div style="font-size:15px; color:#e2e8f0; line-height:1.8; whitespace:pre-wrap;">${message.trim().replace(/\n/g, '<br>')}</div>
+                </div>
+
+                <div style="background:rgba(99, 102, 241, 0.1); border:1px solid rgba(99, 102, 241, 0.2); border-radius:8px; padding:15px; text-align:center;">
+                  <p style="margin:0 0 10px 0; font-size:14px; color:#c7d2fe;">To reply directly to ${name.trim()}, click the response link below:</p>
+                  <a href="mailto:${email.trim()}?subject=Re:%20Portfolio%20Inquiry" style="display:inline-block; background-color:#6366f1; color:#ffffff; padding:10px 22px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:14px;">Reply via Email ✉️</a>
+                </div>
+              </div>
+
+              <!-- Footer -->
+              <div style="background-color:#0b111e; padding:18px 30px; text-align:center; border-top:1px solid #1f2937;">
+                <p style="font-size:12px; color:#64748b; margin:0;">Automated System Dispatch • Portfolio Interactive Platform</p>
+              </div>
+            </div>
           </div>
         `
       }).catch(e => console.error('✗ Contact Email Error:', e.message));
@@ -492,21 +526,65 @@ router.post('/meetings/book', async (req, res) => {
     // Send email notification to student (admin) with Action Links
     sendEmail({
       to: notifyEmail,
-      subject: `📅 New Meeting Request: ${name.trim()} (${role || 'Visitor'})`,
+      subject: `📅 New In-Person Meeting Request from ${name.trim()} (${role || 'Visitor'})`,
       html: `
-        <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#101726;color:#e2e8f0;padding:24px;border-radius:12px;">
-          <h2 style="color:#d8a53e;margin-top:0;">📍 New Meeting Requested</h2>
-          <p><strong>Visitor Name:</strong> ${name.trim()} (${role || 'Visitor'})</p>
-          <p><strong>Email:</strong> <a href="mailto:${email.trim()}" style="color:#6f9bd1;">${email.trim()}</a></p>
-          <p><strong>Date & Time:</strong> ${meeting_date} at ${timeDisplay} (${guestTz})</p>
-          <p><strong>Location:</strong> 📍 ${meetingLocation}</p>
-          <p><strong>Topic / Discussion Agenda:</strong></p>
-          <blockquote style="background:#1a2336;border-left:4px solid #d8a53e;padding:12px 16px;margin:12px 0;color:#cbd5e1;">${topic.trim().replace(/\n/g, '<br>')}</blockquote>
+        <div style="background-color:#090d16; padding:40px 20px; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+          <div style="max-width:650px; margin:0 auto; background-color:#111827; border-radius:12px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.5); border:1px solid #1f2937; color:#e5e7eb;">
+            
+            <!-- Banner Header -->
+            <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 30px; text-align: center;">
+              <h1 style="margin:0; color:#ffffff; font-size:24px; font-weight:800; letter-spacing:-0.5px;">
+                📍 New Meeting Booking Requested
+              </h1>
+              <p style="margin:6px 0 0 0; color:rgba(255,255,255,0.95); font-size:14px;">Action Required • Approve or Decline Below</p>
+            </div>
 
-          <div style="margin-top:24px;padding-top:20px;border-top:1px solid #2d3748;text-align:center;">
-            <p style="margin-bottom:16px;font-weight:600;">Take Action on this Meeting Request:</p>
-            <a href="${confirmUrl}" style="display:inline-block;padding:12px 24px;margin-right:10px;background:#22c55e;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">✓ Accept & Confirm</a>
-            <a href="${cancelUrl}" style="display:inline-block;padding:12px 24px;background:#ef4444;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">✕ Decline Meeting</a>
+            <!-- Content -->
+            <div style="padding:35px 30px;">
+              <p style="margin:0 0 16px 0; font-size:15px; color:#cbd5e1; line-height:1.7;">
+                Hello <strong>${studentName}</strong>, a visitor on your interactive portfolio website has submitted a new in-person meeting request. Review their contact information, proposed date, time, location, and topic agenda below.
+              </p>
+
+              <!-- Details Card -->
+              <div style="background-color:#1f2937; border:1px solid #374151; border-radius:10px; padding:22px; margin-bottom:25px;">
+                <h3 style="margin:0 0 14px 0; color:#fbbf24; font-size:15px; font-weight:700; border-bottom:1px solid #374151; padding-bottom:8px;">📌 Booking Details Summary</h3>
+                <table style="width:100%; border-collapse:collapse; font-size:15px; color:#e5e7eb;">
+                  <tr>
+                    <td style="padding:8px 0; font-weight:bold; color:#9ca3af; width:120px;">👤 Visitor:</td>
+                    <td style="padding:8px 0; font-weight:600; color:#ffffff;">${name.trim()} (${role || 'Visitor'})</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:8px 0; font-weight:bold; color:#9ca3af;">📧 Email:</td>
+                    <td style="padding:8px 0;"><a href="mailto:${email.trim()}" style="color:#60a5fa;">${email.trim()}</a></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:8px 0; font-weight:bold; color:#9ca3af;">📅 Date & Time:</td>
+                    <td style="padding:8px 0; font-weight:600; color:#ffffff;">${meeting_date} @ ${timeDisplay} (${guestTz})</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:8px 0; font-weight:bold; color:#9ca3af;">📍 Location:</td>
+                    <td style="padding:8px 0; color:#6f9bd1;">📍 ${meetingLocation}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:8px 0; font-weight:bold; color:#9ca3af;">💬 Discussion Topic:</td>
+                    <td style="padding:8px 0; color:#e5e7eb;">${topic.trim()}</td>
+                  </tr>
+                </table>
+              </div>
+
+              <!-- Quick Action Card -->
+              <div style="background-color:#141d2b; border:1px solid #2d3748; border-radius:10px; padding:20px; text-align:center; margin-bottom:15px;">
+                <p style="margin:0 0 16px 0; font-size:15px; font-weight:700; color:#ffffff;">Select an Action to Instantly Respond:</p>
+                <a href="${confirmUrl}" style="display:inline-block; padding:12px 28px; margin-right:12px; background-color:#22c55e; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:bold; font-size:14px; box-shadow:0 4px 12px rgba(34,197,94,0.3);">✓ Accept & Confirm Meeting</a>
+                <a href="${cancelUrl}" style="display:inline-block; padding:12px 28px; background-color:#ef4444; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:bold; font-size:14px; box-shadow:0 4px 12px rgba(239,68,68,0.3);">✕ Decline Request</a>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="background-color:#0b111e; padding:18px 30px; text-align:center; border-top:1px solid #1f2937;">
+              <p style="font-size:12px; color:#64748b; margin:0;">Automated System Dispatch • Interactive Portfolio Meeting Manager</p>
+            </div>
+
           </div>
         </div>
       `
@@ -520,19 +598,67 @@ router.post('/meetings/book', async (req, res) => {
       .replace(/\{\{student_name\}\}/g, studentName);
 
     let customHtml = `
-      <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#101726;color:#e2e8f0;padding:24px;border-radius:12px;">
-        <h2 style="color:#d8a53e;margin-top:0;">⏳ Meeting Request Received!</h2>
-        <p>Hi <strong>${name.trim()}</strong>,</p>
-        <p>Your meeting request with ${studentName} has been submitted and is pending confirmation.</p>
-        <div style="background:#1a2336;padding:16px;border-radius:8px;margin:16px 0;border:1px solid #2d3748;">
-          <p style="margin:4px 0;"><strong>Date:</strong> ${meeting_date}</p>
-          <p style="margin:4px 0;"><strong>Time:</strong> ${timeDisplay} (${guestTz})</p>
-          <p style="margin:4px 0;"><strong>Location:</strong> 📍 ${meetingLocation}</p>
-          <p style="margin:4px 0;"><strong>Topic:</strong> ${topic.trim()}</p>
+      <div style="background-color:#090d16; padding:40px 20px; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+        <div style="max-width:650px; margin:0 auto; background-color:#111827; border-radius:12px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.5); border:1px solid #1f2937; color:#e5e7eb;">
+          
+          <!-- Banner Header -->
+          <div style="background: linear-gradient(135deg, #d8a53e 0%, #b45309 100%); padding: 30px; text-align: center;">
+            <h1 style="margin:0; color:#ffffff; font-size:24px; font-weight:800; letter-spacing:-0.5px;">
+              ⏳ Meeting Request Received!
+            </h1>
+            <p style="margin:6px 0 0 0; color:rgba(255,255,255,0.95); font-size:14px;">Your reservation request is currently pending review</p>
+          </div>
+
+          <!-- Content -->
+          <div style="padding:35px 30px;">
+            <p style="margin:0 0 16px 0; font-size:16px; color:#ffffff; font-weight:600;">Hi <strong>${name.trim()}</strong>,</p>
+            
+            <p style="margin:0 0 20px 0; font-size:15px; line-height:1.7; color:#cbd5e1;">
+              Thank you for requesting an in-person meeting with <strong>${studentName}</strong>! Your request has been successfully recorded in our scheduling portal and is currently awaiting confirmation.
+            </p>
+
+            <p style="margin:0 0 20px 0; font-size:15px; line-height:1.7; color:#cbd5e1;">
+              Below is a summary of the reservation details submitted for your meeting. You will receive an immediate follow-up confirmation email as soon as your requested time slot is approved.
+            </p>
+
+            <!-- Details Card -->
+            <div style="background-color:#1f2937; border:1px solid #374151; border-radius:10px; padding:22px; margin-bottom:25px;">
+              <h3 style="margin:0 0 14px 0; color:#fbbf24; font-size:15px; font-weight:700; border-bottom:1px solid #374151; padding-bottom:8px;">📍 Pending Request Overview</h3>
+              <table style="width:100%; border-collapse:collapse; font-size:15px; color:#e5e7eb;">
+                <tr>
+                  <td style="padding:8px 0; font-weight:bold; color:#9ca3af; width:120px;">📅 Date:</td>
+                  <td style="padding:8px 0; font-weight:600; color:#ffffff;">${meeting_date}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0; font-weight:bold; color:#9ca3af;">⏰ Time Slot:</td>
+                  <td style="padding:8px 0; font-weight:600; color:#ffffff;">${timeDisplay} (${guestTz})</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0; font-weight:bold; color:#9ca3af;">📍 Location:</td>
+                  <td style="padding:8px 0; color:#6f9bd1;">📍 ${meetingLocation}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0; font-weight:bold; color:#9ca3af;">💬 Topic:</td>
+                  <td style="padding:8px 0; color:#e5e7eb;">${topic.trim()}</td>
+                </tr>
+              </table>
+            </div>
+
+            <p style="margin:0 0 16px 0; font-size:14px; color:#cbd5e1;">
+              If your plans change before confirmation or if you need to withdraw this request, you may cancel it at any time using the link below:
+            </p>
+
+            <div>
+              <a href="${cancelUrl}" style="display:inline-block; background-color:#ef4444; color:#ffffff; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:14px;">Cancel Pending Request</a>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div style="background-color:#0b111e; padding:18px 30px; text-align:center; border-top:1px solid #1f2937;">
+            <p style="font-size:12px; color:#64748b; margin:0;">Sent via ${studentName}'s Interactive Scheduling System</p>
+          </div>
+
         </div>
-        <p style="font-size:0.9rem;color:#cbd5e1;">You will receive an update once ${studentName} accepts the meeting.</p>
-        <p style="font-size:0.9rem;color:#cbd5e1;">Need to cancel this request? Click below:</p>
-        <p><a href="${cancelUrl}" style="display:inline-block;padding:8px 16px;background:#ef4444;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;font-size:0.85rem;">Cancel Meeting Request</a></p>
       </div>
     `;
 
