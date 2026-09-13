@@ -1651,6 +1651,58 @@ router.delete('/busy-schedules/:id', async (req, res) => {
   }
 });
 
+// ══════════════════════════════════════════════════════════════════
+//  SCHOOL & PUBLIC CALENDAR EVENTS MANAGER
+// ══════════════════════════════════════════════════════════════════
+router.get('/events', async (req, res) => {
+  try {
+    const { rows } = await req.app.locals.pool.query(
+      'SELECT * FROM school_events ORDER BY event_date ASC'
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/events', async (req, res) => {
+  try {
+    const { title, event_date, start_time, end_time, location, category, description } = req.body;
+    const { rows } = await req.app.locals.pool.query(
+      `INSERT INTO school_events (title, event_date, start_time, end_time, location, category, description)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [title.trim(), event_date, start_time || '', end_time || '', location || '', category || 'School Event', description || '']
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/events/:id', async (req, res) => {
+  try {
+    const { title, event_date, start_time, end_time, location, category, description, is_published } = req.body;
+    const { rows } = await req.app.locals.pool.query(
+      `UPDATE school_events SET title=$1, event_date=$2, start_time=$3, end_time=$4, location=$5, category=$6, description=$7, is_published=$8
+       WHERE id=$9 RETURNING *`,
+      [title.trim(), event_date, start_time || '', end_time || '', location || '', category || 'School Event', description || '', !!is_published, req.params.id]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/events/:id', async (req, res) => {
+  try {
+    await req.app.locals.pool.query('DELETE FROM school_events WHERE id=$1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
 
 

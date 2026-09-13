@@ -89,13 +89,50 @@ router.get('/recommendations', async (req, res) => {
   res.json(rows);
 });
 
-// ── GET faqs ─────────────────────────────────────────────────────
-router.get('/faqs', async (req, res) => {
-  const { rows } = await safeQuery(
-    req.app.locals.pool,
-    'SELECT * FROM faqs WHERE is_published = true ORDER BY sort_order ASC, created_at DESC'
-  );
-  res.json(rows);
+// ── GET School & Public Events ────────────────────────────────────
+router.get('/events', async (req, res) => {
+  try {
+    const { rows } = await safeQuery(
+      req.app.locals.pool,
+      'SELECT * FROM school_events WHERE is_published = true ORDER BY event_date ASC'
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── POST Meeting Feedback / Testimonial ───────────────────────────
+router.post('/meetings/feedback', async (req, res) => {
+  try {
+    const { token, rating, comment } = req.body;
+    if (!token || !rating) {
+      return res.status(400).json({ error: 'Rating and meeting token are required.' });
+    }
+
+    const { rows } = await req.app.locals.pool.query(
+      'UPDATE meetings SET feedback_rating = $1, feedback_comment = $2 WHERE cancel_token = $3 RETURNING *',
+      [parseInt(rating, 10), (comment || '').trim(), token]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Meeting not found.' });
+    }
+
+    const m = rows[0];
+
+    // Automatically create testimonial entry if rating is 5 stars and feedback is detailed!
+    if (parseInt(rating, 10) >= 4 && comment && comment.trim().length > 10) {
+      await req.app.locals.pool.query(
+        'INSERT INTO testimonials (quote, author_name, author_role, is_published, sort_order) VALUES ($1, $2, $3, true, 0)',
+        [comment.trim(), m.name, m.role || 'Meeting Guest']
+      ).catch(() => {});
+    }
+
+    res.json({ success: true, message: 'Thank you for your feedback!' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ── GET certifications ───────────────────────────────────────────

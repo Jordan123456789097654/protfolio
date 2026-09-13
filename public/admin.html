@@ -62,6 +62,7 @@
                     <div class="nav-group-title">💬 Interactions</div>
                     <button class="tab-btn" data-tab="messages">📬 Messages</button>
                     <button class="tab-btn" data-tab="meetings">📅 Meetings &amp; Availability</button>
+                    <button class="tab-btn" data-tab="events">🏫 School &amp; Public Events</button>
                     <button class="tab-btn" data-tab="recommendations">📄 Recommendations</button>
                     <button class="tab-btn" data-tab="testimonials">💬 Testimonials</button>
                     <button class="tab-btn" data-tab="faqs">❓ FAQ</button>
@@ -672,6 +673,30 @@
                     </div>
                 </section>
 
+                <!-- School & Public Calendar Events -->
+                <section id="tab-events" class="tab-panel">
+                    <div class="panel-header">
+                        <h2>🏫 School &amp; Public Calendar Events</h2>
+                        <button id="add-event-btn" class="btn-primary">Add Calendar Event</button>
+                    </div>
+                    <p class="settings-desc">Add public events (e.g. FBLA State Conference, Science Fairs, Robotics Competitions, Exam Schedules) so visitors &amp; teachers can view your academic calendar!</p>
+                    <div class="table-responsive">
+                        <table id="events-table">
+                            <thead>
+                                <tr>
+                                    <th>Event Title</th>
+                                    <th>Category</th>
+                                    <th>Date &amp; Time</th>
+                                    <th>Location</th>
+                                    <th>Published</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+
                 <!-- Email Templates & Customization -->
                 <section id="tab-email-templates" class="tab-panel">
                     <h2>✉️ Email Templates &amp; Customization</h2>
@@ -993,9 +1018,58 @@
                     </div>
                     <textarea id="reply-body" name="reply_text" rows="5" placeholder="Write your response email..." required></textarea>
                 </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Calendar Event Modal -->
+    <div id="event-modal-overlay" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3 id="event-modal-title">Add School / Public Calendar Event</h3>
+            <form id="event-form">
+                <input type="hidden" id="event-id">
+                <div class="form-group">
+                    <label for="event-title-input">Event Title *</label>
+                    <input type="text" id="event-title-input" required placeholder="e.g. FBLA State Leadership Conference">
+                </div>
+                <div class="form-group row" style="display:flex;gap:1rem;">
+                    <div style="flex:1;">
+                        <label for="event-date-input">Event Date *</label>
+                        <input type="date" id="event-date-input" required>
+                    </div>
+                    <div style="flex:1;">
+                        <label for="event-category-input">Category</label>
+                        <select id="event-category-input" class="form-control">
+                            <option value="FBLA">FBLA</option>
+                            <option value="Robotics">Robotics</option>
+                            <option value="Academic">Academic / Science Fair</option>
+                            <option value="Sports">Sports / Athletics</option>
+                            <option value="Volunteering">Volunteering & Community</option>
+                            <option value="School Event" selected>School Event</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row" style="display:flex;gap:1rem;">
+                    <div style="flex:1;">
+                        <label for="event-start-input">Start Time</label>
+                        <input type="time" id="event-start-input">
+                    </div>
+                    <div style="flex:1;">
+                        <label for="event-end-input">End Time</label>
+                        <input type="time" id="event-end-input">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="event-location-input">Location</label>
+                    <input type="text" id="event-location-input" placeholder="e.g. State Convention Center / School Auditorium">
+                </div>
+                <div class="form-group">
+                    <label for="event-desc-input">Description / Details</label>
+                    <textarea id="event-desc-input" rows="3" placeholder="Key topics, agenda, or competition notes"></textarea>
+                </div>
                 <div class="modal-actions">
-                    <button type="button" id="reply-cancel-btn" class="btn-outline">Cancel</button>
-                    <button type="submit" id="reply-send-btn" class="btn-primary">Send Reply Email</button>
+                    <button type="button" id="event-cancel-btn" class="btn-outline">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Event</button>
                 </div>
             </form>
         </div>

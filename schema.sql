@@ -327,27 +327,36 @@ CREATE TABLE IF NOT EXISTS meetings (
 ALTER TABLE meetings ADD COLUMN IF NOT EXISTS location_type VARCHAR(255) DEFAULT 'IRL Meeting (School / Library / Coffee Shop)';
 ALTER TABLE meetings ADD COLUMN IF NOT EXISTS guest_timezone VARCHAR(100) DEFAULT 'EST';
 ALTER TABLE meetings ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT '';
-ALTER TABLE meetings ADD COLUMN IF NOT EXISTS cancel_token VARCHAR(100);
-ALTER TABLE meetings ADD COLUMN IF NOT EXISTS confirm_token VARCHAR(100);
-ALTER TABLE meetings ADD COLUMN IF NOT EXISTS reminder_sent_24h BOOLEAN DEFAULT false;
-ALTER TABLE meetings ADD COLUMN IF NOT EXISTS reminder_sent_1h BOOLEAN DEFAULT false;
-
--- Busy Schedule Recurring Blocks (e.g. FBLA Meetings, Robotics Build Season)
-CREATE TABLE IF NOT EXISTS busy_schedules (
+-- School & Public Calendar Events (e.g. FBLA State Conference, Science Fair, Robotics Competition)
+CREATE TABLE IF NOT EXISTS school_events (
   id SERIAL PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
-  day_of_week VARCHAR(20) NOT NULL, -- 'Monday', 'Tuesday', etc.
-  start_time VARCHAR(20) NOT NULL, -- '15:00'
-  end_time VARCHAR(20) NOT NULL,   -- '17:00'
-  description VARCHAR(255) DEFAULT ''
+  event_date VARCHAR(50) NOT NULL,
+  start_time VARCHAR(20) DEFAULT '',
+  end_time VARCHAR(20) DEFAULT '',
+  location VARCHAR(255) DEFAULT '',
+  category VARCHAR(100) DEFAULT 'School Event', -- 'FBLA', 'Robotics', 'Academic', 'Sports', 'Volunteering', 'School Event'
+  description TEXT DEFAULT '',
+  is_published BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Seed default busy schedule blocks if table is empty
-INSERT INTO busy_schedules (title, day_of_week, start_time, end_time, description)
-SELECT 'FBLA Chapter Officer Meeting', 'Monday', '15:00', '16:30', 'Weekly FBLA leadership planning'
-WHERE NOT EXISTS (SELECT 1 FROM busy_schedules);
+-- Seed Sample School Events if table empty
+INSERT INTO school_events (title, event_date, start_time, end_time, location, category, description)
+SELECT 'FBLA State Leadership Conference', '2026-10-24', '08:00', '17:00', 'State Convention Center', 'FBLA', 'Annual FBLA competition and keynote leadership workshops'
+WHERE NOT EXISTS (SELECT 1 FROM school_events);
 
-INSERT INTO busy_schedules (title, day_of_week, start_time, end_time, description)
+INSERT INTO school_events (title, event_date, start_time, end_time, location, category, description)
+SELECT 'Regional Science & Engineering Fair', '2026-11-12', '09:00', '15:00', 'University Auditorium', 'Academic', 'Displaying independent STEM software research project'
+WHERE NOT EXISTS (SELECT 1 FROM school_events WHERE title LIKE '%Science%');
+
+-- Reschedule Tokens, ICS Sent Flags, and Post-Meeting Feedback Columns
+ALTER TABLE meetings ADD COLUMN IF NOT EXISTS reschedule_token VARCHAR(100);
+ALTER TABLE meetings ADD COLUMN IF NOT EXISTS feedback_rating INTEGER;
+ALTER TABLE meetings ADD COLUMN IF NOT EXISTS feedback_comment TEXT;
+ALTER TABLE meetings ADD COLUMN IF NOT EXISTS post_feedback_sent BOOLEAN DEFAULT false;
+ALTER TABLE meetings ADD COLUMN IF NOT EXISTS pre_agenda_sent BOOLEAN DEFAULT false;
+
 SELECT 'VEX Robotics Build Season Practice', 'Tuesday', '15:15', '17:00', 'Robotics team CAD & autonomous coding'
 WHERE NOT EXISTS (SELECT 1 FROM busy_schedules WHERE title LIKE '%Robotics%');
 

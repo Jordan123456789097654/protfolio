@@ -33,6 +33,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('add-faq-btn').addEventListener('click', () => openFAQModal());
     document.getElementById('add-social-btn').addEventListener('click', () => openSocialModal());
+    const addEventBtn = document.getElementById('add-event-btn');
+    if (addEventBtn) addEventBtn.addEventListener('click', () => openEventModal());
+
+    // Event Modal
+    const eventForm = document.getElementById('event-form');
+    if (eventForm) eventForm.addEventListener('submit', handleEventSubmit);
+    const eventCancelBtn = document.getElementById('event-cancel-btn');
+    if (eventCancelBtn) eventCancelBtn.addEventListener('click', () => {
+        document.getElementById('event-modal-overlay').classList.add('hidden');
+    });
 
     // Modal
     document.getElementById('modal-cancel').addEventListener('click', closeModal);
@@ -254,6 +264,7 @@ function showDashboard() {
     loadMeetings();
     loadMeetingSettings();
     loadBusySchedules();
+    loadEvents();
     loadSeasonalTheme();
     loadFAQs();
     loadAnalytics();
@@ -2831,6 +2842,114 @@ async function handleIntegrationsSave(e) {
         showToast('Integrations & Twilio SMS settings saved successfully!', 'success');
     } catch (err) {
         showToast('Failed to save integrations: ' + err.message, 'error');
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// 🏫 SCHOOL & PUBLIC CALENDAR EVENTS MANAGER
+// ══════════════════════════════════════════════════════════════════
+async function loadEvents() {
+    try {
+        const events = await apiCall('/admin/events');
+        const tbody = document.querySelector('#events-table tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (!events || events.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary);">No calendar events added yet.</td></tr>';
+            return;
+        }
+
+        events.forEach(ev => {
+            const tr = document.createElement('tr');
+            const timeStr = ev.start_time ? `${ev.start_time} - ${ev.end_time || 'End'}` : 'All Day';
+            tr.innerHTML = `
+                <td><strong>${escapeHTML(ev.title)}</strong></td>
+                <td><span class="badge badge-info">${escapeHTML(ev.category || 'School Event')}</span></td>
+                <td>📅 ${escapeHTML(ev.event_date)} (${escapeHTML(timeStr)})</td>
+                <td>📍 ${escapeHTML(ev.location || 'N/A')}</td>
+                <td>
+                    <button class="btn-sm ${ev.is_published ? 'btn-success' : 'btn-outline'} toggle-pub-event" data-id="${ev.id}" data-pub="${ev.is_published}">
+                        ${ev.is_published ? 'Published' : 'Draft'}
+                    </button>
+                </td>
+                <td>
+                    <button class="btn-sm btn-outline edit-event-btn" data-id="${ev.id}">Edit</button>
+                    <button class="btn-sm btn-danger delete-event-btn" data-id="${ev.id}">Delete</button>
+                </td>
+            `;
+
+            tr.querySelector('.toggle-pub-event').addEventListener('click', async (e) => {
+                const id = e.currentTarget.dataset.id;
+                const isPub = e.currentTarget.dataset.pub === 'true';
+                try {
+                    await apiCall(`/admin/events/${id}`, 'PUT', { ...ev, is_published: !isPub });
+                    showToast('Event publication status updated!', 'success');
+                    loadEvents();
+                } catch (err) {
+                    showToast('Failed to update event: ' + err.message, 'error');
+                }
+            });
+
+            tr.querySelector('.edit-event-btn').addEventListener('click', () => openEventModal(ev));
+            tr.querySelector('.delete-event-btn').addEventListener('click', async () => {
+                if (confirm(`Delete calendar event "${ev.title}"?`)) {
+                    try {
+                        await apiCall(`/admin/events/${ev.id}`, 'DELETE');
+                        showToast('Calendar event deleted!', 'success');
+                        loadEvents();
+                    } catch (err) {
+                        showToast('Failed to delete event: ' + err.message, 'error');
+                    }
+                }
+            });
+
+            tbody.appendChild(tr);
+        });
+    } catch (err) {
+        console.error('Failed to load school events:', err);
+    }
+}
+
+function openEventModal(ev = null) {
+    document.getElementById('event-id').value = ev ? ev.id : '';
+    document.getElementById('event-title-input').value = ev ? ev.title : '';
+    document.getElementById('event-date-input').value = ev ? ev.event_date : new Date().toISOString().slice(0, 10);
+    document.getElementById('event-category-input').value = ev ? ev.category : 'School Event';
+    document.getElementById('event-start-input').value = ev ? ev.start_time : '';
+    document.getElementById('event-end-input').value = ev ? ev.end_time : '';
+    document.getElementById('event-location-input').value = ev ? ev.location : '';
+    document.getElementById('event-desc-input').value = ev ? ev.description : '';
+    document.getElementById('event-modal-title').textContent = ev ? 'Edit Calendar Event' : 'Add School / Public Calendar Event';
+    document.getElementById('event-modal-overlay').classList.remove('hidden');
+}
+
+async function handleEventSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('event-id').value;
+    const payload = {
+        title: document.getElementById('event-title-input').value,
+        event_date: document.getElementById('event-date-input').value,
+        category: document.getElementById('event-category-input').value,
+        start_time: document.getElementById('event-start-input').value,
+        end_time: document.getElementById('event-end-input').value,
+        location: document.getElementById('event-location-input').value,
+        description: document.getElementById('event-desc-input').value,
+        is_published: true
+    };
+
+    try {
+        if (id) {
+            await apiCall(`/admin/events/${id}`, 'PUT', payload);
+            showToast('Calendar event updated!', 'success');
+        } else {
+            await apiCall('/admin/events', 'POST', payload);
+            showToast('Calendar event created!', 'success');
+        }
+        document.getElementById('event-modal-overlay').classList.add('hidden');
+        loadEvents();
+    } catch (err) {
+        showToast('Failed to save calendar event: ' + err.message, 'error');
     }
 }
 

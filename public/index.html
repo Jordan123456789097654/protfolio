@@ -378,10 +378,18 @@
         <div class="meeting-modal-card">
             <div class="meeting-modal-header">
                 <div>
-                    <h3 style="margin:0;font-size:1.3rem;color:var(--text-primary);">📅 Schedule a Chat / Meeting</h3>
+                    <h3 style="margin:0;font-size:1.3rem;color:var(--text-primary);">📅 Schedule a Chat &amp; View Academic Calendar</h3>
                     <p style="margin:4px 0 0 0;font-size:0.82rem;color:var(--text-secondary);">Select a date and pick an available time slot around Jordan's schedule.</p>
                 </div>
                 <button type="button" id="meeting-modal-close" class="modal-close-btn">&times;</button>
+            </div>
+
+            <!-- Public School Events Strip -->
+            <div id="public-events-strip" style="background:rgba(216, 165, 62, 0.08);border:1px solid rgba(216, 165, 62, 0.25);border-radius:10px;padding:12px 16px;margin-bottom:18px;">
+                <h4 style="margin:0 0 6px 0;font-size:0.85rem;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;">🏫 Upcoming School &amp; Academic Events</h4>
+                <div id="public-events-list" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;font-size:0.82rem;color:var(--text-secondary);">
+                    <span>Loading calendar events...</span>
+                </div>
             </div>
 
             <form id="meeting-booking-form">

@@ -1366,6 +1366,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ── Public School & Academic Events Strip ─────────────────────────
+    async function loadPublicEvents() {
+        const eventsList = document.getElementById('public-events-list');
+        if (!eventsList) return;
+        try {
+            const res = await fetch('/api/events');
+            const events = await res.json();
+            if (!events || events.length === 0) {
+                eventsList.innerHTML = '<span style="color:var(--text-secondary);">No upcoming public events scheduled.</span>';
+                return;
+            }
+            eventsList.innerHTML = '';
+            events.forEach(ev => {
+                const chip = document.createElement('div');
+                chip.style.cssText = 'background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:6px 12px;border-radius:6px;white-space:nowrap;display:flex;align-items:center;gap:6px;font-weight:600;';
+                chip.innerHTML = `<span style="color:var(--accent); font-size:0.78rem;">📌 ${ev.event_date}</span> <span>${ev.title}</span>`;
+                eventsList.appendChild(chip);
+            });
+        } catch (e) {
+            eventsList.innerHTML = '<span style="color:var(--text-secondary);">Academic Events Calendar active.</span>';
+        }
+    }
+
     // ── Magnetic Physics on Buttons ──────────────────────────────
     function initMagneticElements() {
         const magnetics = document.querySelectorAll('.magnetic');
@@ -1785,6 +1808,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (openBtn) openBtn.addEventListener('click', () => {
             modal.classList.remove('hidden');
+            loadPublicEvents();
             if (dateInput && dateInput.value) {
                 fetchSlots(dateInput.value);
             }
