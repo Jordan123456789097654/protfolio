@@ -1950,12 +1950,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!grid) return;
 
         let filtered = cachedEvents;
-        if (category !== 'all') {
-            filtered = cachedEvents.filter(e => e.category && e.category.toLowerCase() === category.toLowerCase());
+        if (category && category !== 'all') {
+            const catLower = category.toLowerCase();
+            filtered = cachedEvents.filter(e => {
+                if (!e.category) return false;
+                const itemCat = e.category.toLowerCase();
+                return itemCat === catLower || itemCat.includes(catLower) || catLower.includes(itemCat);
+            });
         }
 
         if (filtered.length === 0) {
-            grid.innerHTML = emptyStateHTML('calendar', 'No Events Found', `No events found for category: ${category}`);
+            grid.innerHTML = emptyStateHTML('calendar', 'No Events Found', `No events currently scheduled under ${category}.`);
             return;
         }
 
@@ -1970,7 +1975,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (ev.end_time) timeStr += ` - ${ev.end_time}`;
 
             return `
-                <div class="event-bento-card reveal">
+                <div class="event-bento-card reveal" data-category="${escapeHTML(ev.category || 'Event')}">
                     <div>
                         <div class="event-bento-header">
                             <span class="event-category-badge"><i data-lucide="tag" style="width:12px;height:12px;"></i> ${escapeHTML(ev.category || 'Event')}</span>

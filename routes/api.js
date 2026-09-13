@@ -144,6 +144,56 @@ router.get('/certifications', async (req, res) => {
   res.json(rows);
 });
 
+// ── GET public academic & school events ───────────────────────────
+router.get('/events', async (req, res) => {
+  try {
+    const { rows: schoolEvents } = await safeQuery(
+      req.app.locals.pool,
+      'SELECT * FROM school_events WHERE is_published = true ORDER BY event_date ASC, start_time ASC'
+    );
+
+    const { rows: busyBlocks } = await safeQuery(
+      req.app.locals.pool,
+      'SELECT * FROM busy_schedules ORDER BY day_of_week ASC, start_time ASC'
+    );
+
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    // Map busy blocks (like Robotics & FBLA) into public event cards
+    const mappedBusy = (busyBlocks || []).map(b => {
+      let cat = 'School Event';
+      const titleLower = (b.title || '').toLowerCase();
+      if (titleLower.includes('robotics')) cat = 'Robotics';
+      else if (titleLower.includes('fbla')) cat = 'FBLA';
+
+      const dayStr = typeof b.day_of_week === 'number' ? dayNames[b.day_of_week] || 'Weekly' : b.day_of_week;
+
+      return {
+        id: `busy_${b.id}`,
+        title: b.title || 'Academic Hold',
+        category: cat,
+        event_date: `${dayStr}s`,
+        start_time: b.start_time,
+        end_time: b.end_time,
+        location: b.description || 'School Campus',
+        description: b.description || 'Weekly recurring academic hold',
+        is_recurring: true,
+        recurrence_rule: 'weekly',
+        is_published: true
+      };
+    });
+
+    const combined = [...(schoolEvents || []), ...mappedBusy];
+
+    res.json({
+      success: true,
+      events: combined
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message, events: [] });
+  }
+});
+
 
 // ── GET Spotify now-playing ───────────────────────────────────────
 router.get('/spotify/now-playing', async (req, res) => {

@@ -3220,12 +3220,12 @@ section:has(.reveal.active) .hollow-bg-text {
 
 .event-bento-card {
     position: relative;
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.75), rgba(11, 15, 25, 0.85));
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(11, 15, 25, 0.9));
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 22px;
-    padding: 26px;
+    border-radius: 18px;
+    padding: 22px 24px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -3239,21 +3239,28 @@ section:has(.reveal.active) .hollow-bg-text {
     position: absolute;
     top: 0;
     left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--accent), #6f9bd1, #d8a53e);
-    opacity: 0.85;
-    transition: opacity 0.3s ease;
+    bottom: 0;
+    width: 6px;
+    background: var(--accent);
+    transition: background 0.3s ease;
+}
+
+.event-bento-card[data-category="Robotics"]::before {
+    background: #00d4ff;
+}
+
+.event-bento-card[data-category="FBLA"]::before {
+    background: #d8a53e;
+}
+
+.event-bento-card[data-category="Academic"]::before {
+    background: #a855f7;
 }
 
 .event-bento-card:hover {
-    transform: translateY(-6px) scale(1.01);
-    border-color: rgba(216, 165, 62, 0.4);
-    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5), 0 0 25px rgba(216, 165, 62, 0.15);
-}
-
-.event-bento-card:hover::before {
-    opacity: 1;
+    transform: translateY(-4px);
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.05);
 }
 
 .event-bento-header {
