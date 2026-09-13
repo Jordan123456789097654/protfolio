@@ -168,6 +168,16 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Helper for API calls
+function escapeHTML(str) {
+    if (!str && str !== 0) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 async function apiCall(endpoint, method = 'GET', body = null) {
     const options = {
         method,
