@@ -1926,7 +1926,9 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await fetch('/api/events');
             const data = await res.json();
-            if (data.events && Array.isArray(data.events)) {
+            if (Array.isArray(data)) {
+                cachedEvents = data;
+            } else if (data && Array.isArray(data.events)) {
                 cachedEvents = data.events;
             }
         } catch (err) {
@@ -2005,11 +2007,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const dayStr = (ev.event_date || '').toLowerCase();
                 const titleStr = (ev.title || '').toLowerCase();
 
-                // Recurring event matching (e.g. "Tuesdays", "Thu", "Thursday", or title mentions)
-                if (ev.is_recurring || dayStr.includes('day') || dayStr.includes('s') || dayStr.includes('tue') || dayStr.includes('thu')) {
+                // 1. Check if recurring or contains day name/shorthand
+                if (ev.is_recurring || dayStr.includes('day') || dayStr.includes('s') || dayStr.includes('tue') || dayStr.includes('thu') || dayStr.includes('mon') || dayStr.includes('wed') || dayStr.includes('fri')) {
                     if (dayStr.includes(fullDayName.toLowerCase()) || dayStr.includes(dayName.toLowerCase())) return true;
                     if (titleStr.includes(fullDayName.toLowerCase()) || titleStr.includes(dayName.toLowerCase())) return true;
-                    // Special shorthand check for Tue/Thu/Wed/Mon/Fri
                     if (dayName === 'Tue' && (dayStr.includes('tue') || titleStr.includes('tue'))) return true;
                     if (dayName === 'Thu' && (dayStr.includes('thu') || titleStr.includes('thu'))) return true;
                     if (dayName === 'Mon' && (dayStr.includes('mon') || titleStr.includes('mon'))) return true;
@@ -2017,7 +2018,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (dayName === 'Fri' && (dayStr.includes('fri') || titleStr.includes('fri'))) return true;
                 }
 
-                // Standard exact date match (local date comparison YYYY-MM-DD without UTC shift)
+                // 2. Check exact date match (YYYY-MM-DD)
                 if (ev.event_date && ev.event_date.length >= 10) {
                     const targetISO = ev.event_date.slice(0, 10);
                     const y = dayDate.getFullYear();
@@ -2025,6 +2026,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const d = String(dayDate.getDate()).padStart(2, '0');
                     const currentLocalISO = `${y}-${m}-${d}`;
                     if (targetISO === currentLocalISO) return true;
+                }
+
+                // 3. Fallback for events with ambiguous or missing dates: display them on the week view!
+                if (!ev.event_date || ev.event_date === 'Recurring' || ev.event_date === 'Weekly') {
+                    return true;
                 }
 
                 return false;
