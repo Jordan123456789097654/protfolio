@@ -310,19 +310,43 @@
                     <h2 class="section-title scramble-link">Events &amp; Activity Calendar</h2>
                 </div>
 
-                <div class="calendar-layout-container">
-                    <!-- Filter bar -->
-                    <div class="calendar-filter-bar" id="calendar-filter-bar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px;justify-content:center;">
-                        <button class="calendar-filter-btn active" data-category="all">All Events</button>
-                        <button class="calendar-filter-btn" data-category="Robotics">🤖 Robotics</button>
-                        <button class="calendar-filter-btn" data-category="FBLA">👔 FBLA</button>
-                        <button class="calendar-filter-btn" data-category="Academic">🎓 Academic &amp; Science</button>
-                        <button class="calendar-filter-btn" data-category="School Event">🏫 School Events</button>
+                <div class="gcal-container">
+                    <!-- Google Calendar Header Controls -->
+                    <div class="gcal-header">
+                        <div class="gcal-controls">
+                            <button id="gcal-prev-week-btn" class="gcal-nav-btn" title="Previous Week">&lt;</button>
+                            <button id="gcal-next-week-btn" class="gcal-nav-btn" title="Next Week">&gt;</button>
+                            <button id="gcal-today-btn" class="gcal-today-btn">Today</button>
+                            <span id="gcal-month-year" class="gcal-month-title">September 2026</span>
+                        </div>
+                        <div class="calendar-filter-bar" id="calendar-filter-bar" style="margin-bottom:0;">
+                            <button class="calendar-filter-btn active" data-category="all">All Events</button>
+                            <button class="calendar-filter-btn" data-category="Robotics">🤖 Robotics</button>
+                            <button class="calendar-filter-btn" data-category="FBLA">👔 FBLA</button>
+                            <button class="calendar-filter-btn" data-category="Academic">🎓 Academic</button>
+                            <button class="calendar-filter-btn" data-category="School Event">🏫 School Events</button>
+                        </div>
                     </div>
 
-                    <!-- Events Bento Grid -->
-                    <div class="events-bento-grid" id="events-bento-grid">
-                        <div class="events-loading-placeholder">Loading official academic calendar...</div>
+                    <!-- Weekly Schedule Grid View -->
+                    <div class="gcal-grid-wrapper">
+                        <div class="gcal-time-col">
+                            <div class="gcal-time-header"></div>
+                            <div class="gcal-time-slot">7:00 AM</div>
+                            <div class="gcal-time-slot">8:00 AM</div>
+                            <div class="gcal-time-slot">9:00 AM</div>
+                            <div class="gcal-time-slot">10:00 AM</div>
+                            <div class="gcal-time-slot">11:00 AM</div>
+                            <div class="gcal-time-slot">12:00 PM</div>
+                            <div class="gcal-time-slot">1:00 PM</div>
+                            <div class="gcal-time-slot">2:00 PM</div>
+                            <div class="gcal-time-slot">3:00 PM</div>
+                            <div class="gcal-time-slot">4:00 PM</div>
+                            <div class="gcal-time-slot">5:00 PM</div>
+                        </div>
+                        <div class="gcal-days-grid" id="gcal-days-grid">
+                            <!-- 7 Days (Sun-Sat) rendered dynamically with event pills -->
+                        </div>
                     </div>
                 </div>
             </div>

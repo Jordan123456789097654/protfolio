@@ -1914,86 +1914,160 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ── Academic & Public Events Calendar ─────────────────────────
+    // ── Google Calendar Interactive Weekly View ──────────────────────
     let cachedEvents = [];
+    let currentWeekOffset = 0;
+
     async function loadAcademicCalendar() {
-        const grid = document.getElementById('events-bento-grid');
+        const gridContainer = document.getElementById('gcal-days-grid');
         const filterBtns = document.querySelectorAll('.calendar-filter-btn');
-        if (!grid) return;
+        if (!gridContainer) return;
 
         try {
             const res = await fetch('/api/events');
             const data = await res.json();
-            if (data.success && Array.isArray(data.events)) {
+            if (data.events && Array.isArray(data.events)) {
                 cachedEvents = data.events;
-                renderAcademicEvents('all');
-            } else {
-                grid.innerHTML = emptyStateHTML('calendar', 'No Events Scheduled', 'Check back later for school and robotics events.');
             }
         } catch (err) {
             console.error('Failed to load academic calendar:', err);
-            grid.innerHTML = emptyStateHTML('calendar', 'Calendar Unavailable', 'Unable to load events at this time.');
         }
+
+        renderGoogleCalendar('all');
 
         filterBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 filterBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 const cat = btn.getAttribute('data-category');
-                renderAcademicEvents(cat);
+                renderGoogleCalendar(cat);
             });
+        });
+
+        document.getElementById('gcal-prev-week-btn')?.addEventListener('click', () => {
+            currentWeekOffset--;
+            const activeCat = document.querySelector('.calendar-filter-btn.active')?.getAttribute('data-category') || 'all';
+            renderGoogleCalendar(activeCat);
+        });
+
+        document.getElementById('gcal-next-week-btn')?.addEventListener('click', () => {
+            currentWeekOffset++;
+            const activeCat = document.querySelector('.calendar-filter-btn.active')?.getAttribute('data-category') || 'all';
+            renderGoogleCalendar(activeCat);
+        });
+
+        document.getElementById('gcal-today-btn')?.addEventListener('click', () => {
+            currentWeekOffset = 0;
+            const activeCat = document.querySelector('.calendar-filter-btn.active')?.getAttribute('data-category') || 'all';
+            renderGoogleCalendar(activeCat);
         });
     }
 
-    function renderAcademicEvents(category = 'all') {
-        const grid = document.getElementById('events-bento-grid');
-        if (!grid) return;
+    function renderGoogleCalendar(category = 'all') {
+        const gridContainer = document.getElementById('gcal-days-grid');
+        const monthTitleEl = document.getElementById('gcal-month-year');
+        if (!gridContainer) return;
 
-        let filtered = cachedEvents;
-        if (category && category !== 'all') {
-            const catLower = category.toLowerCase();
-            filtered = cachedEvents.filter(e => {
-                if (!e.category) return false;
-                const itemCat = e.category.toLowerCase();
-                return itemCat === catLower || itemCat.includes(catLower) || catLower.includes(itemCat);
+        // Calculate Sunday of current displayed week
+        const now = new Date();
+        now.setDate(now.getDate() + (currentWeekOffset * 7));
+        const sunday = new Date(now);
+        sunday.setDate(now.getDate() - now.getDay());
+
+        // Update Month Title Header
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        if (monthTitleEl) {
+            monthTitleEl.textContent = `${monthNames[sunday.getMonth()]} ${sunday.getFullYear()}`;
+        }
+
+        const dayAbbrs = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const todayDateStr = new Date().toDateString();
+
+        let daysHtml = '';
+
+        for (let i = 0; i < 7; i++) {
+            const dayDate = new Date(sunday);
+            dayDate.setDate(sunday.getDate() + i);
+            const isToday = dayDate.toDateString() === todayDateStr;
+            const dayNum = dayDate.getDate();
+            const dayName = dayAbbrs[i];
+            const fullDayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][i];
+
+            // Filter matching events for this day & category
+            let dayEvents = cachedEvents.filter(ev => {
+                // Category match
+                if (category !== 'all') {
+                    const catLower = category.toLowerCase();
+                    const itemCat = (ev.category || '').toLowerCase();
+                    if (!itemCat.includes(catLower) && !catLower.includes(itemCat)) return false;
+                }
+
+                // Date or day of week match
+                if (ev.is_recurring) {
+                    const dStr = (ev.event_date || '').toLowerCase();
+                    if (dStr.includes(fullDayName.toLowerCase()) || dStr.includes(dayName.toLowerCase())) return true;
+                }
+                
+                if (ev.event_date) {
+                    const dateObj = new Date(ev.event_date);
+                    if (!isNaN(dateObj.getTime()) && dateObj.toDateString() === dayDate.toDateString()) return true;
+                }
+
+                return false;
             });
-        }
 
-        if (filtered.length === 0) {
-            grid.innerHTML = emptyStateHTML('calendar', 'No Events Found', `No events currently scheduled under ${category}.`);
-            return;
-        }
+            let eventPillsHtml = '';
 
-        grid.innerHTML = filtered.map(ev => {
-            let recurText = 'Weekly';
-            if (ev.recurrence_rule === 'biweekly') recurText = 'Bi-weekly';
-            else if (ev.recurrence_rule === 'monthly') recurText = 'Monthly';
+            dayEvents.forEach(ev => {
+                let topPx = 40; // Default position
+                if (ev.start_time) {
+                    const parts = ev.start_time.split(':');
+                    let hrs = parseInt(parts[0], 10) || 7;
+                    let mins = parseInt(parts[1], 10) || 0;
+                    if (hrs < 7) hrs = 7;
+                    if (hrs > 17) hrs = 17;
+                    topPx = ((hrs - 7) * 60) + mins;
+                }
 
-            const isRecurring = ev.is_recurring ? `<span class="event-recurring-tag"><i data-lucide="repeat" style="width:10px;height:10px;display:inline-block;"></i> ${recurText}</span>` : '';
-            
-            let timeStr = ev.start_time || '';
-            if (ev.end_time) timeStr += ` - ${ev.end_time}`;
+                let heightPx = 50;
+                if (ev.start_time && ev.end_time) {
+                    const sParts = ev.start_time.split(':');
+                    const eParts = ev.end_time.split(':');
+                    const sMin = (parseInt(sParts[0], 10) * 60) + parseInt(sParts[1], 10);
+                    const eMin = (parseInt(eParts[0], 10) * 60) + parseInt(eParts[1], 10);
+                    if (eMin > sMin) heightPx = Math.max(eMin - sMin, 36);
+                }
 
-            return `
-                <div class="event-bento-card reveal" data-category="${escapeHTML(ev.category || 'Event')}">
-                    <div>
-                        <div class="event-bento-header">
-                            <span class="event-category-badge"><i data-lucide="tag" style="width:12px;height:12px;"></i> ${escapeHTML(ev.category || 'Event')}</span>
-                            ${isRecurring}
-                        </div>
-                        <h3 class="event-title">${escapeHTML(ev.title)}</h3>
-                        ${ev.description ? `<p class="event-description">${escapeHTML(ev.description)}</p>` : ''}
+                let catClass = '';
+                const cLower = (ev.category || '').toLowerCase();
+                if (cLower.includes('robotics')) catClass = 'cat-robotics';
+                else if (cLower.includes('fbla')) catClass = 'cat-fbla';
+                else if (cLower.includes('academic')) catClass = 'cat-academic';
+
+                const timeDisp = ev.start_time ? `${ev.start_time}${ev.end_time ? ' - ' + ev.end_time : ''}` : 'All Day';
+
+                eventPillsHtml += `
+                    <div class="gcal-event-pill ${catClass}" style="top:${topPx}px; height:${heightPx}px;" title="${escapeHTML(ev.title)} (${escapeHTML(timeDisp)})">
+                        <div class="gcal-event-title">${escapeHTML(ev.title)}</div>
+                        <div class="gcal-event-time">${escapeHTML(timeDisp)}</div>
                     </div>
-                    <div class="event-meta-list">
-                        ${ev.event_date ? `<div class="event-meta-item"><i data-lucide="calendar"></i> <span>${escapeHTML(ev.event_date)}</span></div>` : ''}
-                        ${timeStr ? `<div class="event-meta-item"><i data-lucide="clock"></i> <span>${escapeHTML(timeStr)}</span></div>` : ''}
-                        ${ev.location ? `<div class="event-meta-item"><i data-lucide="map-pin"></i> <span>${escapeHTML(ev.location)}</span></div>` : ''}
+                `;
+            });
+
+            daysHtml += `
+                <div class="gcal-day-col">
+                    <div class="gcal-day-header ${isToday ? 'is-today' : ''}">
+                        <span>${dayName}</span>
+                        <span class="gcal-day-num">${dayNum}</span>
+                    </div>
+                    <div class="gcal-day-body">
+                        ${eventPillsHtml}
                     </div>
                 </div>
             `;
-        }).join('');
+        }
 
-        if (window.lucide) lucide.createIcons();
+        gridContainer.innerHTML = daysHtml;
     }
 
     // Run UI listeners immediately so buttons work instantly

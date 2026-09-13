@@ -3150,72 +3150,201 @@ section:has(.reveal.active) .hollow-bg-text {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   Academic & Public Events Bento Grid
+   Google Calendar Weekly Schedule View
    ══════════════════════════════════════════════════════════════════ */
-.calendar-section {
-    position: relative;
-    padding: 100px 0;
-    background: var(--bg-primary);
+.gcal-container {
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
 }
 
-.calendar-filter-bar {
+.gcal-header {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    gap: 10px;
     flex-wrap: wrap;
-    margin-bottom: 40px;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.calendar-filter-btn {
-    padding: 8px 18px;
-    border-radius: 99px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.25s ease;
+.gcal-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
-.calendar-filter-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
+.gcal-nav-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     color: var(--text-primary);
-    border-color: rgba(255, 255, 255, 0.2);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-.calendar-filter-btn.active {
+.gcal-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: var(--accent);
+}
+
+.gcal-today-btn {
+    padding: 6px 16px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.gcal-today-btn:hover {
     background: var(--accent);
     color: #000;
-    font-weight: 600;
-    border-color: var(--accent);
-    box-shadow: 0 0 16px var(--accent-glow);
 }
 
-.events-bento-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 24px;
-    width: 100%;
+.gcal-month-title {
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-left: 8px;
 }
 
-.events-loading-placeholder,
-.empty-state-card {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 48px 24px;
+.gcal-grid-wrapper {
+    display: flex;
+    background: rgba(10, 15, 30, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    overflow-x: auto;
+}
+
+.gcal-time-col {
+    width: 80px;
+    flex-shrink: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(15, 23, 42, 0.4);
-    border: 1px dashed rgba(255, 255, 255, 0.12);
-    border-radius: 20px;
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-    backdrop-filter: blur(12px);
+}
+
+.gcal-time-header {
+    height: 54px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gcal-time-slot {
+    height: 60px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding-right: 10px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    transform: translateY(-8px);
+}
+
+.gcal-days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(130px, 1fr));
+    flex: 1;
+}
+
+.gcal-day-col {
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    flex-direction: column;
+}
+
+.gcal-day-col:last-child {
+    border-right: none;
+}
+
+.gcal-day-header {
+    height: 54px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.5);
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+}
+
+.gcal-day-header.is-today .gcal-day-num {
+    background: var(--accent);
+    color: #000;
+    font-weight: 700;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gcal-day-body {
+    position: relative;
+    height: 660px;
+    background: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 59px,
+        rgba(255, 255, 255, 0.04) 59px,
+        rgba(255, 255, 255, 0.04) 60px
+    );
+    padding: 4px;
+}
+
+.gcal-event-pill {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    background: rgba(30, 41, 59, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-left: 4px solid var(--accent);
+    border-radius: 8px;
+    padding: 6px 8px;
+    color: var(--text-primary);
+    font-size: 0.78rem;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 2;
+}
+
+.gcal-event-pill:hover {
+    transform: scale(1.02);
+    z-index: 10;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.gcal-event-pill.cat-robotics { border-left-color: #00d4ff; background: rgba(0, 212, 255, 0.15); }
+.gcal-event-pill.cat-fbla { border-left-color: #d8a53e; background: rgba(216, 165, 62, 0.15); }
+.gcal-event-pill.cat-academic { border-left-color: #a855f7; background: rgba(168, 85, 247, 0.15); }
+
+.gcal-event-title {
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gcal-event-time {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
 }
 
 .event-bento-card {
