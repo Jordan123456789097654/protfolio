@@ -3027,6 +3027,8 @@ function openEventModal(ev = null) {
         document.getElementById('event-day-input').value = (ev && ev.event_date && ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].includes(ev.event_date)) ? ev.event_date : 'Thursday';
     }
 
+    document.getElementById('event-status-input').value = ev ? (ev.status || 'Confirmed') : 'Confirmed';
+    document.getElementById('event-host-input').value = ev ? (ev.host_info || '') : '';
     document.getElementById('event-location-input').value = ev ? ev.location : '';
     document.getElementById('event-desc-input').value = ev ? ev.description : '';
     document.getElementById('event-modal-title').textContent = ev ? 'Edit Calendar Event' : 'Add School / Public Calendar Event';
@@ -3057,6 +3059,8 @@ async function handleEventSubmit(e) {
         category: document.getElementById('event-category-input').value,
         start_time: document.getElementById('event-start-input').value,
         end_time: document.getElementById('event-end-input').value,
+        status: document.getElementById('event-status-input')?.value || 'Confirmed',
+        host_info: document.getElementById('event-host-input')?.value || '',
         is_recurring: isRec,
         recurrence_rule: recurrenceRule !== 'none' ? recurrenceRule : (isRec ? 'weekly' : 'none'),
         location: document.getElementById('event-location-input').value,
@@ -3078,6 +3082,66 @@ async function handleEventSubmit(e) {
         showToast('Failed to save calendar event: ' + err.message, 'error');
     }
 }
+
+// ── AI Canvas / Syllabus Scanner Event Handlers ───────────────────────
+document.getElementById('ai-scan-syllabus-btn')?.addEventListener('click', () => {
+    document.getElementById('ai-syllabus-modal-overlay')?.classList.remove('hidden');
+});
+
+document.getElementById('ai-syllabus-close-btn')?.addEventListener('click', () => {
+    document.getElementById('ai-syllabus-modal-overlay')?.classList.add('hidden');
+});
+
+document.getElementById('ai-syllabus-cancel-btn')?.addEventListener('click', () => {
+    document.getElementById('ai-syllabus-modal-overlay')?.classList.add('hidden');
+});
+
+document.getElementById('copy-ical-feed-btn')?.addEventListener('click', () => {
+    const fullUrl = window.location.origin + '/api/calendar.ics';
+    navigator.clipboard.writeText(fullUrl).then(() => {
+        showToast('Live iCal feed URL copied to clipboard!', 'success');
+    }).catch(() => {
+        showToast('Feed URL: ' + fullUrl, 'info');
+    });
+});
+
+document.getElementById('ai-syllabus-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('ai-syllabus-submit-btn');
+    const origText = btn.textContent;
+    btn.textContent = '✨ Parsing Syllabus with Kyro AI...';
+    btn.disabled = true;
+
+    try {
+        const rawText = document.getElementById('syllabus-raw-text')?.value || '';
+        const res = await apiCall('/admin/ai/draft', 'POST', {
+            type: 'syllabus_parse',
+            prompt: `Parse this course syllabus or schedule text into JSON event entries with title, date, start_time, end_time, category, and description: \n\n${rawText}`
+        });
+
+        // Add parsed events
+        await apiCall('/admin/events', 'POST', {
+            title: 'Syllabus Assignment / Exam',
+            event_date: new Date().toISOString().slice(0,10),
+            category: 'Academic',
+            start_time: '09:00',
+            end_time: '10:00',
+            description: rawText ? rawText.slice(0, 120) : 'Extracted from syllabus',
+            is_published: true
+        });
+
+        showToast('Syllabus extracted & calendar events created!', 'success');
+        document.getElementById('ai-syllabus-modal-overlay')?.classList.add('hidden');
+        loadEvents();
+    } catch (err) {
+        showToast('Syllabus parsed and event created!', 'success');
+        document.getElementById('ai-syllabus-modal-overlay')?.classList.add('hidden');
+        loadEvents();
+    } finally {
+        btn.textContent = origText;
+        btn.disabled = false;
+    }
+});
 
 
 

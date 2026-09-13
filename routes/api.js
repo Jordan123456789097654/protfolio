@@ -192,6 +192,88 @@ router.get('/events', async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, error: err.message, events: [] });
   }
+// ── GET live WebCal / iCal subscription feed (.ics) ───────────────
+router.get('/calendar.ics', async (req, res) => {
+  try {
+    const { rows: schoolEvents } = await safeQuery(
+      req.app.locals.pool,
+      'SELECT * FROM school_events WHERE is_published = true ORDER BY event_date ASC'
+    );
+
+    const { rows: busyBlocks } = await safeQuery(
+      req.app.locals.pool,
+      'SELECT * FROM busy_schedules ORDER BY day_of_week ASC'
+    );
+
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    let icsLines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Jordan Academic Portfolio Calendar//EN',
+      'X-WR-CALNAME:Jordan Academic & Club Calendar',
+      'X-WR-TIMEZONE:America/New_York',
+      'CALSCALE:GREGORIAN'
+    ];
+
+    const nowIso = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+    (schoolEvents || []).forEach(ev => {
+      const dtStart = (ev.event_date ? ev.event_date.replace(/-/g, '') : '20260913') + 'T' + (ev.start_time ? ev.start_time.replace(/:/g, '') + '00' : '090000');
+      const dtEnd = (ev.event_date ? ev.event_date.replace(/-/g, '') : '20260913') + 'T' + (ev.end_time ? ev.end_time.replace(/:/g, '') + '00' : '100000');
+
+      icsLines.push('BEGIN:VEVENT');
+      icsLines.push(`UID:event_${ev.id}@jordanportfolio`);
+      icsLines.push(`DTSTAMP:${nowIso}`);
+      icsLines.push(`SUMMARY:${(ev.title || 'School Event').replace(/\n/g, ' ')}`);
+      if (ev.description) icsLines.push(`DESCRIPTION:${ev.description.replace(/\n/g, '\\n')}`);
+      if (ev.location) icsLines.push(`LOCATION:${ev.location.replace(/\n/g, ' ')}`);
+      icsLines.push(`DTSTART:${dtStart}`);
+      icsLines.push(`DTEND:${dtEnd}`);
+      if (ev.is_recurring) icsLines.push('RRULE:FREQ=WEEKLY');
+      icsLines.push('END:VEVENT');
+    });
+
+    (busyBlocks || []).forEach(b => {
+      const dayStr = typeof b.day_of_week === 'number' ? dayNames[b.day_of_week] || 'Weekly' : b.day_of_week;      icsLines.push('BEGIN:VEVENT');
+      icsLines.push(`UID:busy_${b.id}@jordanportfolio`);
+      icsLines.push(`DTSTAMP:${nowIso}`);
+      icsLines.push(`SUMMARY:${(b.title || 'Academic Hold').replace(/\n/g, ' ')}`);
+      icsLines.push(`DESCRIPTION:Weekly recurring ${b.title || 'hold'} on ${dayStr}`);
+      icsLines.push(`LOCATION:${b.description || 'School Campus'}`);
+      icsLines.push(`DTSTART:20260913T${b.start_time ? b.start_time.replace(/:/g, '') + '00' : '080000'}`);
+      icsLines.push(`DTEND:20260913T${b.end_time ? b.end_time.replace(/:/g, '') + '00' : '090000'}`);
+      icsLines.push('RRULE:FREQ=WEEKLY');
+      icsLines.push('END:VEVENT');
+    });
+
+    icsLines.push('END:VCALENDAR');
+
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', 'inline; filename="academic_calendar.ics"');
+    res.send(icsLines.join('\r\n'));
+  } catch (err) {
+    res.status(500).send('Error generating calendar feed');
+  }
+});
+
+// ── POST RSVP Attending for Public Events ─────────────────────────
+router.post('/events/:id/rsvp', async (req, res) => {
+  try {
+    const { name, email } = req.body;
+    const { rows } = await req.app.locals.pool.query(
+      'UPDATE school_events SET rsvp_count = COALESCE(rsvp_count, 0) + 1 WHERE id = $1 RETURNING rsvp_count',
+      [req.params.id]
+    );
+
+    res.json({
+      success: true,
+      message: 'RSVP confirmed! Thank you for attending.',
+      rsvp_count: rows[0]?.rsvp_count || 1
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 

@@ -319,6 +319,16 @@
                             <button id="gcal-today-btn" class="gcal-today-btn">Today</button>
                             <span id="gcal-month-year" class="gcal-month-title">September 2026</span>
                         </div>
+
+                        <!-- Multi-View Switcher & Actions -->
+                        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                            <div class="gcal-view-switcher" style="display:inline-flex;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:3px;">
+                                <button class="gcal-view-btn active" data-view="week" style="padding:4px 12px;border:none;border-radius:6px;background:var(--accent);color:#000;font-weight:700;font-size:0.8rem;cursor:pointer;">Week</button>
+                                <button class="gcal-view-btn" data-view="list" style="padding:4px 12px;border:none;border-radius:6px;background:transparent;color:var(--text-secondary);font-weight:500;font-size:0.8rem;cursor:pointer;">Agenda List</button>
+                            </div>
+                            <button type="button" id="gcal-print-btn" class="btn btn-outline" style="padding:6px 12px;font-size:0.8rem;">🖨️ Print / PDF</button>
+                        </div>
+
                         <div class="calendar-filter-bar" id="calendar-filter-bar" style="margin-bottom:0;">
                             <button class="calendar-filter-btn active" data-category="all">All Events</button>
                             <button class="calendar-filter-btn" data-category="Robotics">🤖 Robotics</button>
@@ -549,18 +559,25 @@
                     <div class="event-meta-item"><i data-lucide="calendar"></i> <span id="gcal-detail-date" style="color:var(--text-primary);font-weight:600;">Every Thursday</span></div>
                     <div class="event-meta-item"><i data-lucide="clock"></i> <span id="gcal-detail-time" style="color:var(--text-primary);">08:00 AM - 08:30 AM</span></div>
                     <div class="event-meta-item" id="gcal-detail-location-wrap"><i data-lucide="map-pin"></i> <span id="gcal-detail-location" style="color:var(--text-secondary);">High School Campus</span></div>
+                    <div class="event-meta-item" id="gcal-detail-status-wrap"><i data-lucide="info"></i> <span id="gcal-detail-status" style="font-weight:700;color:#2ed573;">🟢 Confirmed</span></div>
+                    <div class="event-meta-item" id="gcal-detail-host-wrap"><i data-lucide="user"></i> <span id="gcal-detail-host" style="color:var(--text-secondary);">Mrs. Davila (Club Advisor)</span></div>
                 </div>
 
                 <p id="gcal-detail-desc" style="font-size:0.88rem;color:var(--text-secondary);line-height:1.6;margin:18px 0 0 0;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;"></p>
             </div>
 
             <div class="meeting-modal-footer" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;">
-                <button type="button" id="gcal-export-ical" class="btn btn-outline" style="font-size:0.85rem;padding:8px 16px;">
-                    📥 Download iCal (.ics)
+                <button type="button" id="gcal-rsvp-btn" class="btn btn-outline" style="font-size:0.85rem;padding:8px 16px;border-color:var(--accent);color:var(--accent);">
+                    ✋ I'm Attending (RSVP)
                 </button>
-                <a id="gcal-export-gcal" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="font-size:0.85rem;padding:8px 18px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
-                    📅 Add to Google Calendar
-                </a>
+                <div style="display:flex;gap:8px;">
+                    <button type="button" id="gcal-export-ical" class="btn btn-outline" style="font-size:0.85rem;padding:8px 14px;">
+                        📥 iCal (.ics)
+                    </button>
+                    <a id="gcal-export-gcal" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="font-size:0.85rem;padding:8px 16px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+                        📅 Google Calendar
+                    </a>
+                </div>
             </div>
         </div>
     </div>

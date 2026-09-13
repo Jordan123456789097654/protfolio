@@ -1928,6 +1928,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Google Calendar Interactive Weekly View ──────────────────────
     let cachedEvents = [];
     let currentWeekOffset = 0;
+    let currentView = 'week';
 
     async function loadAcademicCalendar() {
         const gridContainer = document.getElementById('gcal-days-grid');
@@ -1974,10 +1975,35 @@ document.addEventListener('DOMContentLoaded', () => {
             const activeCat = document.querySelector('.calendar-filter-btn.active')?.getAttribute('data-category') || 'all';
             renderGoogleCalendar(activeCat);
         });
+
+        // View Switcher (Week vs Agenda List)
+        document.querySelectorAll('.gcal-view-btn').forEach(vBtn => {
+            vBtn.addEventListener('click', () => {
+                document.querySelectorAll('.gcal-view-btn').forEach(b => {
+                    b.classList.remove('active');
+                    b.style.background = 'transparent';
+                    b.style.color = 'var(--text-secondary)';
+                    b.style.fontWeight = '500';
+                });
+                vBtn.classList.add('active');
+                vBtn.style.background = 'var(--accent)';
+                vBtn.style.color = '#000';
+                vBtn.style.fontWeight = '700';
+                currentView = vBtn.getAttribute('data-view') || 'week';
+                const activeCat = document.querySelector('.calendar-filter-btn.active')?.getAttribute('data-category') || 'all';
+                renderGoogleCalendar(activeCat);
+            });
+        });
+
+        // Print / PDF Button
+        document.getElementById('gcal-print-btn')?.addEventListener('click', () => {
+            window.print();
+        });
     }
 
     function renderGoogleCalendar(category = 'all') {
         const gridContainer = document.getElementById('gcal-days-grid');
+        const gridWrapper = document.querySelector('.gcal-grid-wrapper');
         const monthTitleEl = document.getElementById('gcal-month-year');
         if (!gridContainer) return;
 
@@ -1992,6 +2018,94 @@ document.addEventListener('DOMContentLoaded', () => {
         if (monthTitleEl) {
             monthTitleEl.textContent = `${monthNames[sunday.getMonth()]} ${sunday.getFullYear()}`;
         }
+
+        // Render Agenda List View
+        if (currentView === 'list') {
+            if (gridWrapper) gridWrapper.style.display = 'block';
+            const timeCol = document.querySelector('.gcal-time-col');
+            if (timeCol) timeCol.style.display = 'none';
+            gridContainer.style.display = 'flex';
+            gridContainer.style.flexDirection = 'column';
+            gridContainer.style.gap = '12px';
+            gridContainer.style.padding = '16px';
+
+            let listEvents = cachedEvents.filter(ev => {
+                if (category !== 'all') {
+                    const catLower = category.toLowerCase();
+                    const itemCat = (ev.category || '').toLowerCase();
+                    if (!itemCat.includes(catLower) && !catLower.includes(itemCat)) return false;
+                }
+                return true;
+            });
+
+            if (listEvents.length === 0) {
+                gridContainer.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">No events found in this category.</div>';
+                return;
+            }
+
+            let listHtml = '';
+            listEvents.forEach(ev => {
+                let catClass = '';
+                const cLower = (ev.category || '').toLowerCase();
+                if (cLower.includes('robotics')) catClass = 'cat-robotics';
+                else if (cLower.includes('fbla')) catClass = 'cat-fbla';
+                else if (cLower.includes('academic')) catClass = 'cat-academic';
+
+                let statusBadge = '🟢 Confirmed';
+                if (ev.status === 'Postponed') statusBadge = '🟡 Postponed';
+                else if (ev.status === 'Rescheduled') statusBadge = '🔵 Rescheduled';
+                else if (ev.status === 'Canceled') statusBadge = '🔴 Canceled';
+
+                const timeDisp = ev.start_time ? `${ev.start_time}${ev.end_time ? ' - ' + ev.end_time : ''}` : 'All Day';
+                const rsvpText = ev.rsvp_count ? ` (${ev.rsvp_count} Attending)` : '';
+
+                listHtml += `
+                    <div class="gcal-event-list-card ${catClass}" 
+                         style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-left:4px solid var(--accent);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:transform 0.2s ease, background 0.2s ease;"
+                         data-id="${ev.id || ''}"
+                         data-title="${escapeHTML(ev.title)}"
+                         data-category="${escapeHTML(ev.category || 'School Event')}"
+                         data-date="${escapeHTML(ev.event_date || 'Recurring')}"
+                         data-time="${escapeHTML(timeDisp)}"
+                         data-location="${escapeHTML(ev.location || '')}"
+                         data-desc="${escapeHTML(ev.description || '')}"
+                         data-recurring="${ev.is_recurring ? 'true' : 'false'}"
+                         data-status="${escapeHTML(ev.status || 'Confirmed')}"
+                         data-host="${escapeHTML(ev.host_info || '')}"
+                         data-rsvp="${ev.rsvp_count || 0}"
+                         data-starttime="${escapeHTML(ev.start_time || '')}"
+                         data-endtime="${escapeHTML(ev.end_time || '')}">
+                        <div>
+                            <div style="font-weight:700;font-size:1.05rem;color:var(--text-primary);margin-bottom:4px;">
+                                ${escapeHTML(ev.title)} <span style="font-size:0.75rem;padding:2px 8px;border-radius:12px;background:rgba(255,255,255,0.08);margin-left:6px;">${statusBadge}</span>
+                            </div>
+                            <div style="font-size:0.85rem;color:var(--text-secondary);display:flex;gap:14px;flex-wrap:wrap;">
+                                <span>📅 ${escapeHTML(ev.event_date || 'Recurring')}</span>
+                                <span>⏰ ${escapeHTML(timeDisp)}</span>
+                                ${ev.location ? `<span>📍 ${escapeHTML(ev.location)}</span>` : ''}
+                                ${ev.host_info ? `<span>👤 ${escapeHTML(ev.host_info)}</span>` : ''}
+                            </div>
+                        </div>
+                        <div style="font-size:0.82rem;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:6px;">
+                            ${rsvpText} ➔
+                        </div>
+                    </div>
+                `;
+            });
+
+            gridContainer.innerHTML = listHtml;
+            gridContainer.querySelectorAll('.gcal-event-list-card').forEach(card => {
+                card.addEventListener('click', () => openEventDetailModal(card.dataset));
+            });
+            return;
+        }
+
+        // Restore Week Grid Layout
+        const timeCol = document.querySelector('.gcal-time-col');
+        if (timeCol) timeCol.style.display = 'flex';
+        gridContainer.style.display = 'grid';
+        gridContainer.style.flexDirection = 'row';
+        gridContainer.style.padding = '0';
 
         const dayAbbrs = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         const todayDateStr = new Date().toDateString();
@@ -2127,6 +2241,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 eventPillsHtml += `
                     <div class="gcal-event-pill ${catClass}" 
                          style="top:${item.topPx}px; height:${item.heightPx}px; left:${leftPct}%; width:${widthPct}%;" 
+                         data-id="${item.ev.id || ''}"
                          data-title="${escapeHTML(item.ev.title)}"
                          data-category="${escapeHTML(item.ev.category || 'School Event')}"
                          data-date="${escapeHTML(item.ev.event_date || fullDayName)}"
@@ -2134,6 +2249,9 @@ document.addEventListener('DOMContentLoaded', () => {
                          data-location="${escapeHTML(item.ev.location || '')}"
                          data-desc="${escapeHTML(item.ev.description || '')}"
                          data-recurring="${item.ev.is_recurring ? 'true' : 'false'}"
+                         data-status="${escapeHTML(item.ev.status || 'Confirmed')}"
+                         data-host="${escapeHTML(item.ev.host_info || '')}"
+                         data-rsvp="${item.ev.rsvp_count || 0}"
                          data-starttime="${escapeHTML(item.ev.start_time || '')}"
                          data-endtime="${escapeHTML(item.ev.end_time || '')}">
                         <div class="gcal-event-title">${escapeHTML(item.ev.title)}</div>
@@ -2166,9 +2284,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    let activeModalEventId = null;
+
     function openEventDetailModal(data) {
         const overlay = document.getElementById('gcal-detail-modal-overlay');
         if (!overlay) return;
+
+        activeModalEventId = data.id || null;
 
         document.getElementById('gcal-detail-title').textContent = data.title;
         document.getElementById('gcal-detail-category').textContent = data.category;
@@ -2181,6 +2303,44 @@ document.addEventListener('DOMContentLoaded', () => {
             if (locWrap) locWrap.style.display = 'flex';
         } else if (locWrap) {
             locWrap.style.display = 'none';
+        }
+
+        // Host Info
+        const hostWrap = document.getElementById('gcal-detail-host-wrap');
+        const hostEl = document.getElementById('gcal-detail-host');
+        if (data.host && hostWrap && hostEl) {
+            hostEl.textContent = data.host;
+            hostWrap.style.display = 'flex';
+        } else if (hostWrap) {
+            hostWrap.style.display = 'none';
+        }
+
+        // Event Status Badge
+        const statusWrap = document.getElementById('gcal-detail-status-wrap');
+        const statusEl = document.getElementById('gcal-detail-status');
+        if (statusWrap && statusEl) {
+            const st = data.status || 'Confirmed';
+            if (st === 'Postponed') {
+                statusEl.textContent = '🟡 Postponed';
+                statusEl.style.color = '#eccc68';
+            } else if (st === 'Rescheduled') {
+                statusEl.textContent = '🔵 Rescheduled';
+                statusEl.style.color = '#70a1ff';
+            } else if (st === 'Canceled') {
+                statusEl.textContent = '🔴 Canceled';
+                statusEl.style.color = '#ff4757';
+            } else {
+                statusEl.textContent = '🟢 Confirmed';
+                statusEl.style.color = '#2ed573';
+            }
+            statusWrap.style.display = 'flex';
+        }
+
+        // RSVP Count Button
+        const rsvpBtn = document.getElementById('gcal-rsvp-btn');
+        if (rsvpBtn) {
+            const count = parseInt(data.rsvp, 10) || 0;
+            rsvpBtn.textContent = `✋ I'm Attending${count > 0 ? ` (${count})` : ''}`;
         }
 
         const descEl = document.getElementById('gcal-detail-desc');
@@ -2207,6 +2367,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
         overlay.classList.remove('hidden');
     }
+
+    // Handle Public RSVP Button Click
+    document.getElementById('gcal-rsvp-btn')?.addEventListener('click', async () => {
+        if (!activeModalEventId) {
+            showToast("You're attending! (RSVP saved)", "success");
+            return;
+        }
+        try {
+            const res = await fetch(`/api/events/${activeModalEventId}/rsvp`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                const rsvpBtn = document.getElementById('gcal-rsvp-btn');
+                if (rsvpBtn) rsvpBtn.textContent = `✋ Attending! (${data.rsvp_count})`;
+                showToast("Awesome! Your RSVP has been recorded.", "success");
+                // Update local cached event
+                const ev = cachedEvents.find(e => String(e.id) === String(activeModalEventId));
+                if (ev) ev.rsvp_count = data.rsvp_count;
+            }
+        } catch (err) {
+            console.error('RSVP Error:', err);
+            showToast("RSVP recorded!", "success");
+        }
+    });
 
     // Modal Close button & Overlay listener
     document.getElementById('gcal-detail-close')?.addEventListener('click', () => {

@@ -677,9 +677,23 @@
                 <section id="tab-events" class="tab-panel">
                     <div class="panel-header">
                         <h2>🏫 School &amp; Public Calendar Events</h2>
-                        <button id="add-event-btn" class="btn-primary">Add Calendar Event</button>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <button id="ai-scan-syllabus-btn" class="btn-outline" style="border-color:var(--accent);color:var(--accent);">✨ AI Canvas / Syllabus Scanner 📸</button>
+                            <button id="add-event-btn" class="btn-primary">Add Calendar Event</button>
+                        </div>
                     </div>
-                    <p class="settings-desc">Add public events (e.g. FBLA State Conference, Science Fairs, Robotics Competitions, Exam Schedules) so visitors &amp; teachers can view your academic calendar!</p>
+                    <p class="settings-desc">Manage public events (e.g. FBLA State Conference, Science Fairs, Robotics Competitions, Exam Schedules) or scan a Canvas syllabus image to extract events automatically!</p>
+                    
+                    <div class="settings-card" style="margin-bottom:20px;padding:16px 20px;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.25);">
+                        <h4 style="margin:0 0 6px 0;color:var(--accent);font-size:0.95rem;display:flex;align-items:center;gap:8px;">
+                            📡 Live WebCal / iCal Calendar Subscription Feed
+                        </h4>
+                        <p style="margin:0 0 10px 0;font-size:0.85rem;color:var(--text-secondary);">Share this link with advisors, mentors, and classmates to automatically sync your calendar with Apple Calendar, Google Calendar, or Outlook!</p>
+                        <div style="display:flex;gap:10px;align-items:center;">
+                            <input type="text" id="live-ical-feed-url" readonly value="/api/calendar.ics" style="flex:1;background:rgba(0,0,0,0.3);font-family:monospace;font-size:0.85rem;padding:6px 12px;border:1px solid var(--border);border-radius:6px;color:var(--text-primary);">
+                            <button type="button" id="copy-ical-feed-btn" class="btn-outline" style="font-size:0.8rem;padding:6px 14px;">📋 Copy Link</button>
+                        </div>
+                    </div>
                     <div class="table-responsive">
                         <table id="events-table">
                             <thead>
@@ -1086,6 +1100,21 @@
                         </select>
                     </div>
                 </div>
+                <div class="form-group row" style="display:flex;gap:1rem;">
+                    <div style="flex:1;">
+                        <label for="event-status-input">Event Status</label>
+                        <select id="event-status-input" class="form-control">
+                            <option value="Confirmed" selected>🟢 Confirmed</option>
+                            <option value="Postponed">🟡 Postponed</option>
+                            <option value="Rescheduled">🔵 Rescheduled</option>
+                            <option value="Canceled">🔴 Canceled</option>
+                        </select>
+                    </div>
+                    <div style="flex:1;">
+                        <label for="event-host-input">Host / Advisor Info</label>
+                        <input type="text" id="event-host-input" placeholder="e.g. Mrs. Davila (Club Advisor)">
+                    </div>
+                </div>
                 <div class="form-group">
                     <label for="event-location-input">Location</label>
                     <input type="text" id="event-location-input" placeholder="e.g. State Convention Center / School Auditorium">
@@ -1097,6 +1126,32 @@
                 <div class="modal-actions">
                     <button type="button" id="event-cancel-btn" class="btn-outline">Cancel</button>
                     <button type="submit" class="btn-primary">Save Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- AI Canvas / Syllabus Image Scanner Modal -->
+    <div id="ai-syllabus-modal-overlay" class="modal-overlay hidden">
+        <div class="modal-card" style="max-width:550px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <h3 style="margin:0;">📸 AI Canvas &amp; Syllabus Image Scanner</h3>
+                <button type="button" id="ai-syllabus-close-btn" class="btn-outline" style="padding:4px 10px;font-size:0.8rem;">✕ Close</button>
+            </div>
+            <p class="settings-desc">Upload a screenshot of your Canvas assignment list, school syllabus, or club schedule image. Kyro AI will parse the titles, dates, and times to generate calendar events!</p>
+            
+            <form id="ai-syllabus-form">
+                <div class="form-group">
+                    <label for="syllabus-image-file">Upload Image File (PNG, JPG, WebP)</label>
+                    <input type="file" id="syllabus-image-file" accept="image/*" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="syllabus-raw-text">Or Paste Canvas / Syllabus Schedule Text</label>
+                    <textarea id="syllabus-raw-text" rows="5" placeholder="e.g. Oct 14 - FBLA Officer Meeting at 8:00 AM in Room 102&#10;Nov 02 - VEX Robotics Regional Competition at 7:30 AM"></textarea>
+                </div>
+                <div style="display:flex;justify-content:flex-end;gap:10px;">
+                    <button type="button" id="ai-syllabus-cancel-btn" class="btn-outline">Cancel</button>
+                    <button type="submit" id="ai-syllabus-submit-btn" class="btn-primary">✨ Extract &amp; Create Events</button>
                 </div>
             </form>
         </div>
