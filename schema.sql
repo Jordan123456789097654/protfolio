@@ -332,6 +332,7 @@ CREATE TABLE IF NOT EXISTS school_events (
   id SERIAL PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
   event_date VARCHAR(50) NOT NULL,
+  end_date VARCHAR(50) DEFAULT '',
   start_time VARCHAR(20) DEFAULT '',
   end_time VARCHAR(20) DEFAULT '',
   location VARCHAR(255) DEFAULT '',
@@ -347,6 +348,7 @@ CREATE TABLE IF NOT EXISTS school_events (
 );
 
 -- Safely add columns if school_events table already exists
+ALTER TABLE school_events ADD COLUMN IF NOT EXISTS end_date VARCHAR(50) DEFAULT '';
 ALTER TABLE school_events ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Confirmed';
 ALTER TABLE school_events ADD COLUMN IF NOT EXISTS host_info VARCHAR(255) DEFAULT '';
 ALTER TABLE school_events ADD COLUMN IF NOT EXISTS is_recurring BOOLEAN DEFAULT false;

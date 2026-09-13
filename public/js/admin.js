@@ -3015,6 +3015,9 @@ function openEventModal(ev = null) {
     document.getElementById('event-id').value = ev ? ev.id : '';
     document.getElementById('event-title-input').value = ev ? ev.title : '';
     document.getElementById('event-date-input').value = ev ? (ev.event_date || '') : '';
+    if (document.getElementById('event-end-date-input')) {
+        document.getElementById('event-end-date-input').value = ev ? (ev.end_date || '') : '';
+    }
     document.getElementById('event-category-input').value = ev ? ev.category : 'School Event';
     document.getElementById('event-start-input').value = ev ? ev.start_time : '';
     document.getElementById('event-end-input').value = ev ? ev.end_time : '';
@@ -3048,6 +3051,8 @@ async function handleEventSubmit(e) {
     const isRec = isRecurring || recurrenceRule !== 'none';
 
     let eventDate = document.getElementById('event-date-input').value;
+    const endDate = document.getElementById('event-end-date-input')?.value || '';
+
     if (isRec && !eventDate) {
         const dayVal = document.getElementById('event-day-input')?.value || 'Weekly';
         eventDate = `${dayVal}s`;
@@ -3056,6 +3061,7 @@ async function handleEventSubmit(e) {
     const payload = {
         title: document.getElementById('event-title-input').value,
         event_date: eventDate || 'Recurring',
+        end_date: endDate,
         category: document.getElementById('event-category-input').value,
         start_time: document.getElementById('event-start-input').value,
         end_time: document.getElementById('event-end-input').value,

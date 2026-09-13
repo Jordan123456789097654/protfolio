@@ -2057,7 +2057,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 else if (ev.status === 'Canceled') statusBadge = '🔴 Canceled';
 
                 const timeDisp = ev.start_time ? `${ev.start_time}${ev.end_time ? ' - ' + ev.end_time : ''}` : 'All Day';
-                const rsvpText = ev.rsvp_count ? ` (${ev.rsvp_count} Attending)` : '';
+                const dateDisp = (ev.end_date && ev.end_date !== ev.event_date) ? `${ev.event_date} to ${ev.end_date}` : (ev.event_date || 'Recurring');
 
                 listHtml += `
                     <div class="gcal-event-list-card ${catClass}" 
@@ -2065,7 +2065,7 @@ document.addEventListener('DOMContentLoaded', () => {
                          data-id="${ev.id || ''}"
                          data-title="${escapeHTML(ev.title)}"
                          data-category="${escapeHTML(ev.category || 'School Event')}"
-                         data-date="${escapeHTML(ev.event_date || 'Recurring')}"
+                         data-date="${escapeHTML(dateDisp)}"
                          data-time="${escapeHTML(timeDisp)}"
                          data-location="${escapeHTML(ev.location || '')}"
                          data-desc="${escapeHTML(ev.description || '')}"
@@ -2080,7 +2080,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 ${escapeHTML(ev.title)} <span style="font-size:0.75rem;padding:2px 8px;border-radius:12px;background:rgba(255,255,255,0.08);margin-left:6px;">${statusBadge}</span>
                             </div>
                             <div style="font-size:0.85rem;color:var(--text-secondary);display:flex;gap:14px;flex-wrap:wrap;">
-                                <span>📅 ${escapeHTML(ev.event_date || 'Recurring')}</span>
+                                <span>📅 ${escapeHTML(dateDisp)}</span>
                                 <span>⏰ ${escapeHTML(timeDisp)}</span>
                                 ${ev.location ? `<span>📍 ${escapeHTML(ev.location)}</span>` : ''}
                                 ${ev.host_info ? `<span>👤 ${escapeHTML(ev.host_info)}</span>` : ''}
@@ -2143,14 +2143,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (dayName === 'Fri' && (dayStr.includes('fri') || titleStr.includes('fri'))) return true;
                 }
 
-                // 2. Check exact date match (YYYY-MM-DD)
+                // 2. Check multi-day date range (event_date <= currentLocalISO <= end_date) or exact start date match
                 if (ev.event_date && ev.event_date.length >= 10) {
-                    const targetISO = ev.event_date.slice(0, 10);
+                    const startISO = ev.event_date.slice(0, 10);
+                    const endISO = (ev.end_date && ev.end_date.length >= 10) ? ev.end_date.slice(0, 10) : startISO;
+                    
                     const y = dayDate.getFullYear();
                     const m = String(dayDate.getMonth() + 1).padStart(2, '0');
                     const d = String(dayDate.getDate()).padStart(2, '0');
                     const currentLocalISO = `${y}-${m}-${d}`;
-                    if (targetISO === currentLocalISO) return true;
+                    
+                    if (currentLocalISO >= startISO && currentLocalISO <= endISO) return true;
                 }
 
                 // 3. Fallback for events with ambiguous or missing dates: display them on the week view!
