@@ -1806,13 +1806,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         fetchConfig();
 
-        if (openBtn) openBtn.addEventListener('click', () => {
+        const openMeetingCalendarBtn = document.getElementById('open-meeting-calendar-btn');
+        const navCalendarBtn = document.getElementById('nav-calendar-btn');
+
+        const openCalendarModal = () => {
             modal.classList.remove('hidden');
             loadPublicEvents();
             if (dateInput && dateInput.value) {
                 fetchSlots(dateInput.value);
             }
-        });
+        };
+
+        if (openBtn) openBtn.addEventListener('click', openCalendarModal);
+        if (openMeetingCalendarBtn) openMeetingCalendarBtn.addEventListener('click', openCalendarModal);
+        if (navCalendarBtn) navCalendarBtn.addEventListener('click', openCalendarModal);
 
         if (closeBtn) closeBtn.addEventListener('click', closeModal);
         if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
