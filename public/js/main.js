@@ -2230,20 +2230,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     leftPct = 4 + (colIndex * widthPct);
                 }
 
-                let catClass = '';
+                let catClass = 'cat-fbla';
                 const cLower = (item.ev.category || '').toLowerCase();
-                if (cLower.includes('robotics')) catClass = 'cat-robotics';
-                else if (cLower.includes('fbla')) catClass = 'cat-fbla';
-                else if (cLower.includes('academic')) catClass = 'cat-academic';
+                const tLower = (item.ev.title || '').toLowerCase();
+                if (cLower.includes('robotics') || tLower.includes('robotics') || tLower.includes('vex')) catClass = 'cat-robotics';
+                else if (cLower.includes('academic') || tLower.includes('exam')) catClass = 'cat-academic';
+                else catClass = 'cat-fbla';
 
                 const timeDisp = item.ev.start_time ? `${item.ev.start_time}${item.ev.end_time ? ' - ' + item.ev.end_time : ''}` : 'All Day';
 
                 eventPillsHtml += `
                     <div class="gcal-event-pill ${catClass}" 
                          style="top:${item.topPx}px; height:${item.heightPx}px; left:${leftPct}%; width:${widthPct}%;" 
+                         title="${escapeHTML(item.ev.title)} (${escapeHTML(timeDisp)})"
                          data-id="${item.ev.id || ''}"
                          data-title="${escapeHTML(item.ev.title)}"
-                         data-category="${escapeHTML(item.ev.category || 'School Event')}"
+                         data-category="FBLA"
                          data-date="${escapeHTML(item.ev.event_date || fullDayName)}"
                          data-time="${escapeHTML(timeDisp)}"
                          data-location="${escapeHTML(item.ev.location || '')}"
