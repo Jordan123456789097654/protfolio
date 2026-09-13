@@ -1856,6 +1856,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Run UI listeners immediately so buttons work instantly
+    initMeetingModal();
+
     // Start everything
     fetchData().then(() => {
         setTimeout(() => {
@@ -1870,7 +1873,6 @@ document.addEventListener('DOMContentLoaded', () => {
             initDynamicTimeAndWeather();
             initCountdownWidget();
             initSeasonalTheme();
-            initMeetingModal();
             initRealtimeSync();
         }, 200);
     });

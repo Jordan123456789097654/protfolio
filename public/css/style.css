@@ -3005,6 +3005,25 @@ section:has(.reveal.active) .hollow-bg-text {
 }
 
 /* ── Interactive Meeting Booking Modal ────────────────────── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    background: rgba(5, 8, 17, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.modal-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+}
+
 .meeting-modal-card {
     background: rgba(16, 24, 40, 0.95);
     backdrop-filter: blur(24px);
