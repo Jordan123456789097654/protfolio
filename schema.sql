@@ -257,7 +257,8 @@ VALUES
   ('achievements', 'Achievements', 4, true),
   ('gallery', 'Gallery', 5, true),
   ('skills', 'Strengths', 6, true),
-  ('recommendations', 'Recommendations', 7, true),
+  ('recommendations', 'Recommendations & Endorsements', 7, true),
+
   ('faq', 'FAQ', 8, true),
   ('contact', 'Contact', 9, true)
 ON CONFLICT (section_id) DO UPDATE SET title = EXCLUDED.title, sort_order = EXCLUDED.sort_order;
