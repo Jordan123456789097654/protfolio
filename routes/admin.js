@@ -1682,11 +1682,11 @@ router.get('/events', async (req, res) => {
 
 router.post('/events', async (req, res) => {
   try {
-    const { title, event_date, start_time, end_time, location, category, description } = req.body;
+    const { title, event_date, start_time, end_time, location, category, description, status, host_info, is_recurring, recurrence_rule, is_published } = req.body;
     const { rows } = await req.app.locals.pool.query(
-      `INSERT INTO school_events (title, event_date, start_time, end_time, location, category, description)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [title.trim(), event_date, start_time || '', end_time || '', location || '', category || 'School Event', description || '']
+      `INSERT INTO school_events (title, event_date, start_time, end_time, location, category, description, status, host_info, is_recurring, recurrence_rule, is_published)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
+      [title ? title.trim() : 'New Event', event_date || 'Recurring', start_time || '', end_time || '', location || '', category || 'School Event', description || '', status || 'Confirmed', host_info || '', !!is_recurring, recurrence_rule || 'none', is_published !== false]
     );
     res.json(rows[0]);
   } catch (err) {
@@ -1696,11 +1696,11 @@ router.post('/events', async (req, res) => {
 
 router.put('/events/:id', async (req, res) => {
   try {
-    const { title, event_date, start_time, end_time, location, category, description, is_published } = req.body;
+    const { title, event_date, start_time, end_time, location, category, description, status, host_info, is_recurring, recurrence_rule, is_published } = req.body;
     const { rows } = await req.app.locals.pool.query(
-      `UPDATE school_events SET title=$1, event_date=$2, start_time=$3, end_time=$4, location=$5, category=$6, description=$7, is_published=$8
-       WHERE id=$9 RETURNING *`,
-      [title.trim(), event_date, start_time || '', end_time || '', location || '', category || 'School Event', description || '', !!is_published, req.params.id]
+      `UPDATE school_events SET title=$1, event_date=$2, start_time=$3, end_time=$4, location=$5, category=$6, description=$7, status=$8, host_info=$9, is_recurring=$10, recurrence_rule=$11, is_published=$12
+       WHERE id=$13 RETURNING *`,
+      [title ? title.trim() : 'Event', event_date || 'Recurring', start_time || '', end_time || '', location || '', category || 'School Event', description || '', status || 'Confirmed', host_info || '', !!is_recurring, recurrence_rule || 'none', is_published !== false, req.params.id]
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
