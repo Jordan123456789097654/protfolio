@@ -2003,18 +2003,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const dayStr = (ev.event_date || '').toLowerCase();
+                const titleStr = (ev.title || '').toLowerCase();
 
                 // Recurring event matching (e.g. "Tuesdays", "Thu", "Thursday", or title mentions)
-                if (ev.is_recurring || dayStr.includes('day') || dayStr.includes('s')) {
+                if (ev.is_recurring || dayStr.includes('day') || dayStr.includes('s') || dayStr.includes('tue') || dayStr.includes('thu')) {
                     if (dayStr.includes(fullDayName.toLowerCase()) || dayStr.includes(dayName.toLowerCase())) return true;
-                    if ((ev.title || '').toLowerCase().includes(fullDayName.toLowerCase()) || (ev.title || '').toLowerCase().includes(dayName.toLowerCase())) return true;
+                    if (titleStr.includes(fullDayName.toLowerCase()) || titleStr.includes(dayName.toLowerCase())) return true;
+                    // Special shorthand check for Tue/Thu/Wed/Mon/Fri
+                    if (dayName === 'Tue' && (dayStr.includes('tue') || titleStr.includes('tue'))) return true;
+                    if (dayName === 'Thu' && (dayStr.includes('thu') || titleStr.includes('thu'))) return true;
+                    if (dayName === 'Mon' && (dayStr.includes('mon') || titleStr.includes('mon'))) return true;
+                    if (dayName === 'Wed' && (dayStr.includes('wed') || titleStr.includes('wed'))) return true;
+                    if (dayName === 'Fri' && (dayStr.includes('fri') || titleStr.includes('fri'))) return true;
                 }
 
-                // Standard exact date match (compare YYYY-MM-DD directly to prevent timezone shift)
+                // Standard exact date match (local date comparison YYYY-MM-DD without UTC shift)
                 if (ev.event_date && ev.event_date.length >= 10) {
                     const targetISO = ev.event_date.slice(0, 10);
-                    const currentISO = dayDate.toISOString().slice(0, 10);
-                    if (targetISO === currentISO) return true;
+                    const y = dayDate.getFullYear();
+                    const m = String(dayDate.getMonth() + 1).padStart(2, '0');
+                    const d = String(dayDate.getDate()).padStart(2, '0');
+                    const currentLocalISO = `${y}-${m}-${d}`;
+                    if (targetISO === currentLocalISO) return true;
                 }
 
                 return false;
