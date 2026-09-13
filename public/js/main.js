@@ -2002,15 +2002,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!itemCat.includes(catLower) && !catLower.includes(itemCat)) return false;
                 }
 
-                // Date or day of week match
-                if (ev.is_recurring) {
-                    const dStr = (ev.event_date || '').toLowerCase();
-                    if (dStr.includes(fullDayName.toLowerCase()) || dStr.includes(dayName.toLowerCase())) return true;
+                const dayStr = (ev.event_date || '').toLowerCase();
+
+                // Recurring event matching (e.g. "Tuesdays", "Thu", "Thursday", or title mentions)
+                if (ev.is_recurring || dayStr.includes('day') || dayStr.includes('s')) {
+                    if (dayStr.includes(fullDayName.toLowerCase()) || dayStr.includes(dayName.toLowerCase())) return true;
+                    if ((ev.title || '').toLowerCase().includes(fullDayName.toLowerCase()) || (ev.title || '').toLowerCase().includes(dayName.toLowerCase())) return true;
                 }
-                
+
+                // Standard exact date match
                 if (ev.event_date) {
                     const dateObj = new Date(ev.event_date);
-                    if (!isNaN(dateObj.getTime()) && dateObj.toDateString() === dayDate.toDateString()) return true;
+                    if (!isNaN(dateObj.getTime())) {
+                        return dateObj.toDateString() === dayDate.toDateString();
+                    }
                 }
 
                 return false;
@@ -2019,23 +2024,44 @@ document.addEventListener('DOMContentLoaded', () => {
             let eventPillsHtml = '';
 
             dayEvents.forEach(ev => {
-                let topPx = 40; // Default position
+                let hrs = 8;
+                let mins = 0;
+
                 if (ev.start_time) {
-                    const parts = ev.start_time.split(':');
-                    let hrs = parseInt(parts[0], 10) || 7;
-                    let mins = parseInt(parts[1], 10) || 0;
-                    if (hrs < 7) hrs = 7;
-                    if (hrs > 17) hrs = 17;
-                    topPx = ((hrs - 7) * 60) + mins;
+                    const timeStr = ev.start_time.trim();
+                    const isPM = /pm/i.test(timeStr);
+                    const isAM = /am/i.test(timeStr);
+                    const cleanTime = timeStr.replace(/(am|pm)/i, '').trim();
+                    const parts = cleanTime.split(':');
+                    let rawHrs = parseInt(parts[0], 10) || 8;
+                    mins = parseInt(parts[1], 10) || 0;
+
+                    if (isPM && rawHrs < 12) rawHrs += 12;
+                    if (isAM && rawHrs === 12) rawHrs = 0;
+                    hrs = rawHrs;
                 }
 
-                let heightPx = 50;
+                // Map 7 AM (0) to 5 PM (10 hrs * 60 = 600px)
+                if (hrs < 7) hrs = 7;
+                if (hrs > 17) hrs = 17;
+                const topPx = Math.max(((hrs - 7) * 60) + mins, 4);
+
+                let heightPx = 54;
                 if (ev.start_time && ev.end_time) {
-                    const sParts = ev.start_time.split(':');
-                    const eParts = ev.end_time.split(':');
-                    const sMin = (parseInt(sParts[0], 10) * 60) + parseInt(sParts[1], 10);
-                    const eMin = (parseInt(eParts[0], 10) * 60) + parseInt(eParts[1], 10);
-                    if (eMin > sMin) heightPx = Math.max(eMin - sMin, 36);
+                    function parseMin(t) {
+                        const pm = /pm/i.test(t);
+                        const am = /am/i.test(t);
+                        const clean = t.replace(/(am|pm)/i, '').trim();
+                        const p = clean.split(':');
+                        let h = parseInt(p[0], 10) || 0;
+                        let m = parseInt(p[1], 10) || 0;
+                        if (pm && h < 12) h += 12;
+                        if (am && h === 12) h = 0;
+                        return (h * 60) + m;
+                    }
+                    const sMin = parseMin(ev.start_time);
+                    const eMin = parseMin(ev.end_time);
+                    if (eMin > sMin) heightPx = Math.max(eMin - sMin, 40);
                 }
 
                 let catClass = '';
