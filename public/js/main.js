@@ -47,6 +47,17 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(raf);
     }
 
+    // Helper function to escape HTML characters
+    function escapeHTML(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
     // Set current year in footer
     document.getElementById('current-year').textContent = new Date().getFullYear();
 
