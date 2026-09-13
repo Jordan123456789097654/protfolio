@@ -192,6 +192,8 @@ router.get('/events', async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, error: err.message, events: [] });
   }
+});
+
 // ── GET live WebCal / iCal subscription feed (.ics) ───────────────
 router.get('/calendar.ics', async (req, res) => {
   try {
