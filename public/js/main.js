@@ -381,8 +381,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Always pin Contact section at the very end of <main>
+        // Always pin Calendar right above Contact, and Contact at the very end of <main>
+        const calendarEl = document.getElementById('calendar');
         const contactEl = document.getElementById('contact');
+        if (calendarEl && calendarEl.parentElement === main) {
+            main.appendChild(calendarEl);
+        }
         if (contactEl && contactEl.parentElement === main) {
             main.appendChild(contactEl);
         }
