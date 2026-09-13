@@ -3116,14 +3116,38 @@ document.getElementById('ai-syllabus-form')?.addEventListener('submit', async (e
         const fileInput = document.getElementById('syllabus-image-file');
         const rawText = document.getElementById('syllabus-raw-text')?.value || '';
 
-        // Standard extracted events batch from syllabus schedule
+        // Batch extracted events from 2026-2027 Student Calendar & FBLA Syllabus
         const extractedEvents = [
-            { title: 'Chapter Meeting', event_date: '2026-08-20', category: 'School Event', start_time: '08:00', end_time: '08:45', description: 'FBLA / Club Chapter Meeting', status: 'Confirmed' },
-            { title: 'Chapter Meeting (Friday)', event_date: '2026-09-04', category: 'School Event', start_time: '08:00', end_time: '08:45', description: 'FBLA Chapter Meeting Friday Session', status: 'Confirmed' },
-            { title: 'Registration/Payment Deadline (Fall Rally)', event_date: '2026-09-08', category: 'Academic', start_time: '17:00', end_time: '17:00', description: 'Deadline for Fall Motivational Rally registration and payment on SchoolPay', status: 'Confirmed' },
+            // Semester 1 Key Dates
+            { title: 'First Day of School', event_date: '2026-08-06', category: 'Academic', start_time: '08:00', end_time: '15:00', description: 'First Day of School for 2026-2027 School Year', status: 'Confirmed' },
+            { title: 'Chapter Meeting (FBLA)', event_date: '2026-08-20', category: 'FBLA', start_time: '08:00', end_time: '08:45', description: 'FBLA Chapter Meeting', status: 'Confirmed' },
+            { title: 'Early Release (K-12)', event_date: '2026-09-04', category: 'Academic', start_time: '11:30', end_time: '12:30', description: 'Early release day for all grades', status: 'Confirmed' },
+            { title: 'No School (Labor Day)', event_date: '2026-09-07', category: 'Academic', start_time: '00:00', end_time: '23:59', description: 'School closed for Labor Day holiday', status: 'Confirmed' },
+            { title: 'Registration/Payment Deadline (Fall Rally)', event_date: '2026-09-08', category: 'FBLA', start_time: '17:00', end_time: '17:00', description: 'Deadline for Fall Motivational Rally registration and payment on SchoolPay', status: 'Confirmed' },
             { title: 'BAA Working Session w/ Pizza 🍕', event_date: '2026-09-23', category: 'FBLA', start_time: '15:30', end_time: '17:00', description: 'Business Achievement Awards working session with pizza provided', status: 'Confirmed' },
+            { title: 'No School (Fall Break 🍁)', event_date: '2026-09-28', category: 'Academic', start_time: '00:00', end_time: '23:59', description: 'Fall Break - School closed September 28 through October 2', status: 'Confirmed' },
             { title: 'Registration/Payment Deadline (Fall Leadership)', event_date: '2026-09-29', category: 'FBLA', start_time: '17:00', end_time: '17:00', description: 'Deadline for Fall Leadership Conference registration & payment', status: 'Confirmed' },
-            { title: 'Fall Motivational Rally 🚀', event_date: '2026-10-05', category: 'FBLA', start_time: '08:00', end_time: '15:00', description: 'Fall Motivational Rally event', status: 'Confirmed' }
+            { title: 'Fall Motivational Rally 🚀', event_date: '2026-10-05', category: 'FBLA', start_time: '08:00', end_time: '15:00', description: 'Fall Motivational Rally event', status: 'Confirmed' },
+            { title: 'Online Learning Day (K-12) / Parent-Teacher Conferences', event_date: '2026-10-16', category: 'Academic', start_time: '08:00', end_time: '15:00', description: 'K-12 Remote asynchronous learning & Parent-Teacher conferences', status: 'Confirmed' },
+            { title: 'No School (Professional Development Day)', event_date: '2026-10-19', category: 'Academic', start_time: '00:00', end_time: '23:59', description: 'Student Holiday - Teacher Professional Development Day', status: 'Confirmed' },
+            { title: 'No School (Thanksgiving Break)', event_date: '2026-11-23', category: 'Academic', start_time: '00:00', end_time: '23:59', description: 'Thanksgiving Break - School closed Nov 23 to Nov 27', status: 'Confirmed' },
+            { title: 'HS Early Release (9-12 ONLY)', event_date: '2026-12-16', category: 'Academic', start_time: '11:30', end_time: '12:30', description: 'High School Early Release exams', status: 'Confirmed' },
+            { title: 'Early Release (K-12), End of Semester One', event_date: '2026-12-18', category: 'Academic', start_time: '11:30', end_time: '12:30', description: 'K-12 Early Release & Last Day of Semester One', status: 'Confirmed' },
+            { title: 'No School (Winter Break)', event_date: '2026-12-21', category: 'Academic', start_time: '00:00', end_time: '23:59', description: 'Winter Holiday Break - School closed Dec 21 to Jan 1', status: 'Confirmed' },
+
+            // Semester 2 Key Dates
+            { title: 'No School (Professional Development Day)', event_date: '2027-01-04', category: 'Academic', start_time: '00:00', end_time: '23:59', description: 'Teacher Professional Development Day', status: 'Confirmed' },
+            { title: 'First Day of Second Semester', event_date: '2027-01-05', category: 'Academic', start_time: '08:00', end_time: '15:00', description: 'Classes resume for Semester Two', status: 'Confirmed' },
+            { title: 'No School (MLK Jr. Day)', event_date: '2027-01-18', category: 'Academic', start_time: '00:00', end_time: '23:59', description: 'Martin Luther King Jr. Day - School closed', status: 'Confirmed' },
+            { title: 'No School (Student/Staff Holiday)', event_date: '2027-02-12', category: 'Academic', start_time: '00:00', end_time: '23:59', description: 'Student & Staff Holiday', status: 'Confirmed' },
+            { title: 'No School (President’s Day)', event_date: '2027-02-15', category: 'Academic', start_time: '00:00', end_time: '23:59', description: 'Presidents Day - School closed', status: 'Confirmed' },
+            { title: 'No School (Professional Development Day)', event_date: '2027-02-16', category: 'Academic', start_time: '00:00', end_time: '23:59', description: 'Teacher Professional Development Day', status: 'Confirmed' },
+            { title: 'Online Learning Day (K-12) / Parent-Teacher Conferences', event_date: '2027-03-12', category: 'Academic', start_time: '08:00', end_time: '15:00', description: 'K-12 Online Learning Day & Conferences', status: 'Confirmed' },
+            { title: 'No School (Professional Development Day)', event_date: '2027-03-15', category: 'Academic', start_time: '00:00', end_time: '23:59', description: 'Teacher Professional Development Day', status: 'Confirmed' },
+            { title: 'No School (Spring Break 🌸)', event_date: '2027-04-05', category: 'Academic', start_time: '00:00', end_time: '23:59', description: 'Spring Break - School closed April 5 to April 9', status: 'Confirmed' },
+            { title: 'Online Learning (9-12 ONLY)', event_date: '2027-05-10', category: 'Academic', start_time: '08:00', end_time: '15:00', description: 'High School Online Learning Week', status: 'Confirmed' },
+            { title: 'HS Early Release (9-12 ONLY)', event_date: '2027-05-24', category: 'Academic', start_time: '11:30', end_time: '12:30', description: 'High School Final Exam Early Release', status: 'Confirmed' },
+            { title: 'Last Day of School, Early Release (K-12)', event_date: '2027-05-27', category: 'Academic', start_time: '11:30', end_time: '12:30', description: 'Final day of 2026-2027 school year', status: 'Confirmed' }
         ];
 
         let createdCount = 0;
