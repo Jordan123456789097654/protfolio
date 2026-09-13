@@ -1754,16 +1754,39 @@ document.addEventListener('DOMContentLoaded', () => {
             modal.classList.add('hidden');
         }
 
+        async function fetchConfig() {
+            try {
+                const res = await fetch('/api/meetings/config');
+                const cfg = await res.json();
+
+                if (cfg && !cfg.meeting_enabled && openBtn) {
+                    openBtn.style.display = 'none';
+                    return;
+                }
+
+                const locationSelect = document.getElementById('meeting-location');
+                if (locationSelect && cfg.locations && cfg.locations.length > 0) {
+                    locationSelect.innerHTML = cfg.locations.map(loc => `<option value="${loc}">${loc}</option>`).join('');
+                }
+
+                if (dateInput) {
+                    const noticeDays = cfg.notice_days || 0;
+                    const minDateObj = new Date(Date.now() + noticeDays * 24 * 60 * 60 * 1000);
+                    const minDateStr = minDateObj.toISOString().split('T')[0];
+                    dateInput.min = minDateStr;
+                    if (!dateInput.value || dateInput.value < minDateStr) {
+                        dateInput.value = minDateStr;
+                    }
+                }
+            } catch (e) {}
+        }
+
+        fetchConfig();
+
         if (openBtn) openBtn.addEventListener('click', () => {
             modal.classList.remove('hidden');
-            // Set min date to today
-            if (dateInput) {
-                const today = new Date().toISOString().split('T')[0];
-                dateInput.min = today;
-                if (!dateInput.value) {
-                    dateInput.value = today;
-                    fetchSlots(today);
-                }
+            if (dateInput && dateInput.value) {
+                fetchSlots(dateInput.value);
             }
         });
 

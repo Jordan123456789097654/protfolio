@@ -43,7 +43,17 @@ ALTER TABLE site_config ADD COLUMN IF NOT EXISTS recommendation_email_subject TE
 ALTER TABLE site_config ADD COLUMN IF NOT EXISTS recommendation_teacher_email_subject TEXT DEFAULT 'Teacher Recommendation Request for {{student_name}}';
 ALTER TABLE site_config ADD COLUMN IF NOT EXISTS recommendation_teacher_email_template TEXT DEFAULT '';
 ALTER TABLE site_config ADD COLUMN IF NOT EXISTS recommendation_mentor_email_subject TEXT DEFAULT 'Mentor Endorsement Request for {{student_name}}';
-ALTER TABLE site_config ADD COLUMN IF NOT EXISTS recommendation_mentor_email_template TEXT DEFAULT '';
+-- Meeting System Configuration Settings
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS meeting_enabled BOOLEAN DEFAULT true;
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS meeting_locations TEXT DEFAULT '📍 High School Campus / Classroom
+📍 Local Public Library
+📍 Coffee Shop / Cafe
+📍 Community Center / Club Lab
+📍 FBLA / Robotics Practice Space';
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS meeting_durations VARCHAR(100) DEFAULT '30';
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS meeting_start_time VARCHAR(20) DEFAULT '09:00';
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS meeting_end_time VARCHAR(20) DEFAULT '17:00';
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS meeting_notice_days INTEGER DEFAULT 0;
 -- Analytics & Event Tracking
 CREATE TABLE IF NOT EXISTS analytics_events (
   id SERIAL PRIMARY KEY,

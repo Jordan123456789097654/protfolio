@@ -61,6 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Meetings & Busy Schedules
     const busyForm = document.getElementById('add-busy-schedule-form');
     if (busyForm) busyForm.addEventListener('submit', handleBusyScheduleAdd);
+    const meetingSettingsForm = document.getElementById('meeting-settings-form');
+    if (meetingSettingsForm) meetingSettingsForm.addEventListener('submit', handleMeetingSettingsSave);
 
     document.getElementById('password-form').addEventListener('submit', handlePasswordChange);
     document.getElementById('export-btn').addEventListener('click', handleExport);
@@ -250,6 +252,7 @@ function showDashboard() {
     loadEmailTemplates();
     loadRecommendations();
     loadMeetings();
+    loadMeetingSettings();
     loadBusySchedules();
     loadSeasonalTheme();
     loadFAQs();
@@ -2711,6 +2714,49 @@ async function loadSeasonalTheme() {
         }
     } catch (e) {
         console.error('Seasonal theme load error:', e);
+    }
+}
+
+async function loadMeetingSettings() {
+    try {
+        const res = await apiCall('/admin/meetings/settings');
+        if (!res) return;
+
+        const enabledInput = document.getElementById('cfg-meeting-enabled');
+        const startInput = document.getElementById('cfg-meeting-start');
+        const endInput = document.getElementById('cfg-meeting-end');
+        const noticeInput = document.getElementById('cfg-meeting-notice');
+        const locsInput = document.getElementById('cfg-meeting-locations');
+
+        if (enabledInput && res.meeting_enabled !== undefined) enabledInput.checked = !!res.meeting_enabled;
+        if (startInput && res.meeting_start_time) startInput.value = res.meeting_start_time;
+        if (endInput && res.meeting_end_time) endInput.value = res.meeting_end_time;
+        if (noticeInput && res.meeting_notice_days !== undefined) noticeInput.value = res.meeting_notice_days;
+        if (locsInput && res.meeting_locations !== undefined) locsInput.value = res.meeting_locations;
+    } catch (e) {
+        console.error('Meeting settings load error:', e);
+    }
+}
+
+async function handleMeetingSettingsSave(e) {
+    e.preventDefault();
+    const meeting_enabled = !!document.getElementById('cfg-meeting-enabled')?.checked;
+    const meeting_start_time = document.getElementById('cfg-meeting-start')?.value || '09:00';
+    const meeting_end_time = document.getElementById('cfg-meeting-end')?.value || '17:00';
+    const meeting_notice_days = parseInt(document.getElementById('cfg-meeting-notice')?.value || '0', 10);
+    const meeting_locations = document.getElementById('cfg-meeting-locations')?.value || '';
+
+    try {
+        await apiCall('/admin/meetings/settings', 'PUT', {
+            meeting_enabled,
+            meeting_start_time,
+            meeting_end_time,
+            meeting_notice_days,
+            meeting_locations
+        });
+        showToast('Meeting settings saved successfully!', 'success');
+    } catch (err) {
+        showToast('Failed to save meeting settings: ' + err.message, 'error');
     }
 }
 

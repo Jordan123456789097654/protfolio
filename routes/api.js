@@ -348,6 +348,34 @@ router.get('/theme/seasonal', async (req, res) => {
   }
 });
 
+// ── GET Meeting Configuration & Locations ─────────────────────────
+router.get('/meetings/config', async (req, res) => {
+  try {
+    const { rows } = await safeQuery(
+      req.app.locals.pool,
+      'SELECT meeting_enabled, meeting_locations, meeting_start_time, meeting_end_time, meeting_notice_days FROM site_config LIMIT 1'
+    );
+    const config = rows[0] || {};
+    const locations = (config.meeting_locations || '').split('\n').map(l => l.trim()).filter(Boolean);
+
+    res.json({
+      meeting_enabled: config.meeting_enabled !== false,
+      locations: locations.length > 0 ? locations : [
+        '📍 High School Campus / Classroom',
+        '📍 Local Public Library',
+        '📍 Coffee Shop / Cafe',
+        '📍 Community Center / Club Lab',
+        '📍 FBLA / Robotics Practice Space'
+      ],
+      start_time: config.meeting_start_time || '09:00',
+      end_time: config.meeting_end_time || '17:00',
+      notice_days: config.meeting_notice_days || 0
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── GET Meeting Availability for a date ────────────────────────────
 router.get('/meetings/availability', async (req, res) => {
   try {
@@ -357,6 +385,14 @@ router.get('/meetings/availability', async (req, res) => {
     const selectedDate = new Date(date + 'T00:00:00');
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const dayName = days[selectedDate.getDay()];
+
+    const { rows: configRows } = await safeQuery(
+      req.app.locals.pool,
+      'SELECT meeting_start_time, meeting_end_time FROM site_config LIMIT 1'
+    );
+    const config = configRows[0] || {};
+    const startHour = parseInt((config.meeting_start_time || '09:00').split(':')[0], 10);
+    const endHour = parseInt((config.meeting_end_time || '17:00').split(':')[0], 10);
 
     // Fetch recurring busy schedules for this day of week
     const { rows: busyBlocks } = await safeQuery(
@@ -373,11 +409,14 @@ router.get('/meetings/availability', async (req, res) => {
     );
     const bookedSlotsSet = new Set(bookedMeetings.map(m => m.time_slot));
 
-    // Standard available hours (9:00 AM - 5:00 PM)
-    const baseSlots = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'];
+    // Dynamic hourly slots from startHour to endHour
+    const baseSlots = [];
+    for (let h = startHour; h < endHour; h++) {
+      baseSlots.push(`${String(h).padStart(2, '0')}:00`);
+    }
+
     const slots = baseSlots.map(timeStr => {
-      const [hourStr, minStr] = timeStr.split(':');
-      const slotHour = parseInt(hourStr, 10);
+      const slotHour = parseInt(timeStr.split(':')[0], 10);
 
       // Check if slot overlaps with any busy block
       let busyReason = null;

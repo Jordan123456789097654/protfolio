@@ -1441,6 +1441,37 @@ router.put('/theme/seasonal', async (req, res) => {
 // ══════════════════════════════════════════════════════════════════
 //  MEETING SCHEDULER & BUSY SCHEDULE MANAGER
 // ══════════════════════════════════════════════════════════════════
+router.get('/meetings/settings', async (req, res) => {
+  try {
+    const { rows } = await req.app.locals.pool.query(
+      'SELECT meeting_enabled, meeting_locations, meeting_start_time, meeting_end_time, meeting_notice_days FROM site_config LIMIT 1'
+    );
+    res.json(rows[0] || {});
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/meetings/settings', async (req, res) => {
+  try {
+    const { meeting_enabled, meeting_locations, meeting_start_time, meeting_end_time, meeting_notice_days } = req.body;
+    const { rows } = await req.app.locals.pool.query(
+      `UPDATE site_config SET 
+        meeting_enabled=$1, 
+        meeting_locations=$2, 
+        meeting_start_time=$3, 
+        meeting_end_time=$4, 
+        meeting_notice_days=$5 
+       WHERE id=(SELECT id FROM site_config LIMIT 1) 
+       RETURNING meeting_enabled, meeting_locations, meeting_start_time, meeting_end_time, meeting_notice_days`,
+      [!!meeting_enabled, meeting_locations || '', meeting_start_time || '09:00', meeting_end_time || '17:00', parseInt(meeting_notice_days || 0, 10)]
+    );
+    res.json(rows[0] || {});
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/meetings', async (req, res) => {
   try {
     const { rows } = await req.app.locals.pool.query(

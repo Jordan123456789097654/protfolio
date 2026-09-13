@@ -575,6 +575,37 @@
                     </div>
                     <p class="settings-desc">Manage scheduled meetings from visitors/mentors and block out recurring busy times (e.g. FBLA or Robotics practices).</p>
                     
+                    <div class="settings-card" style="margin-bottom:24px;">
+                        <h3>⚙️ Meeting System Controls &amp; Location Options</h3>
+                        <p class="settings-desc">Enable or disable meeting booking, set available daily hours, minimum advance notice, and customize available in-person locations.</p>
+                        <form id="meeting-settings-form">
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:1rem;margin-bottom:14px;">
+                                <div class="form-group" style="display:flex;align-items:center;gap:10px;margin-bottom:0;">
+                                    <input type="checkbox" id="cfg-meeting-enabled" name="meeting_enabled" style="width:auto;">
+                                    <label for="cfg-meeting-enabled" style="margin:0;cursor:pointer;">Enable Meeting Booking Widget</label>
+                                </div>
+                                <div class="form-group" style="margin-bottom:0;">
+                                    <label for="cfg-meeting-start">Daily Start Hour</label>
+                                    <input type="time" id="cfg-meeting-start" name="meeting_start_time" required>
+                                </div>
+                                <div class="form-group" style="margin-bottom:0;">
+                                    <label for="cfg-meeting-end">Daily End Hour</label>
+                                    <input type="time" id="cfg-meeting-end" name="meeting_end_time" required>
+                                </div>
+                                <div class="form-group" style="margin-bottom:0;">
+                                    <label for="cfg-meeting-notice">Min Advance Notice (Days)</label>
+                                    <input type="number" id="cfg-meeting-notice" name="meeting_notice_days" min="0" max="30" value="0">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="cfg-meeting-locations">Custom Meeting Locations (One per line)</label>
+                                <textarea id="cfg-meeting-locations" name="meeting_locations" rows="4" placeholder="📍 High School Campus / Classroom&#10;📍 Local Public Library&#10;📍 Coffee Shop / Cafe"></textarea>
+                            </div>
+                            <button type="submit" class="btn-primary">Save Meeting System Settings</button>
+                        </form>
+                    </div>
+                    
                     <div class="table-responsive">
                         <table id="meetings-table">
                             <thead>
