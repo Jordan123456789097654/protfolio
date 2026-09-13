@@ -119,12 +119,15 @@
                             <input type="text" id="config-class-year" name="class_year" placeholder="e.g. Class of 2026 or 2026">
                         </div>
                         <div class="form-group">
-                            <label for="config-photo">About Photo URL</label>
-                            <div class="photo-input-group">
-                                <input type="text" id="config-photo" name="about_photo_url" placeholder="https://... or /uploads/...">
-                                <label for="photo-file-input" class="btn-outline upload-btn" title="Upload an image from your computer">Upload</label>
-                                <input type="file" id="photo-file-input" accept="image/*" class="hidden">
+                            <label for="config-photo">About Photo</label>
+                            <div class="dropzone" id="config-photo-dropzone">
+                                <img id="config-photo-preview" class="dropzone-preview hidden" src="" alt="Preview">
+                                <div class="dropzone-hint">
+                                    <span>📁 Drag &amp; drop an image here, or click to upload</span>
+                                    <input type="file" id="config-photo-file" accept="image/*" class="hidden">
+                                </div>
                             </div>
+                            <input type="text" id="config-photo" name="about_photo_url" placeholder="Or paste an image URL (https://... or /uploads/...)">
                         </div>
                         <div class="form-group">
                             <label for="config-bio">About Bio</label>
