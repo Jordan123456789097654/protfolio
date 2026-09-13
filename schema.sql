@@ -337,9 +337,21 @@ CREATE TABLE IF NOT EXISTS school_events (
   location VARCHAR(255) DEFAULT '',
   category VARCHAR(100) DEFAULT 'School Event', -- 'FBLA', 'Robotics', 'Academic', 'Sports', 'Volunteering', 'School Event'
   description TEXT DEFAULT '',
+  status VARCHAR(50) DEFAULT 'Confirmed',
+  host_info VARCHAR(255) DEFAULT '',
+  is_recurring BOOLEAN DEFAULT false,
+  recurrence_rule VARCHAR(50) DEFAULT 'none',
+  rsvp_count INTEGER DEFAULT 0,
   is_published BOOLEAN DEFAULT true,
   created_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Safely add columns if school_events table already exists
+ALTER TABLE school_events ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Confirmed';
+ALTER TABLE school_events ADD COLUMN IF NOT EXISTS host_info VARCHAR(255) DEFAULT '';
+ALTER TABLE school_events ADD COLUMN IF NOT EXISTS is_recurring BOOLEAN DEFAULT false;
+ALTER TABLE school_events ADD COLUMN IF NOT EXISTS recurrence_rule VARCHAR(50) DEFAULT 'none';
+ALTER TABLE school_events ADD COLUMN IF NOT EXISTS rsvp_count INTEGER DEFAULT 0;
 
 -- Seed Sample School Events if table empty
 INSERT INTO school_events (title, event_date, start_time, end_time, location, category, description)
