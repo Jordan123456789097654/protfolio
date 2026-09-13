@@ -2238,6 +2238,8 @@ async function loadEmailTemplates() {
         const recTeacherTpl = document.getElementById('rec-teacher-template-input');
         const recMentorSub = document.getElementById('rec-mentor-subject-input');
         const recMentorTpl = document.getElementById('rec-mentor-template-input');
+        const meetingSub = document.getElementById('meeting-subject-input');
+        const meetingTpl = document.getElementById('meeting-template-input');
 
         if (contactSub && data.contact_email_subject !== undefined) contactSub.value = data.contact_email_subject || '';
         if (contactTpl && data.contact_email_template !== undefined) contactTpl.value = data.contact_email_template || '';
@@ -2247,6 +2249,8 @@ async function loadEmailTemplates() {
         if (recTeacherTpl && data.recommendation_teacher_email_template !== undefined) recTeacherTpl.value = data.recommendation_teacher_email_template || '';
         if (recMentorSub && data.recommendation_mentor_email_subject !== undefined) recMentorSub.value = data.recommendation_mentor_email_subject || '';
         if (recMentorTpl && data.recommendation_mentor_email_template !== undefined) recMentorTpl.value = data.recommendation_mentor_email_template || '';
+        if (meetingSub && data.meeting_email_subject !== undefined) meetingSub.value = data.meeting_email_subject || '';
+        if (meetingTpl && data.meeting_email_template !== undefined) meetingTpl.value = data.meeting_email_template || '';
     } catch (e) {
         console.error('Failed to load email templates:', e.message);
     }
@@ -2262,7 +2266,9 @@ async function handleEmailTemplatesSave(e) {
         recommendation_teacher_email_subject: document.getElementById('rec-teacher-subject-input')?.value || '',
         recommendation_teacher_email_template: document.getElementById('rec-teacher-template-input')?.value || '',
         recommendation_mentor_email_subject: document.getElementById('rec-mentor-subject-input')?.value || '',
-        recommendation_mentor_email_template: document.getElementById('rec-mentor-template-input')?.value || ''
+        recommendation_mentor_email_template: document.getElementById('rec-mentor-template-input')?.value || '',
+        meeting_email_subject: document.getElementById('meeting-subject-input')?.value || '',
+        meeting_email_template: document.getElementById('meeting-template-input')?.value || ''
     };
 
     try {
@@ -2412,6 +2418,9 @@ async function handleAIDraftEmailTemplate(type) {
     } else if (type === 'recommendation_mentor') {
         targetId = 'rec-mentor-template-input';
         prompt = `Design a warm, inspiring mentor/therapist endorsement request HTML email from {{student_name}} to mentor {{teacher_name}}. Features: teal/emerald gradient header, personal growth request phrasing, highlight box for {{course_or_context}}, and glowing button linking to {{form_url}}. Use exact tags: {{teacher_name}}, {{student_name}}, {{course_or_context}}, {{form_url}}, {{site_title}}. Output ONLY raw inline-styled HTML.`;
+    } else if (type === 'meeting_confirmation') {
+        targetId = 'meeting-template-input';
+        prompt = `Design a modern, polished HTML meeting confirmation email from {{student_name}} to guest {{name}}. Features: gold/dark gradient header, clear meeting details card for {{meeting_date}}, {{time_slot}}, {{location}}, and {{topic}}, and red button for {{cancel_url}}. Use exact tags: {{name}}, {{meeting_date}}, {{time_slot}}, {{location}}, {{topic}}, {{cancel_url}}, {{student_name}}. Output ONLY raw inline-styled HTML.`;
     }
 
     if (targetId) {
@@ -2768,6 +2777,60 @@ async function handleSeasonalThemeSave(e) {
         showToast(`Seasonal theme updated to: ${theme.toUpperCase()}`, 'success');
     } catch (err) {
         showToast('Failed to save seasonal theme: ' + err.message, 'error');
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// 🔗 INTEGRATIONS HANDLER (Discord, Kyro AI, Resend, Twilio SMS)
+// ══════════════════════════════════════════════════════════════════
+async function loadIntegrations() {
+    try {
+        const data = await apiCall('/admin/settings/integrations');
+        if (!data) return;
+
+        const discordInput = document.getElementById('discord-webhook-input');
+        const kyroInput = document.getElementById('kyro-key-input');
+        const resendInput = document.getElementById('resend-key-input');
+        const emailInput = document.getElementById('notification-email-input');
+        const twilioEnabled = document.getElementById('twilio-enabled-input');
+        const twilioSid = document.getElementById('twilio-sid-input');
+        const twilioToken = document.getElementById('twilio-token-input');
+        const twilioPhone = document.getElementById('twilio-phone-input');
+        const adminPhone = document.getElementById('admin-phone-input');
+
+        if (discordInput && data.discord_webhook_url !== undefined) discordInput.value = data.discord_webhook_url || '';
+        if (kyroInput && data.kyro_api_key !== undefined) kyroInput.value = data.kyro_api_key || '';
+        if (resendInput && data.resend_api_key !== undefined) resendInput.value = data.resend_api_key || '';
+        if (emailInput && data.notification_email !== undefined) emailInput.value = data.notification_email || '';
+        if (twilioEnabled && data.twilio_sms_enabled !== undefined) twilioEnabled.checked = !!data.twilio_sms_enabled;
+        if (twilioSid && data.twilio_account_sid !== undefined) twilioSid.value = data.twilio_account_sid || '';
+        if (twilioToken && data.twilio_auth_token !== undefined) twilioToken.value = data.twilio_auth_token || '';
+        if (twilioPhone && data.twilio_phone_number !== undefined) twilioPhone.value = data.twilio_phone_number || '';
+        if (adminPhone && data.admin_phone_number !== undefined) adminPhone.value = data.admin_phone_number || '';
+    } catch (e) {
+        console.error('Failed to load integrations settings:', e);
+    }
+}
+
+async function handleIntegrationsSave(e) {
+    e.preventDefault();
+    const payload = {
+        discord_webhook_url: document.getElementById('discord-webhook-input')?.value || '',
+        kyro_api_key: document.getElementById('kyro-key-input')?.value || '',
+        resend_api_key: document.getElementById('resend-key-input')?.value || '',
+        notification_email: document.getElementById('notification-email-input')?.value || '',
+        twilio_sms_enabled: !!document.getElementById('twilio-enabled-input')?.checked,
+        twilio_account_sid: document.getElementById('twilio-sid-input')?.value || '',
+        twilio_auth_token: document.getElementById('twilio-token-input')?.value || '',
+        twilio_phone_number: document.getElementById('twilio-phone-input')?.value || '',
+        admin_phone_number: document.getElementById('admin-phone-input')?.value || ''
+    };
+
+    try {
+        await apiCall('/admin/settings/integrations', 'PUT', payload);
+        showToast('Integrations & Twilio SMS settings saved successfully!', 'success');
+    } catch (err) {
+        showToast('Failed to save integrations: ' + err.message, 'error');
     }
 }
 

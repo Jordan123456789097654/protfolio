@@ -43,6 +43,15 @@ ALTER TABLE site_config ADD COLUMN IF NOT EXISTS recommendation_email_subject TE
 ALTER TABLE site_config ADD COLUMN IF NOT EXISTS recommendation_teacher_email_subject TEXT DEFAULT 'Teacher Recommendation Request for {{student_name}}';
 ALTER TABLE site_config ADD COLUMN IF NOT EXISTS recommendation_teacher_email_template TEXT DEFAULT '';
 ALTER TABLE site_config ADD COLUMN IF NOT EXISTS recommendation_mentor_email_subject TEXT DEFAULT 'Mentor Endorsement Request for {{student_name}}';
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS meeting_email_subject TEXT DEFAULT '✓ Meeting Confirmation: {{meeting_date}} @ {{time_slot}} with {{student_name}}';
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS meeting_email_template TEXT DEFAULT '';
+
+-- Twilio SMS Alert Settings
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS twilio_account_sid VARCHAR(255) DEFAULT '';
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS twilio_auth_token VARCHAR(255) DEFAULT '';
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS twilio_phone_number VARCHAR(100) DEFAULT '';
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS admin_phone_number VARCHAR(100) DEFAULT '';
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS twilio_sms_enabled BOOLEAN DEFAULT false;
 -- Meeting System Configuration Settings
 ALTER TABLE site_config ADD COLUMN IF NOT EXISTS meeting_enabled BOOLEAN DEFAULT true;
 ALTER TABLE site_config ADD COLUMN IF NOT EXISTS meeting_locations TEXT DEFAULT '📍 High School Campus / Classroom

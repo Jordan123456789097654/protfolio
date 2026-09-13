@@ -1438,6 +1438,44 @@ router.put('/theme/seasonal', async (req, res) => {
   }
 });
 
+// ── GET & PUT Integrations Settings ─────────────────────────────────
+router.get('/settings/integrations', async (req, res) => {
+  try {
+    const { rows } = await req.app.locals.pool.query(
+      `SELECT discord_webhook_url, kyro_api_key, resend_api_key, notification_email,
+              twilio_account_sid, twilio_auth_token, twilio_phone_number, admin_phone_number, twilio_sms_enabled
+       FROM site_config LIMIT 1`
+    );
+    res.json(rows[0] || {});
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/settings/integrations', async (req, res) => {
+  try {
+    const {
+      discord_webhook_url, kyro_api_key, resend_api_key, notification_email,
+      twilio_account_sid, twilio_auth_token, twilio_phone_number, admin_phone_number, twilio_sms_enabled
+    } = req.body;
+
+    const { rows } = await req.app.locals.pool.query(
+      `UPDATE site_config SET
+        discord_webhook_url=$1, kyro_api_key=$2, resend_api_key=$3, notification_email=$4,
+        twilio_account_sid=$5, twilio_auth_token=$6, twilio_phone_number=$7, admin_phone_number=$8, twilio_sms_enabled=$9
+       WHERE id=(SELECT id FROM site_config LIMIT 1)
+       RETURNING *`,
+      [
+        discord_webhook_url || '', kyro_api_key || '', resend_api_key || '', notification_email || '',
+        twilio_account_sid || '', twilio_auth_token || '', twilio_phone_number || '', admin_phone_number || '', !!twilio_sms_enabled
+      ]
+    );
+    res.json(rows[0] || {});
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ══════════════════════════════════════════════════════════════════
 //  MEETING SCHEDULER & BUSY SCHEDULE MANAGER
 // ══════════════════════════════════════════════════════════════════

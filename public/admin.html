@@ -781,6 +781,33 @@
                             </div>
                         </div>
 
+                        <div class="settings-card">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <h3 style="margin:0;">📅 5. Meeting Confirmation Email (Sent to Guest)</h3>
+                                <button type="button" class="btn-outline ai-draft-tpl-btn" data-type="meeting_confirmation" style="font-size:0.8rem;padding:4px 10px;">✨ Kyro AI Draft</button>
+                            </div>
+                            <p class="settings-desc" style="margin-top:6px;">Sent to guests when they schedule a meeting on your website.</p>
+
+                            <div class="form-group">
+                                <label for="meeting-subject-input">Subject Line</label>
+                                <input type="text" id="meeting-subject-input" name="meeting_email_subject" placeholder="✓ Meeting Confirmation: {{meeting_date}} @ {{time_slot}} with {{student_name}}">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="meeting-template-input">Email Body / HTML Template</label>
+                                <div class="tag-pills-container">
+                                    <span class="tag-pill" onclick="insertTag('meeting-template-input', '{{name}}')">{{name}}</span>
+                                    <span class="tag-pill" onclick="insertTag('meeting-template-input', '{{meeting_date}}')">{{meeting_date}}</span>
+                                    <span class="tag-pill" onclick="insertTag('meeting-template-input', '{{time_slot}}')">{{time_slot}}</span>
+                                    <span class="tag-pill" onclick="insertTag('meeting-template-input', '{{location}}')">{{location}}</span>
+                                    <span class="tag-pill" onclick="insertTag('meeting-template-input', '{{topic}}')">{{topic}}</span>
+                                    <span class="tag-pill" onclick="insertTag('meeting-template-input', '{{cancel_url}}')">{{cancel_url}}</span>
+                                    <span class="tag-pill" onclick="insertTag('meeting-template-input', '{{student_name}}')">{{student_name}}</span>
+                                </div>
+                                <textarea id="meeting-template-input" name="meeting_email_template" rows="6" placeholder="Enter custom meeting confirmation HTML template..."></textarea>
+                            </div>
+                        </div>
+
                         <button type="submit" class="btn-primary" style="margin-top:10px;">Save Email Settings</button>
                     </form>
                 </section>
@@ -878,6 +905,28 @@
                             <div class="form-group">
                                 <label for="notification-email-input">Notification Email Address</label>
                                 <input type="email" id="notification-email-input" name="notification_email" placeholder="jordan.lmmsfbla@outlook.com">
+                            </div>
+
+                            <h4 style="margin:16px 0 8px;font-size:0.95rem;color:var(--accent-secondary);">📱 Twilio SMS Text Alerts (Optional)</h4>
+                            <div class="form-group" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                                <input type="checkbox" id="twilio-enabled-input" name="twilio_sms_enabled" style="width:auto;">
+                                <label for="twilio-enabled-input" style="margin:0;cursor:pointer;">Enable SMS Alerts for New Bookings</label>
+                            </div>
+                            <div class="form-group">
+                                <label for="twilio-sid-input">Twilio Account SID</label>
+                                <input type="password" id="twilio-sid-input" name="twilio_account_sid" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                            </div>
+                            <div class="form-group">
+                                <label for="twilio-token-input">Twilio Auth Token</label>
+                                <input type="password" id="twilio-token-input" name="twilio_auth_token" placeholder="your_auth_token">
+                            </div>
+                            <div class="form-group">
+                                <label for="twilio-phone-input">Twilio Phone Number (Sender)</label>
+                                <input type="text" id="twilio-phone-input" name="twilio_phone_number" placeholder="+18005550199">
+                            </div>
+                            <div class="form-group">
+                                <label for="admin-phone-input">Your Mobile Number (Recipient)</label>
+                                <input type="text" id="admin-phone-input" name="admin_phone_number" placeholder="+15551234567">
                             </div>
                             <button type="submit" class="btn-primary">Save Integrations</button>
                         </form>

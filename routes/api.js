@@ -469,8 +469,14 @@ router.post('/meetings/book', async (req, res) => {
     );
     const meeting = rows[0];
 
-    // Fetch site config for notification email & discord webhook
-    const { rows: configRows } = await safeQuery(req.app.locals.pool, 'SELECT name, notification_email, discord_webhook_url FROM site_config LIMIT 1');
+    // Fetch site config for custom templates, notification email, discord webhook, and Twilio settings
+    const { rows: configRows } = await safeQuery(
+      req.app.locals.pool,
+      `SELECT name, notification_email, discord_webhook_url,
+              meeting_email_subject, meeting_email_template,
+              twilio_account_sid, twilio_auth_token, twilio_phone_number, admin_phone_number, twilio_sms_enabled
+       FROM site_config LIMIT 1`
+    );
     const config = configRows[0] || {};
     const notifyEmail = config.notification_email || 'jordan.lmmsfbla@outlook.com';
 
@@ -480,6 +486,7 @@ router.post('/meetings/book', async (req, res) => {
     const protocol = req.protocol || 'https';
     const host = req.get('host') || 'localhost:3000';
     const cancelUrl = `${protocol}://${host}/api/meetings/cancel/${cancelToken}`;
+    const studentName = config.name || 'Jordan';
 
     // Send email notification to student (admin)
     sendEmail({
@@ -498,15 +505,29 @@ router.post('/meetings/book', async (req, res) => {
       `
     }).catch(e => console.error('Meeting email error:', e.message));
 
-    // Send confirmation & calendar event email to guest
-    sendEmail({
-      to: email.trim(),
-      subject: `✓ Meeting Confirmation: ${meeting_date} @ ${timeDisplay} with Jordan`,
-      html: `
+    // Determine custom email subject & template or default
+    let customSubject = (config.meeting_email_subject || '✓ Meeting Confirmation: {{meeting_date}} @ {{time_slot}} with {{student_name}}')
+      .replace(/\{\{name\}\}/g, name.trim())
+      .replace(/\{\{meeting_date\}\}/g, meeting_date)
+      .replace(/\{\{time_slot\}\}/g, timeDisplay)
+      .replace(/\{\{student_name\}\}/g, studentName);
+
+    let customHtml = config.meeting_email_template;
+    if (customHtml && customHtml.trim()) {
+      customHtml = customHtml
+        .replace(/\{\{name\}\}/g, name.trim())
+        .replace(/\{\{meeting_date\}\}/g, meeting_date)
+        .replace(/\{\{time_slot\}\}/g, `${timeDisplay} (${guestTz})`)
+        .replace(/\{\{location\}\}/g, meetingLocation)
+        .replace(/\{\{topic\}\}/g, topic.trim())
+        .replace(/\{\{cancel_url\}\}/g, cancelUrl)
+        .replace(/\{\{student_name\}\}/g, studentName);
+    } else {
+      customHtml = `
         <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#101726;color:#e2e8f0;padding:24px;border-radius:12px;">
           <h2 style="color:#d8a53e;margin-top:0;">✓ Meeting Confirmed!</h2>
           <p>Hi <strong>${name.trim()}</strong>,</p>
-          <p>Your in-person meeting with Jordan has been confirmed.</p>
+          <p>Your in-person meeting with ${studentName} has been confirmed.</p>
           <div style="background:#1a2336;padding:16px;border-radius:8px;margin:16px 0;border:1px solid #2d3748;">
             <p style="margin:4px 0;"><strong>Date:</strong> ${meeting_date}</p>
             <p style="margin:4px 0;"><strong>Time:</strong> ${timeDisplay} (${guestTz})</p>
@@ -516,8 +537,41 @@ router.post('/meetings/book', async (req, res) => {
           <p style="font-size:0.9rem;color:#cbd5e1;">Need to cancel or reschedule? Click the link below:</p>
           <p><a href="${cancelUrl}" style="display:inline-block;padding:8px 16px;background:#ef4444;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;font-size:0.85rem;">Cancel / Reschedule Meeting</a></p>
         </div>
-      `
+      `;
+    }
+
+    // Send confirmation & calendar event email to guest
+    sendEmail({
+      to: email.trim(),
+      subject: customSubject,
+      html: customHtml
     }).catch(e => console.error('Guest confirmation email error:', e.message));
+
+    // Send Twilio SMS text alert to admin if enabled & configured
+    if (config.twilio_sms_enabled && config.twilio_account_sid && config.twilio_auth_token && config.twilio_phone_number && config.admin_phone_number) {
+      try {
+        const smsBody = `📅 New Portfolio Meeting Booked!\nName: ${name.trim()} (${role || 'Visitor'})\nDate: ${meeting_date} @ ${timeDisplay}\nLoc: ${meetingLocation}\nTopic: ${topic.trim()}`;
+        const auth = Buffer.from(`${config.twilio_account_sid.trim()}:${config.twilio_auth_token.trim()}`).toString('base64');
+        
+        fetch(`https://api.twilio.com/2010-04-01/Accounts/${config.twilio_account_sid.trim()}/Messages.json`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: new URLSearchParams({
+            To: config.admin_phone_number.trim(),
+            From: config.twilio_phone_number.trim(),
+            Body: smsBody
+          }).toString()
+        }).then(r => r.json()).then(data => {
+          if (data.sid) console.log('✓ Twilio SMS Alert sent:', data.sid);
+          else console.warn('⚠️ Twilio SMS error:', JSON.stringify(data));
+        }).catch(err => console.error('Twilio SMS fetch error:', err.message));
+      } catch (smsErr) {
+        console.error('Twilio setup error:', smsErr.message);
+      }
+    }
 
     // Send Discord webhook notification if configured
     if (config.discord_webhook_url) {
