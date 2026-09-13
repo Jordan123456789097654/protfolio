@@ -294,9 +294,23 @@ CREATE TABLE IF NOT EXISTS meetings (
   meeting_date VARCHAR(50) NOT NULL,
   time_slot VARCHAR(50) NOT NULL,
   topic TEXT NOT NULL,
+  location_type VARCHAR(255) DEFAULT 'IRL Meeting (School / Library / Coffee Shop)',
+  guest_timezone VARCHAR(100) DEFAULT 'EST',
+  notes TEXT DEFAULT '',
+  cancel_token VARCHAR(100),
+  reminder_sent_24h BOOLEAN DEFAULT false,
+  reminder_sent_1h BOOLEAN DEFAULT false,
   status VARCHAR(50) DEFAULT 'confirmed', -- 'confirmed', 'declined', 'cancelled'
   created_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Safely add columns if meetings table already exists
+ALTER TABLE meetings ADD COLUMN IF NOT EXISTS location_type VARCHAR(255) DEFAULT 'IRL Meeting (School / Library / Coffee Shop)';
+ALTER TABLE meetings ADD COLUMN IF NOT EXISTS guest_timezone VARCHAR(100) DEFAULT 'EST';
+ALTER TABLE meetings ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT '';
+ALTER TABLE meetings ADD COLUMN IF NOT EXISTS cancel_token VARCHAR(100);
+ALTER TABLE meetings ADD COLUMN IF NOT EXISTS reminder_sent_24h BOOLEAN DEFAULT false;
+ALTER TABLE meetings ADD COLUMN IF NOT EXISTS reminder_sent_1h BOOLEAN DEFAULT false;
 
 -- Busy Schedule Recurring Blocks (e.g. FBLA Meetings, Robotics Build Season)
 CREATE TABLE IF NOT EXISTS busy_schedules (

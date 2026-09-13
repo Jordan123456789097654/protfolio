@@ -1452,13 +1452,21 @@ router.get('/meetings', async (req, res) => {
   }
 });
 
-router.put('/meetings/:id/status', async (req, res) => {
+router.put('/meetings/:id', async (req, res) => {
   try {
-    const { status } = req.body;
-    const { rows } = await req.app.locals.pool.query(
-      'UPDATE meetings SET status=$1 WHERE id=$2 RETURNING *',
-      [status || 'confirmed', req.params.id]
-    );
+    const { status, notes } = req.body;
+    let query = 'UPDATE meetings SET status=COALESCE($1, status)';
+    const params = [status];
+
+    if (notes !== undefined) {
+      query += ', notes=$2 WHERE id=$3 RETURNING *';
+      params.push(notes, req.params.id);
+    } else {
+      query += ' WHERE id=$2 RETURNING *';
+      params.push(req.params.id);
+    }
+
+    const { rows } = await req.app.locals.pool.query(query, params);
     if (rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
   } catch (err) {

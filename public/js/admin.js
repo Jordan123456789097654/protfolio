@@ -2607,11 +2607,16 @@ async function loadMeetings() {
                 ? '<span style="color:#ff4757;font-weight:600;">✕ Declined</span>' 
                 : '<span style="color:#ffa502;font-weight:600;">⏳ Pending</span>';
             
+            const hasNotes = m.notes && m.notes.trim().length > 0;
+            const notesBtnLabel = hasNotes ? '📝 View Notes' : '➕ Add Notes';
+
             return `
                 <td data-label="Name"><strong>${m.name}</strong></td>
                 <td data-label="Email / Role">${m.email}<br><small style="color:var(--text-secondary);">${m.role || 'Guest'}</small></td>
                 <td data-label="Date & Time Slot">${m.meeting_date}<br><small style="color:#00d4ff;">${m.time_slot}</small></td>
+                <td data-label="Location & TZ"><small style="color:#cbd5e1;">${m.location_type || 'In-Person'}</small><br><small style="color:var(--text-secondary);">${m.guest_timezone || 'EST'}</small></td>
                 <td data-label="Topic">${m.topic || 'General Meeting'}</td>
+                <td data-label="Private Notes"><button class="btn-sm btn-outline" style="font-size:0.75rem;" onclick='openMeetingNotesModal(${JSON.stringify(m).replace(/'/g, "&apos;")})'>${notesBtnLabel}</button></td>
                 <td data-label="Status">${statusBadge}</td>
                 <td data-label="Actions" class="actions-cell">
                     ${m.status !== 'confirmed' ? `<button class="btn-sm btn-outline" style="color:#2ed573;border-color:#2ed573;" onclick="handleMeetingStatusUpdate(${m.id}, 'confirmed')">Confirm</button>` : ''}
@@ -2623,6 +2628,26 @@ async function loadMeetings() {
     } catch (e) {
         console.error('Meetings load error:', e);
     }
+}
+
+function openMeetingNotesModal(meeting) {
+    const html = `
+        <div class="form-group">
+            <label>Meeting Notes &amp; Key Takeaways for ${meeting.name}</label>
+            <textarea id="meeting-notes-textarea" name="notes" rows="6" placeholder="Write internal summary, action items, advice received, or follow-up notes...">${meeting.notes || ''}</textarea>
+        </div>
+    `;
+
+    openModal(`📝 Private Meeting Notes — ${meeting.name}`, html, async (data) => {
+        try {
+            await apiCall(`/admin/meetings/${meeting.id}`, 'PUT', { notes: data.notes });
+            showToast('Meeting notes updated successfully', 'success');
+            loadMeetings();
+            closeModal();
+        } catch (e) {
+            showToast('Failed to save meeting notes', 'error');
+        }
+    });
 }
 
 async function handleMeetingStatusUpdate(id, status) {

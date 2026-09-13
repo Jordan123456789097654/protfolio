@@ -421,9 +421,31 @@
                     <input type="hidden" id="meeting-selected-slot" name="time_slot" required>
                 </div>
 
+                <div class="form-row-grid">
+                    <div class="form-group">
+                        <label for="meeting-location">Meeting Location / Venue (In-Person) *</label>
+                        <select id="meeting-location" name="location_type" class="form-control">
+                            <option value="📍 High School Campus / Classroom">📍 High School Campus / Classroom</option>
+                            <option value="📍 Local Public Library">📍 Local Public Library</option>
+                            <option value="📍 Coffee Shop / Cafe">📍 Coffee Shop / Cafe</option>
+                            <option value="📍 Community Center / Club Lab">📍 Community Center / Club Lab</option>
+                            <option value="📍 FBLA / Robotics Practice Space">📍 FBLA / Robotics Practice Space</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="meeting-timezone">Your Time Zone</label>
+                        <select id="meeting-timezone" name="guest_timezone" class="form-control">
+                            <option value="EST (Eastern Standard Time)">EST (Eastern Time)</option>
+                            <option value="CST (Central Standard Time)">CST (Central Time)</option>
+                            <option value="MST (Mountain Standard Time)">MST (Mountain Time)</option>
+                            <option value="PST (Pacific Standard Time)">PST (Pacific Time)</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="form-group">
-                    <label for="meeting-topic">Discussion Topic / Meeting Notes *</label>
-                    <textarea id="meeting-topic" name="topic" rows="3" placeholder="What would you like to discuss? (e.g., FBLA project guidance, college recommendation follow-up, robotics code review)" required></textarea>
+                    <label for="meeting-topic">Discussion Topic / Agenda *</label>
+                    <textarea id="meeting-topic" name="topic" rows="3" placeholder="What would you like to discuss during our in-person meeting? (e.g., FBLA project guidance, recommendation follow-up, robotics strategy)" required></textarea>
                 </div>
 
                 <div class="meeting-modal-footer">

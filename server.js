@@ -145,4 +145,69 @@ app.get('*', (req, res) => {
 app.listen(port, () => {
   console.log(`\n  ✦ Portfolio running at http://localhost:${port}`);
   console.log(`  ✦ Admin panel running at http://localhost:${port}/admin/\n`);
+
+  // Start background meeting reminder checker (runs every 15 minutes)
+  const { sendEmail } = require('./lib/email');
+  setInterval(async () => {
+    try {
+      const now = new Date();
+      const { rows } = await pool.query(
+        `SELECT * FROM meetings WHERE status = 'confirmed' AND (reminder_sent_24h = false OR reminder_sent_1h = false)`
+      );
+
+      for (const m of rows) {
+        if (!m.meeting_date || !m.time_slot) continue;
+        const hour = parseInt(m.time_slot.split(':')[0], 10);
+        const meetingDateTime = new Date(`${m.meeting_date}T${String(hour).padStart(2, '0')}:00:00`);
+        const diffMs = meetingDateTime.getTime() - now.getTime();
+        const diffHours = diffMs / (1000 * 60 * 60);
+
+        const timeDisplay = new Date(2000, 0, 1, hour, 0).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        const locationStr = m.location_type || 'IRL Meeting (School / Library / Coffee Shop)';
+
+        // 24-Hour Reminder (between 23 and 25 hours out)
+        if (!m.reminder_sent_24h && diffHours > 0 && diffHours <= 25 && diffHours >= 23) {
+          await sendEmail({
+            to: m.email,
+            subject: `⏰ Reminder: Tomorrow In-Person Meeting at ${timeDisplay} with Jordan`,
+            html: `
+              <div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#101726;color:#e2e8f0;padding:24px;border-radius:12px;">
+                <h2 style="color:#d8a53e;">⏰ Meeting Reminder (Tomorrow)</h2>
+                <p>Hi <strong>${m.name}</strong>,</p>
+                <p>This is a quick reminder about your scheduled in-person meeting tomorrow!</p>
+                <div style="background:#1a2336;padding:14px;border-radius:8px;margin:15px 0;">
+                  <p style="margin:4px 0;"><strong>Date:</strong> ${m.meeting_date}</p>
+                  <p style="margin:4px 0;"><strong>Time:</strong> ${timeDisplay} (${m.guest_timezone || 'EST'})</p>
+                  <p style="margin:4px 0;"><strong>Location:</strong> 📍 ${locationStr}</p>
+                </div>
+              </div>
+            `
+          }).catch(() => {});
+          await pool.query('UPDATE meetings SET reminder_sent_24h = true WHERE id = $1', [m.id]);
+        }
+
+        // 1-Hour Reminder (between 0.5 and 1.5 hours out)
+        if (!m.reminder_sent_1h && diffHours > 0 && diffHours <= 1.5 && diffHours >= 0.5) {
+          await sendEmail({
+            to: m.email,
+            subject: `⏰ Reminder: Meeting in 1 Hour at ${timeDisplay} with Jordan`,
+            html: `
+              <div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#101726;color:#e2e8f0;padding:24px;border-radius:12px;">
+                <h2 style="color:#d8a53e;">⏰ Meeting Starting Soon!</h2>
+                <p>Hi <strong>${m.name}</strong>,</p>
+                <p>Your meeting with Jordan is starting in about 1 hour.</p>
+                <div style="background:#1a2336;padding:14px;border-radius:8px;margin:15px 0;">
+                  <p style="margin:4px 0;"><strong>Time:</strong> ${timeDisplay} (${m.guest_timezone || 'EST'})</p>
+                  <p style="margin:4px 0;"><strong>Location:</strong> 📍 ${locationStr}</p>
+                </div>
+              </div>
+            `
+          }).catch(() => {});
+          await pool.query('UPDATE meetings SET reminder_sent_1h = true WHERE id = $1', [m.id]);
+        }
+      }
+    } catch (err) {
+      console.error('Reminder check error:', err.message);
+    }
+  }, 15 * 60 * 1000);
 });

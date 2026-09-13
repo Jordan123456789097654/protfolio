@@ -413,15 +413,20 @@ router.get('/meetings/availability', async (req, res) => {
 // ── POST Book a Meeting / Chat ─────────────────────────────────────
 router.post('/meetings/book', async (req, res) => {
   try {
-    const { name, email, role, meeting_date, time_slot, topic } = req.body;
+    const crypto = require('crypto');
+    const { name, email, role, meeting_date, time_slot, topic, location_type, guest_timezone } = req.body;
     if (!name || !email || !meeting_date || !time_slot || !topic) {
       return res.status(400).json({ error: 'Name, email, date, time slot, and topic are required.' });
     }
 
+    const cancelToken = crypto.randomBytes(24).toString('hex');
+    const meetingLocation = location_type || 'IRL Meeting (School / Library / Coffee Shop)';
+    const guestTz = guest_timezone || 'EST';
+
     const { rows } = await req.app.locals.pool.query(
-      `INSERT INTO meetings (name, email, role, meeting_date, time_slot, topic, status)
-       VALUES ($1, $2, $3, $4, $5, $6, 'confirmed') RETURNING *`,
-      [name.trim(), email.trim(), role || 'Visitor', meeting_date, time_slot, topic.trim()]
+      `INSERT INTO meetings (name, email, role, meeting_date, time_slot, topic, location_type, guest_timezone, cancel_token, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'confirmed') RETURNING *`,
+      [name.trim(), email.trim(), role || 'Visitor', meeting_date, time_slot, topic.trim(), meetingLocation, guestTz, cancelToken]
     );
     const meeting = rows[0];
 
@@ -433,22 +438,47 @@ router.post('/meetings/book', async (req, res) => {
     // Format readable time display
     const hour = parseInt(time_slot.split(':')[0], 10);
     const timeDisplay = new Date(2000, 0, 1, hour, 0).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    const protocol = req.protocol || 'https';
+    const host = req.get('host') || 'localhost:3000';
+    const cancelUrl = `${protocol}://${host}/api/meetings/cancel/${cancelToken}`;
 
-    // Send email notification to user
+    // Send email notification to student (admin)
     sendEmail({
       to: notifyEmail,
-      subject: `📅 New Meeting Booked: ${name.trim()} (${role || 'Visitor'})`,
+      subject: `📅 New IRL Meeting Booked: ${name.trim()} (${role || 'Visitor'})`,
       html: `
         <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#101726;color:#e2e8f0;padding:24px;border-radius:12px;">
-          <h2 style="color:#d8a53e;margin-top:0;">📅 New Meeting Scheduled</h2>
+          <h2 style="color:#d8a53e;margin-top:0;">📍 New In-Person Meeting Scheduled</h2>
           <p><strong>Visitor Name:</strong> ${name.trim()} (${role || 'Visitor'})</p>
           <p><strong>Email:</strong> <a href="mailto:${email.trim()}" style="color:#6f9bd1;">${email.trim()}</a></p>
-          <p><strong>Date & Time:</strong> ${meeting_date} at ${timeDisplay}</p>
+          <p><strong>Date & Time:</strong> ${meeting_date} at ${timeDisplay} (${guestTz})</p>
+          <p><strong>Location:</strong> 📍 ${meetingLocation}</p>
           <p><strong>Topic / Discussion Agenda:</strong></p>
           <blockquote style="background:#1a2336;border-left:4px solid #d8a53e;padding:12px 16px;margin:0;color:#cbd5e1;">${topic.trim().replace(/\n/g, '<br>')}</blockquote>
         </div>
       `
     }).catch(e => console.error('Meeting email error:', e.message));
+
+    // Send confirmation & calendar event email to guest
+    sendEmail({
+      to: email.trim(),
+      subject: `✓ Meeting Confirmation: ${meeting_date} @ ${timeDisplay} with Jordan`,
+      html: `
+        <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#101726;color:#e2e8f0;padding:24px;border-radius:12px;">
+          <h2 style="color:#d8a53e;margin-top:0;">✓ Meeting Confirmed!</h2>
+          <p>Hi <strong>${name.trim()}</strong>,</p>
+          <p>Your in-person meeting with Jordan has been confirmed.</p>
+          <div style="background:#1a2336;padding:16px;border-radius:8px;margin:16px 0;border:1px solid #2d3748;">
+            <p style="margin:4px 0;"><strong>Date:</strong> ${meeting_date}</p>
+            <p style="margin:4px 0;"><strong>Time:</strong> ${timeDisplay} (${guestTz})</p>
+            <p style="margin:4px 0;"><strong>Location:</strong> 📍 ${meetingLocation}</p>
+            <p style="margin:4px 0;"><strong>Topic:</strong> ${topic.trim()}</p>
+          </div>
+          <p style="font-size:0.9rem;color:#cbd5e1;">Need to cancel or reschedule? Click the link below:</p>
+          <p><a href="${cancelUrl}" style="display:inline-block;padding:8px 16px;background:#ef4444;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;font-size:0.85rem;">Cancel / Reschedule Meeting</a></p>
+        </div>
+      `
+    }).catch(e => console.error('Guest confirmation email error:', e.message));
 
     // Send Discord webhook notification if configured
     if (config.discord_webhook_url) {
@@ -462,7 +492,8 @@ router.post('/meetings/book', async (req, res) => {
             fields: [
               { name: 'Name', value: `${name.trim()} (${role || 'Visitor'})`, inline: true },
               { name: 'Email', value: email.trim(), inline: true },
-              { name: 'Date & Time', value: `${meeting_date} @ ${timeDisplay}`, inline: false },
+              { name: 'Date & Time', value: `${meeting_date} @ ${timeDisplay} (${guestTz})`, inline: false },
+              { name: 'Location', value: meetingLocation, inline: false },
               { name: 'Topic', value: topic.trim(), inline: false }
             ],
             timestamp: new Date().toISOString()
@@ -473,9 +504,56 @@ router.post('/meetings/book', async (req, res) => {
 
     if (router.broadcastChange) router.broadcastChange('update');
 
-    res.json({ success: true, message: `Meeting confirmed for ${meeting_date} at ${timeDisplay}! Confirmation details sent to ${email.trim()}.`, meeting });
+    res.json({ success: true, message: `Meeting confirmed for ${meeting_date} at ${timeDisplay}! Confirmation & cancellation link sent to ${email.trim()}.`, meeting, cancelUrl });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ── GET/POST Cancel Meeting via Guest Token ────────────────────────
+router.all('/meetings/cancel/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { rows } = await req.app.locals.pool.query(
+      'SELECT * FROM meetings WHERE cancel_token = $1 LIMIT 1',
+      [token]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).send('<h2 style="font-family:sans-serif;color:#e11d48;text-align:center;margin-top:50px;">Invalid or Expired Cancellation Link</h2>');
+    }
+
+    const meeting = rows[0];
+
+    if (req.method === 'POST' || req.query.confirm === 'true') {
+      await req.app.locals.pool.query(
+        'UPDATE meetings SET status = $1 WHERE cancel_token = $2',
+        ['cancelled', token]
+      );
+      if (router.broadcastChange) router.broadcastChange('update');
+
+      return res.send(`
+        <div style="font-family:sans-serif;max-width:500px;margin:60px auto;padding:30px;background:#0f172a;color:#f8fafc;border-radius:12px;text-align:center;box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+          <h2 style="color:#ef4444;">Meeting Cancelled</h2>
+          <p>Your meeting on <strong>${meeting.meeting_date} at ${meeting.time_slot}</strong> has been successfully cancelled.</p>
+          <a href="/" style="display:inline-block;margin-top:15px;padding:10px 20px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:6px;">Return to Portfolio</a>
+        </div>
+      `);
+    }
+
+    res.send(`
+      <div style="font-family:sans-serif;max-width:500px;margin:60px auto;padding:30px;background:#0f172a;color:#f8fafc;border-radius:12px;text-align:center;box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+        <h2 style="color:#f59e0b;">Cancel Scheduled Meeting?</h2>
+        <p>Are you sure you want to cancel your meeting with Jordan on <strong>${meeting.meeting_date}</strong> at <strong>${meeting.time_slot}</strong>?</p>
+        <form method="POST">
+          <button type="submit" style="padding:10px 24px;background:#ef4444;color:#fff;border:none;border-radius:6px;font-size:1rem;cursor:pointer;font-weight:600;">Yes, Cancel Meeting</button>
+        </form>
+        <br>
+        <a href="/" style="color:#94a3b8;text-decoration:underline;">Keep Meeting & Return</a>
+      </div>
+    `);
+  } catch (err) {
+    res.status(500).send('Error processing cancellation: ' + err.message);
   }
 });
 
