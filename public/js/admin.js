@@ -3001,6 +3001,8 @@ function openEventModal(ev = null) {
     document.getElementById('event-category-input').value = ev ? ev.category : 'School Event';
     document.getElementById('event-start-input').value = ev ? ev.start_time : '';
     document.getElementById('event-end-input').value = ev ? ev.end_time : '';
+    document.getElementById('event-recurring-input').checked = ev ? !!ev.is_recurring : false;
+    document.getElementById('event-recurrence-input').value = (ev && ev.recurrence_rule) ? ev.recurrence_rule : (ev && ev.is_recurring ? 'weekly' : 'none');
     document.getElementById('event-location-input').value = ev ? ev.location : '';
     document.getElementById('event-desc-input').value = ev ? ev.description : '';
     document.getElementById('event-modal-title').textContent = ev ? 'Edit Calendar Event' : 'Add School / Public Calendar Event';
@@ -3010,12 +3012,17 @@ function openEventModal(ev = null) {
 async function handleEventSubmit(e) {
     e.preventDefault();
     const id = document.getElementById('event-id').value;
+    const isRecurring = !!document.getElementById('event-recurring-input').checked;
+    const recurrenceRule = document.getElementById('event-recurrence-input').value;
+
     const payload = {
         title: document.getElementById('event-title-input').value,
         event_date: document.getElementById('event-date-input').value,
         category: document.getElementById('event-category-input').value,
         start_time: document.getElementById('event-start-input').value,
         end_time: document.getElementById('event-end-input').value,
+        is_recurring: isRecurring || recurrenceRule !== 'none',
+        recurrence_rule: recurrenceRule !== 'none' ? recurrenceRule : (isRecurring ? 'weekly' : 'none'),
         location: document.getElementById('event-location-input').value,
         description: document.getElementById('event-desc-input').value,
         is_published: true

@@ -1956,7 +1956,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         grid.innerHTML = filtered.map(ev => {
-            const isRecurring = ev.is_recurring ? `<span class="event-recurring-tag"><i data-lucide="repeat" style="width:10px;height:10px;display:inline-block;"></i> Weekly</span>` : '';
+            let recurText = 'Weekly';
+            if (ev.recurrence_rule === 'biweekly') recurText = 'Bi-weekly';
+            else if (ev.recurrence_rule === 'monthly') recurText = 'Monthly';
+
+            const isRecurring = ev.is_recurring ? `<span class="event-recurring-tag"><i data-lucide="repeat" style="width:10px;height:10px;display:inline-block;"></i> ${recurText}</span>` : '';
             
             let timeStr = ev.start_time || '';
             if (ev.end_time) timeStr += ` - ${ev.end_time}`;
