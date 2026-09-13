@@ -28,6 +28,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('add-recommendation-btn').addEventListener('click', () => openRecommendationModal());
     const reqRecBtn = document.getElementById('request-recommendation-btn');
     if (reqRecBtn) reqRecBtn.addEventListener('click', () => openRequestRecommendationModal());
+    const exportRecsPdfBtn = document.getElementById('export-recs-pdf-btn');
+    if (exportRecsPdfBtn) exportRecsPdfBtn.addEventListener('click', exportRecommendationsPDF);
+
     document.getElementById('add-faq-btn').addEventListener('click', () => openFAQModal());
     document.getElementById('add-social-btn').addEventListener('click', () => openSocialModal());
 
@@ -35,7 +38,24 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('modal-cancel').addEventListener('click', closeModal);
     document.getElementById('modal-form').addEventListener('submit', handleModalSubmit);
 
+    // Live Staging Preview
+    const previewSiteBtn = document.getElementById('preview-site-btn');
+    if (previewSiteBtn) previewSiteBtn.addEventListener('click', openStagingPreviewModal);
+    const previewCloseBtn = document.getElementById('preview-close-btn');
+    if (previewCloseBtn) previewCloseBtn.addEventListener('click', closeStagingPreviewModal);
+    document.querySelectorAll('.device-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            const iframe = document.getElementById('preview-iframe');
+            if (iframe) iframe.style.width = e.target.dataset.width;
+        });
+    });
+
     // Settings tab
+    const countdownForm = document.getElementById('countdown-form');
+    if (countdownForm) countdownForm.addEventListener('submit', handleCountdownSave);
+
     document.getElementById('password-form').addEventListener('submit', handlePasswordChange);
     document.getElementById('export-btn').addEventListener('click', handleExport);
     document.getElementById('spotify-connect-btn').addEventListener('click', () => {
@@ -44,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('spotify-disconnect-btn').addEventListener('click', handleSpotifyDisconnect);
     const integrationsForm = document.getElementById('integrations-form');
     if (integrationsForm) integrationsForm.addEventListener('submit', handleIntegrationsSave);
+
 
     // Message Reply Modal listeners
     const replyForm = document.getElementById('reply-form');
@@ -763,10 +784,19 @@ function openCertificationModal(cert = null) {
             <label>Category</label>
             <input type="text" name="category" value="${cert?.category || 'Certification'}" placeholder="e.g. Cloud, Web Development, AP Honors">
         </div>
-        <div class="form-group">
+        <div class="form-group row">
             <label>Issue Date / Term</label>
-            <input type="text" name="issue_date" value="${cert?.issue_date || ''}" placeholder="e.g. May 2024 or 2024-2025">
+            <input type="text" name="issue_date" value="${cert?.issue_date || ''}" placeholder="e.g. May 2024 or 2024-2025" style="margin-left:auto;width:auto">
         </div>
+        <div class="form-group row">
+            <label>Expiration Date (Optional)</label>
+            <input type="text" name="expiration_date" value="${cert?.expiration_date || ''}" placeholder="e.g. Oct 2027" style="margin-left:auto;width:auto">
+        </div>
+        <div class="form-group row">
+            <label>Is Expired?</label>
+            <input type="checkbox" name="is_expired" id="cert-expired-input" ${cert?.is_expired ? 'checked' : ''} style="margin-left:auto;width:auto">
+        </div>
+
         <div class="form-group">
             <label>Credential ID (Optional)</label>
             <input type="text" name="credential_id" value="${cert?.credential_id || ''}" placeholder="e.g. AWS-1928374">
@@ -800,6 +830,8 @@ function openCertificationModal(cert = null) {
 
     openModal(isEdit ? 'Edit Certification' : 'Add Certification', html, async (data) => {
         data.sort_order = parseInt(data.sort_order, 10);
+        data.is_expired = !!document.getElementById('cert-expired-input')?.checked;
+
         try {
             if (isEdit) await apiCall(`/admin/certifications/${cert.id}`, 'PUT', data);
             else await apiCall('/admin/certifications', 'POST', data);
@@ -1939,11 +1971,21 @@ async function loadRecommendationRequests() {
                 : '<span style="background:rgba(255,171,0,0.15);color:#ffab00;padding:3px 10px;border-radius:99px;font-size:0.75rem;font-weight:700;">⏳ Pending</span>';
             const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString() : 'Recent';
 
+            let readReceiptBadge = '';
+            if (req.clicked_at) {
+                readReceiptBadge = `<span style="background:rgba(46,213,115,0.15);color:#2ed573;padding:3px 8px;border-radius:99px;font-size:0.72rem;font-weight:700;" title="Clicked link on ${new Date(req.clicked_at).toLocaleString()}">🔗 Form Opened</span>`;
+            } else if (req.opened_at) {
+                readReceiptBadge = `<span style="background:rgba(0,212,255,0.15);color:#00d4ff;padding:3px 8px;border-radius:99px;font-size:0.72rem;font-weight:700;" title="Email opened at ${new Date(req.opened_at).toLocaleString()}">👁️ Opened (${req.open_count || 1}x)</span>`;
+            } else {
+                readReceiptBadge = `<span style="background:rgba(255,255,255,0.06);color:var(--text-secondary);padding:3px 8px;border-radius:99px;font-size:0.72rem;">✉️ Sent / Unopened</span>`;
+            }
+
             return `
                 <td data-label="Recipient Name" style="font-weight:600;">${req.teacher_name}</td>
                 <td data-label="Email">${req.teacher_email}</td>
                 <td data-label="Context">${req.course_or_context || '<span style="color:var(--text-secondary);">General</span>'}</td>
                 <td data-label="Status">${statusBadge}</td>
+                <td data-label="Email Read Receipts">${readReceiptBadge}</td>
                 <td data-label="Sent Date">${dateStr}</td>
                 <td data-label="Actions" class="actions-cell">
                     <button class="btn-sm btn-outline" onclick="copyRequestLink('${formUrl}')">📋 Copy Link</button>
@@ -1953,6 +1995,7 @@ async function loadRecommendationRequests() {
         });
     } catch (e) { console.error('Failed to load recommendation requests:', e.message); }
 }
+
 
 function copyRequestLink(url) {
     navigator.clipboard.writeText(url).then(() => {
@@ -2388,10 +2431,161 @@ function initAdminRealtimeSync() {
                 loadRecommendations();
                 loadFAQs();
                 loadAnalytics();
+                loadCountdownSettings();
             }
         } catch (err) {}
     };
 }
+
+// ══════════════════════════════════════════════════════════════════
+// 📑 RECOMMENDATION DOSSIER PDF EXPORTER
+// ══════════════════════════════════════════════════════════════════
+async function exportRecommendationsPDF() {
+    const btn = document.getElementById('export-recs-pdf-btn');
+    const origText = btn ? btn.textContent : '';
+    if (btn) { btn.textContent = '⏳ Generating PDF Dossier...'; btn.disabled = true; }
+
+    try {
+        const recommendations = await apiCall('/admin/recommendations');
+        const config = await apiCall('/admin/config').catch(() => ({}));
+
+        if (!recommendations || recommendations.length === 0) {
+            showToast('No recommendations found to export.', 'warning');
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 54;
+        let y = 60;
+
+        // Title Header
+        doc.setFillColor(10, 18, 32);
+        doc.rect(0, 0, pageWidth, 100, 'F');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(22);
+        doc.setTextColor(216, 165, 62);
+        doc.text(`${config.name || 'Jordan'}'s Recommendation Dossier`, margin, 50);
+
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(164, 174, 194);
+        doc.text(`Official Academic & Professional Recommendation Excerpts • ${new Date().toLocaleDateString()}`, margin, 74);
+
+        y = 130;
+
+        recommendations.forEach((rec, idx) => {
+            if (y > pageHeight - 140) {
+                doc.addPage();
+                y = 60;
+            }
+
+            // Recommendation Card Box
+            doc.setDrawColor(220, 225, 235);
+            doc.setFillColor(250, 252, 255);
+            doc.roundedRect(margin, y, pageWidth - margin * 2, 130, 8, 8, 'FD');
+
+            // Recommender Name & Title
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(13);
+            doc.setTextColor(16, 26, 46);
+            doc.text(`${rec.recommender_name}`, margin + 18, y + 26);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(100, 110, 130);
+            const titleOrg = [rec.recommender_title, rec.school_or_org].filter(Boolean).join(' — ');
+            if (titleOrg) doc.text(titleOrg, margin + 18, y + 42);
+
+            // Quote Excerpt
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(10.5);
+            doc.setTextColor(40, 50, 70);
+            const quoteLines = doc.splitTextToSize(`"${rec.quote_excerpt}"`, pageWidth - margin * 2 - 36);
+            doc.text(quoteLines, margin + 18, y + 66);
+
+            if (rec.letter_pdf_url) {
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(9);
+                doc.setTextColor(108, 99, 255);
+                doc.text(`[Full Verification Letter Attached Online]`, margin + 18, y + 114);
+            }
+
+            y += 150;
+        });
+
+        const filename = `${(config.name || 'Jordan').replace(/\s+/g, '_')}_Recommendations_Dossier.pdf`;
+        doc.save(filename);
+        showToast('📄 Recommendations Dossier PDF exported successfully!', 'success');
+    } catch (err) {
+        showToast('Failed to generate Dossier PDF: ' + err.message, 'error');
+    } finally {
+        if (btn) { btn.textContent = origText; btn.disabled = false; }
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ⏱️ COUNTDOWN TIMER HANDLER
+// ══════════════════════════════════════════════════════════════════
+async function loadCountdownSettings() {
+    try {
+        const data = await apiCall('/api/countdown');
+        if (!data) return;
+
+        const titleInput = document.getElementById('countdown-title-input');
+        const dateInput = document.getElementById('countdown-date-input');
+        const enabledInput = document.getElementById('countdown-enabled-input');
+
+        if (titleInput && data.countdown_title) titleInput.value = data.countdown_title;
+        if (enabledInput && data.countdown_enabled !== undefined) enabledInput.checked = !!data.countdown_enabled;
+
+        if (dateInput && data.countdown_target_date) {
+            const date = new Date(data.countdown_target_date);
+            const iso = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+            dateInput.value = iso;
+        }
+    } catch (e) {}
+}
+
+async function handleCountdownSave(e) {
+    e.preventDefault();
+    const title = document.getElementById('countdown-title-input')?.value || '';
+    const targetDate = document.getElementById('countdown-date-input')?.value || '';
+    const enabled = !!document.getElementById('countdown-enabled-input')?.checked;
+
+    try {
+        await apiCall('/admin/countdown', 'PUT', {
+            countdown_title: title,
+            countdown_target_date: targetDate ? new Date(targetDate).toISOString() : new Date().toISOString(),
+            countdown_enabled: enabled
+        });
+        showToast('Countdown timer updated successfully!', 'success');
+    } catch (err) {
+        showToast('Failed to save countdown timer: ' + err.message, 'error');
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// 📱 LIVE STAGING DEVICE PREVIEW
+// ══════════════════════════════════════════════════════════════════
+function openStagingPreviewModal() {
+    const modal = document.getElementById('preview-modal-overlay');
+    const iframe = document.getElementById('preview-iframe');
+    if (modal && iframe) {
+        iframe.src = '/?preview=' + Date.now();
+        modal.classList.remove('hidden');
+    }
+}
+
+function closeStagingPreviewModal() {
+    const modal = document.getElementById('preview-modal-overlay');
+    if (modal) modal.classList.add('hidden');
+}
+
+
 
 
 

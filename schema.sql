@@ -185,7 +185,20 @@ CREATE TABLE IF NOT EXISTS recommendation_requests (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
-ALTER TABLE recommendation_requests ADD COLUMN IF NOT EXISTS recipient_type VARCHAR(50) DEFAULT 'teacher';
+-- Countdown Timer Widget Settings
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS countdown_title VARCHAR(255) DEFAULT 'FBLA State Leadership Conference';
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS countdown_target_date TIMESTAMPTZ DEFAULT (NOW() + INTERVAL '30 days');
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS countdown_enabled BOOLEAN DEFAULT true;
+
+-- Recommendation Requests Email Read Receipts & Tracking
+ALTER TABLE recommendation_requests ADD COLUMN IF NOT EXISTS opened_at TIMESTAMP;
+ALTER TABLE recommendation_requests ADD COLUMN IF NOT EXISTS clicked_at TIMESTAMP;
+ALTER TABLE recommendation_requests ADD COLUMN IF NOT EXISTS open_count INTEGER DEFAULT 0;
+
+-- Certifications Expiration Date
+ALTER TABLE certifications ADD COLUMN IF NOT EXISTS expiration_date VARCHAR(50) DEFAULT '';
+ALTER TABLE certifications ADD COLUMN IF NOT EXISTS is_expired BOOLEAN DEFAULT false;
+
 
 -- Recommendations & Letters (Teachers, Counselors, Advisors)
 CREATE TABLE IF NOT EXISTS recommendations (

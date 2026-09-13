@@ -1233,8 +1233,9 @@ router.post('/recommendations/request', async (req, res) => {
           </body>
           </html>
         `;
-      }
-    }
+    // Append 1x1 transparent email read receipt tracking pixel
+    const trackingPixelUrl = `${protocol}://${host}/api/recommendations/track/open/${token}`;
+    htmlBody += `<img src="${trackingPixelUrl}" width="1" height="1" alt="" style="display:none !important; width:1px; height:1px; opacity:0; visibility:hidden;" />`;
 
     let emailSent = false;
     let emailError = null;
@@ -1244,6 +1245,7 @@ router.post('/recommendations/request', async (req, res) => {
       subject: subject,
       html: htmlBody
     });
+
 
     if (emailResult.success) {
       emailSent = true;
@@ -1352,11 +1354,11 @@ router.get('/certifications', async (req, res) => {
 
 router.post('/certifications', async (req, res) => {
   try {
-    const { title, issuer, issue_date, credential_id, credential_url, badge_image_url, category, description, sort_order } = req.body;
+    const { title, issuer, issue_date, expiration_date, is_expired, credential_id, credential_url, badge_image_url, category, description, sort_order } = req.body;
     const { rows } = await req.app.locals.pool.query(
-      `INSERT INTO certifications (title, issuer, issue_date, credential_id, credential_url, badge_image_url, category, description, sort_order)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-      [title, issuer, issue_date || '', credential_id || '', credential_url || '', badge_image_url || '', category || 'Certification', description || '', sort_order || 0]
+      `INSERT INTO certifications (title, issuer, issue_date, expiration_date, is_expired, credential_id, credential_url, badge_image_url, category, description, sort_order)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
+      [title, issuer, issue_date || '', expiration_date || '', !!is_expired, credential_id || '', credential_url || '', badge_image_url || '', category || 'Certification', description || '', sort_order || 0]
     );
     res.json(rows[0]);
   } catch (err) {
@@ -1366,11 +1368,11 @@ router.post('/certifications', async (req, res) => {
 
 router.put('/certifications/:id', async (req, res) => {
   try {
-    const { title, issuer, issue_date, credential_id, credential_url, badge_image_url, category, description, sort_order } = req.body;
+    const { title, issuer, issue_date, expiration_date, is_expired, credential_id, credential_url, badge_image_url, category, description, sort_order } = req.body;
     const { rows } = await req.app.locals.pool.query(
-      `UPDATE certifications SET title=$1, issuer=$2, issue_date=$3, credential_id=$4, credential_url=$5, badge_image_url=$6, category=$7, description=$8, sort_order=$9
-       WHERE id=$10 RETURNING *`,
-      [title, issuer, issue_date || '', credential_id || '', credential_url || '', badge_image_url || '', category || 'Certification', description || '', sort_order || 0, req.params.id]
+      `UPDATE certifications SET title=$1, issuer=$2, issue_date=$3, expiration_date=$4, is_expired=$5, credential_id=$6, credential_url=$7, badge_image_url=$8, category=$9, description=$10, sort_order=$11
+       WHERE id=$12 RETURNING *`,
+      [title, issuer, issue_date || '', expiration_date || '', !!is_expired, credential_id || '', credential_url || '', badge_image_url || '', category || 'Certification', description || '', sort_order || 0, req.params.id]
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
@@ -1401,6 +1403,25 @@ router.delete('/certifications/:id', async (req, res) => {
   }
 });
 
+// ══════════════════════════════════════════════════════════════════
+//  COUNTDOWN TIMER SETTINGS
+// ══════════════════════════════════════════════════════════════════
+router.put('/countdown', async (req, res) => {
+  try {
+    const { countdown_title, countdown_target_date, countdown_enabled } = req.body;
+    const { rows } = await req.app.locals.pool.query(
+      `UPDATE site_config SET countdown_title=$1, countdown_target_date=$2, countdown_enabled=$3
+       WHERE id=(SELECT id FROM site_config LIMIT 1) 
+       RETURNING countdown_title, countdown_target_date, countdown_enabled`,
+      [countdown_title || 'FBLA State Leadership Conference', countdown_target_date || new Date().toISOString(), !!countdown_enabled]
+    );
+    res.json(rows[0] || {});
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
+
 
 

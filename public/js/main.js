@@ -477,13 +477,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? `<img src="${cert.badge_image_url}" alt="${cert.title} badge">`
                 : `<i data-lucide="award"></i>`;
 
+            let expiryBadge = '';
+            if (cert.is_expired) {
+                expiryBadge = `<span class="cert-status-badge expired">Expired</span>`;
+            } else if (cert.expiration_date) {
+                expiryBadge = `<span class="cert-status-badge active">Expires: ${cert.expiration_date}</span>`;
+            } else {
+                expiryBadge = `<span class="cert-status-badge active">No Expiration</span>`;
+            }
+
             card.innerHTML = `
                 <div class="cert-card-header">
                     <div class="cert-badge-wrap">
                         ${badgeContent}
                     </div>
                     <div class="cert-meta">
-                        <span class="cert-category-badge">${cert.category || 'Certification'}</span>
+                        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                            <span class="cert-category-badge">${cert.category || 'Certification'}</span>
+                            ${expiryBadge}
+                        </div>
                         <h3 class="cert-title">${cert.title}</h3>
                         <span class="cert-issuer">${cert.issuer}</span>
                     </div>
@@ -503,6 +515,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (window.lucide) lucide.createIcons();
     }
+
+    async function initCountdownWidget() {
+        const banner = document.getElementById('countdown-banner');
+        const titleEl = document.getElementById('countdown-title-text');
+        const daysEl = document.getElementById('cd-days');
+        const hoursEl = document.getElementById('cd-hours');
+        const minsEl = document.getElementById('cd-mins');
+        const secsEl = document.getElementById('cd-secs');
+
+        if (!banner || !daysEl) return;
+
+        try {
+            const res = await fetch('/api/countdown');
+            const data = await res.json();
+
+            if (!data || !data.countdown_enabled) {
+                banner.classList.add('hidden');
+                return;
+            }
+
+            if (titleEl && data.countdown_title) {
+                titleEl.textContent = data.countdown_title;
+            }
+
+            const targetDate = new Date(data.countdown_target_date || Date.now() + 30 * 24 * 60 * 60 * 1000).getTime();
+
+            function updateTimer() {
+                const now = new Date().getTime();
+                const diff = targetDate - now;
+
+                if (diff <= 0) {
+                    daysEl.textContent = '00';
+                    hoursEl.textContent = '00';
+                    minsEl.textContent = '00';
+                    secsEl.textContent = '00';
+                    return;
+                }
+
+                const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+                daysEl.textContent = String(d).padStart(2, '0');
+                hoursEl.textContent = String(h).padStart(2, '0');
+                minsEl.textContent = String(m).padStart(2, '0');
+                secsEl.textContent = String(s).padStart(2, '0');
+            }
+
+            updateTimer();
+            banner.classList.remove('hidden');
+            setInterval(updateTimer, 1000);
+        } catch (e) {
+            banner.classList.add('hidden');
+        }
+    }
+
 
     // initSpotifyWidget is defined below near the bottom (single canonical version)
 
@@ -1676,7 +1745,9 @@ document.addEventListener('DOMContentLoaded', () => {
             initSoundEvents();
             initSpotifyWidget();
             initDynamicTimeAndWeather();
+            initCountdownWidget();
             initRealtimeSync();
+
         }, 200);
     });
 });

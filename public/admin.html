@@ -32,9 +32,11 @@
                 <span class="status-badge">Live System</span>
             </div>
             <div class="top-bar-actions">
+                <button id="preview-site-btn" class="btn-outline" style="margin-right:6px;">📱 Live Staging Preview</button>
                 <a href="/" class="btn-outline" target="_blank">View Live Site ↗</a>
                 <button id="logout-btn" class="btn-danger">Logout</button>
             </div>
+
         </header>
 
         <div class="admin-layout">
@@ -451,6 +453,7 @@
                     <div class="panel-header">
                         <h2>Teacher &amp; Advisor Recommendations</h2>
                         <div>
+                            <button id="export-recs-pdf-btn" class="btn-outline" style="margin-right:8px;">📑 Export Dossier PDF</button>
                             <button id="request-recommendation-btn" class="btn-outline" style="margin-right:8px;">📩 Request via Email</button>
                             <button id="add-recommendation-btn" class="btn-primary">Add Recommendation</button>
                         </div>
@@ -483,6 +486,7 @@
                                     <th>Email</th>
                                     <th>Context / Subject</th>
                                     <th>Status</th>
+                                    <th>Email Read Receipts</th>
                                     <th>Sent Date</th>
                                     <th>Actions</th>
                                 </tr>
@@ -491,6 +495,7 @@
                         </table>
                     </div>
                 </section>
+
 
                 <!-- FAQ -->
                 <section id="tab-faqs" class="tab-panel">
@@ -676,7 +681,28 @@
                     <h2>Settings &amp; Integrations</h2>
 
                     <div class="settings-card">
+                        <h3>⏱️ Live Event Countdown Timer</h3>
+                        <p class="settings-desc">Display a dynamic countdown banner on your homepage hero section for upcoming competitions, FBLA state conferences, robotics meets, or graduation.</p>
+                        <form id="countdown-form">
+                            <div class="form-group">
+                                <label for="countdown-title-input">Event Title / Description</label>
+                                <input type="text" id="countdown-title-input" name="countdown_title" placeholder="FBLA State Leadership Conference 2026">
+                            </div>
+                            <div class="form-group">
+                                <label for="countdown-date-input">Target Date &amp; Time</label>
+                                <input type="datetime-local" id="countdown-date-input" name="countdown_target_date">
+                            </div>
+                            <div class="form-group" style="display:flex;align-items:center;gap:10px;">
+                                <input type="checkbox" id="countdown-enabled-input" name="countdown_enabled" style="width:auto;">
+                                <label for="countdown-enabled-input" style="margin:0;cursor:pointer;">Enable Live Countdown Banner on Homepage</label>
+                            </div>
+                            <button type="submit" class="btn-primary">Save Countdown Timer</button>
+                        </form>
+                    </div>
+
+                    <div class="settings-card">
                         <h3>Spotify &mdash; Now Playing</h3>
+
                         <p class="settings-desc">Connect your Spotify account to show what you're currently listening to on the live site.</p>
                         <div class="settings-row">
                             <span id="spotify-status-pill" class="status-pill">Checking&hellip;</span>
@@ -798,9 +824,86 @@
         </div>
     </div>
 
+    <!-- Admin Media Crop, Rotate & Filter Suite Modal -->
+    <div id="crop-modal-overlay" class="modal-overlay hidden">
+        <div class="modal-card" style="max-width:800px;width:95%;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <h3 style="margin:0;">🖼️ Image Crop, Rotate &amp; Filter Suite</h3>
+                <button type="button" id="crop-close-btn" class="btn-outline" style="padding:4px 10px;font-size:0.8rem;">✕ Close</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 240px;gap:1.5rem;align-items:start;">
+                <div style="max-height:420px;overflow:hidden;background:#000;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                    <img id="crop-image-preview" src="" alt="Image to crop" style="max-width:100%;max-height:400px;display:block;">
+                </div>
+                <div style="display:flex;flex-direction:column;gap:1rem;">
+                    <div>
+                        <label style="font-size:0.8rem;color:var(--text-secondary);display:block;margin-bottom:4px;">Aspect Ratio</label>
+                        <select id="crop-aspect-ratio" class="form-control" style="width:100%;">
+                            <option value="NaN" selected>Freeform</option>
+                            <option value="1">1:1 Square (Avatar/Badge)</option>
+                            <option value="1.7777777777777777">16:9 Landscape</option>
+                            <option value="1.3333333333333333">4:3 Standard</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem;color:var(--text-secondary);display:block;margin-bottom:4px;">Transform</label>
+                        <div style="display:flex;gap:6px;">
+                            <button type="button" id="crop-rotate-left" class="btn-outline" style="flex:1;">↺ 90°</button>
+                            <button type="button" id="crop-rotate-right" class="btn-outline" style="flex:1;">↻ 90°</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem;color:var(--text-secondary);display:block;margin-bottom:4px;">Brightness: <span id="val-brightness">100</span>%</label>
+                        <input type="range" id="filter-brightness" min="50" max="150" value="100" style="width:100%;">
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem;color:var(--text-secondary);display:block;margin-bottom:4px;">Contrast: <span id="val-contrast">100</span>%</label>
+                        <input type="range" id="filter-contrast" min="50" max="150" value="100" style="width:100%;">
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem;color:var(--text-secondary);display:block;margin-bottom:4px;">Preset Filters</label>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                            <button type="button" class="btn-outline filter-preset-btn" data-preset="normal">Normal</button>
+                            <button type="button" class="btn-outline filter-preset-btn" data-preset="cinematic">Cinematic</button>
+                            <button type="button" class="btn-outline filter-preset-btn" data-preset="bw">B&amp;W</button>
+                            <button type="button" class="btn-outline filter-preset-btn" data-preset="warm">Warm</button>
+                        </div>
+                    </div>
+
+                    <button type="button" id="crop-apply-btn" class="btn-primary" style="margin-top:10px;width:100%;">Apply &amp; Upload Image</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Staging Device Preview Modal -->
+    <div id="preview-modal-overlay" class="modal-overlay hidden">
+        <div class="modal-card" style="max-width:1100px;width:95%;height:90vh;display:flex;flex-direction:column;padding:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <h3 style="margin:0;">📱 Live Staging Device Preview</h3>
+                    <div class="device-switcher" style="display:flex;gap:6px;">
+                        <button type="button" class="device-btn active" data-width="100%">💻 Desktop</button>
+                        <button type="button" class="device-btn" data-width="768px">📱 Tablet (768px)</button>
+                        <button type="button" class="device-btn" data-width="395px">📱 Mobile (395px)</button>
+                    </div>
+                </div>
+                <button type="button" id="preview-close-btn" class="btn-outline">✕ Close Preview</button>
+            </div>
+            <div style="flex:1;background:#050811;border-radius:12px;overflow:hidden;display:flex;justify-content:center;border:1px solid var(--border);">
+                <iframe id="preview-iframe" src="/" style="width:100%;height:100%;border:none;transition:width 0.3s ease;background:#0a1220;"></iframe>
+            </div>
+        </div>
+    </div>
+
     <!-- Toasts -->
     <div id="toast-container"></div>
 
     <script src="/js/admin.js"></script>
 </body>
 </html>
+

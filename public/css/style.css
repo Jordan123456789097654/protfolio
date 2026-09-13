@@ -2823,3 +2823,91 @@ body.is-loading {
 section:has(.reveal.active) .hollow-bg-text {
     letter-spacing: 18px;
 }
+
+/* ── Live Event Countdown Timer Banner Widget ───────────────── */
+.countdown-banner {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    background: rgba(16, 24, 40, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(216, 165, 62, 0.35);
+    border-radius: 20px;
+    padding: 12px 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(216, 165, 62, 0.15);
+    transition: all 0.4s ease;
+    animation: countdownPulse 3s ease-in-out infinite alternate;
+}
+
+@keyframes countdownPulse {
+    0% { border-color: rgba(216, 165, 62, 0.35); box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 15px rgba(216, 165, 62, 0.1); }
+    100% { border-color: rgba(111, 155, 209, 0.5); box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 25px rgba(111, 155, 209, 0.25); }
+}
+
+.countdown-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent);
+}
+
+.countdown-units {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.countdown-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.countdown-unit span {
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.countdown-unit label {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+/* ── Certification Expiration Status Badges ─────────────────── */
+.cert-status-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.cert-status-badge.active {
+    background: rgba(44, 156, 92, 0.15);
+    border: 1px solid rgba(44, 156, 92, 0.4);
+    color: #4ade80;
+}
+
+.cert-status-badge.expired {
+    background: rgba(216, 82, 76, 0.15);
+    border: 1px solid rgba(216, 82, 76, 0.4);
+    color: #f87171;
+}
+
+

@@ -215,22 +215,77 @@ router.post('/contact', async (req, res) => {
   }
 });
 
-// ── GET teacher recommendation request token ─────────────────────
+// ── GET countdown settings ─────────────────────────────────────────
+router.get('/countdown', async (req, res) => {
+  try {
+    const { rows } = await safeQuery(
+      req.app.locals.pool,
+      'SELECT countdown_title, countdown_target_date, countdown_enabled FROM site_config LIMIT 1'
+    );
+    res.json(rows[0] || {
+      countdown_title: 'FBLA State Leadership Conference',
+      countdown_target_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      countdown_enabled: true
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── GET email read receipt tracking pixel ────────────────────────
+router.get('/recommendations/track/open/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    if (token) {
+      await req.app.locals.pool.query(
+        `UPDATE recommendation_requests 
+         SET opened_at = COALESCE(opened_at, NOW()), open_count = COALESCE(open_count, 0) + 1 
+         WHERE token = $1`,
+        [token]
+      ).catch(() => {});
+      if (router.broadcastChange) router.broadcastChange('update');
+    }
+  } catch (e) {}
+
+  // 1x1 transparent GIF binary buffer
+  const pixel = Buffer.from(
+    'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
+    'base64'
+  );
+  res.writeHead(200, {
+    'Content-Type': 'image/gif',
+    'Content-Length': pixel.length,
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+  });
+  res.end(pixel);
+});
+
+// ── GET teacher recommendation request token & track link click ──
 router.get('/recommendation-request/:token', async (req, res) => {
   try {
+    const { token } = req.params;
     const { rows } = await req.app.locals.pool.query(
       'SELECT * FROM recommendation_requests WHERE token = $1 LIMIT 1',
-      [req.params.token]
+      [token]
     );
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Invalid or expired recommendation request link.' });
     }
+
+    // Record click timestamp
+    await req.app.locals.pool.query(
+      'UPDATE recommendation_requests SET clicked_at = COALESCE(clicked_at, NOW()) WHERE token = $1',
+      [token]
+    ).catch(() => {});
+    if (router.broadcastChange) router.broadcastChange('update');
+
     const { rows: configRows } = await req.app.locals.pool.query('SELECT name FROM site_config LIMIT 1');
     res.json({ request: rows[0], studentName: configRows[0]?.name || 'Jordan' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // ── POST submit teacher recommendation ──────────────────────────
 router.post('/recommendation-request/:token/submit', async (req, res) => {
