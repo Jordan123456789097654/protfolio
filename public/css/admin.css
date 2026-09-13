@@ -1019,3 +1019,19 @@ tr:hover td {
     transform: translateY(-1px);
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   Dark Theme Select & Option Fix
+   ══════════════════════════════════════════════════════════════════ */
+select.form-control,
+select {
+    background-color: #12121a !important;
+    color: #e8e8e8 !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+select option {
+    background-color: #12121a !important;
+    color: #ffffff !important;
+    padding: 8px 12px;
+}
+
