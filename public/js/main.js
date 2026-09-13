@@ -2049,6 +2049,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let eventPillsHtml = '';
 
+            // Calculate overlapping columns/offsets for events on the same day
+            const placedPills = [];
             dayEvents.forEach(ev => {
                 let hrs = 8;
                 let mins = 0;
@@ -2067,40 +2069,64 @@ document.addEventListener('DOMContentLoaded', () => {
                     hrs = rawHrs;
                 }
 
-                // Map 7 AM (0) to 5 PM (10 hrs * 60 = 600px)
+                function parseMin(t) {
+                    if (!t) return 0;
+                    const pm = /pm/i.test(t);
+                    const am = /am/i.test(t);
+                    const clean = t.replace(/(am|pm)/i, '').trim();
+                    const p = clean.split(':');
+                    let h = parseInt(p[0], 10) || 0;
+                    let m = parseInt(p[1], 10) || 0;
+                    if (pm && h < 12) h += 12;
+                    if (am && h === 12) h = 0;
+                    return (h * 60) + m;
+                }
+
+                const sMin = ev.start_time ? parseMin(ev.start_time) : (hrs * 60);
+                const eMin = ev.end_time ? parseMin(ev.end_time) : (sMin + 60);
+                
                 if (hrs < 7) hrs = 7;
                 if (hrs > 17) hrs = 17;
                 const topPx = Math.max(((hrs - 7) * 60) + mins, 4);
+                let heightPx = Math.max(eMin - sMin, 44);
 
-                let heightPx = 54;
-                if (ev.start_time && ev.end_time) {
-                    function parseMin(t) {
-                        const pm = /pm/i.test(t);
-                        const am = /am/i.test(t);
-                        const clean = t.replace(/(am|pm)/i, '').trim();
-                        const p = clean.split(':');
-                        let h = parseInt(p[0], 10) || 0;
-                        let m = parseInt(p[1], 10) || 0;
-                        if (pm && h < 12) h += 12;
-                        if (am && h === 12) h = 0;
-                        return (h * 60) + m;
-                    }
-                    const sMin = parseMin(ev.start_time);
-                    const eMin = parseMin(ev.end_time);
-                    if (eMin > sMin) heightPx = Math.max(eMin - sMin, 40);
+                placedPills.push({
+                    ev,
+                    sMin,
+                    eMin,
+                    topPx,
+                    heightPx
+                });
+            });
+
+            // Calculate overlap columns (side-by-side positioning like Google Calendar)
+            placedPills.forEach((item, index) => {
+                const overlaps = placedPills.filter(other => {
+                    return item !== other && (item.sMin < other.eMin && item.eMin > other.sMin);
+                });
+
+                let widthPct = 92;
+                let leftPct = 4;
+
+                if (overlaps.length > 0) {
+                    const group = [item, ...overlaps].sort((a, b) => a.sMin - b.sMin);
+                    const colIndex = group.indexOf(item);
+                    const totalCols = group.length;
+                    widthPct = Math.floor(92 / totalCols);
+                    leftPct = 4 + (colIndex * widthPct);
                 }
 
                 let catClass = '';
-                const cLower = (ev.category || '').toLowerCase();
+                const cLower = (item.ev.category || '').toLowerCase();
                 if (cLower.includes('robotics')) catClass = 'cat-robotics';
                 else if (cLower.includes('fbla')) catClass = 'cat-fbla';
                 else if (cLower.includes('academic')) catClass = 'cat-academic';
 
-                const timeDisp = ev.start_time ? `${ev.start_time}${ev.end_time ? ' - ' + ev.end_time : ''}` : 'All Day';
+                const timeDisp = item.ev.start_time ? `${item.ev.start_time}${item.ev.end_time ? ' - ' + item.ev.end_time : ''}` : 'All Day';
 
                 eventPillsHtml += `
-                    <div class="gcal-event-pill ${catClass}" style="top:${topPx}px; height:${heightPx}px;" title="${escapeHTML(ev.title)} (${escapeHTML(timeDisp)})">
-                        <div class="gcal-event-title">${escapeHTML(ev.title)}</div>
+                    <div class="gcal-event-pill ${catClass}" style="top:${item.topPx}px; height:${item.heightPx}px; left:${leftPct}%; width:${widthPct}%;" title="${escapeHTML(item.ev.title)} (${escapeHTML(timeDisp)})">
+                        <div class="gcal-event-title">${escapeHTML(item.ev.title)}</div>
                         <div class="gcal-event-time">${escapeHTML(timeDisp)}</div>
                     </div>
                 `;
