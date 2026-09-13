@@ -1910,6 +1910,79 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ── Academic & Public Events Calendar ─────────────────────────
+    let cachedEvents = [];
+    async function loadAcademicCalendar() {
+        const grid = document.getElementById('events-bento-grid');
+        const filterBtns = document.querySelectorAll('.calendar-filter-btn');
+        if (!grid) return;
+
+        try {
+            const res = await fetch('/api/events');
+            const data = await res.json();
+            if (data.success && Array.isArray(data.events)) {
+                cachedEvents = data.events;
+                renderAcademicEvents('all');
+            } else {
+                grid.innerHTML = emptyStateHTML('calendar', 'No Events Scheduled', 'Check back later for school and robotics events.');
+            }
+        } catch (err) {
+            console.error('Failed to load academic calendar:', err);
+            grid.innerHTML = emptyStateHTML('calendar', 'Calendar Unavailable', 'Unable to load events at this time.');
+        }
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const cat = btn.getAttribute('data-category');
+                renderAcademicEvents(cat);
+            });
+        });
+    }
+
+    function renderAcademicEvents(category = 'all') {
+        const grid = document.getElementById('events-bento-grid');
+        if (!grid) return;
+
+        let filtered = cachedEvents;
+        if (category !== 'all') {
+            filtered = cachedEvents.filter(e => e.category && e.category.toLowerCase() === category.toLowerCase());
+        }
+
+        if (filtered.length === 0) {
+            grid.innerHTML = emptyStateHTML('calendar', 'No Events Found', `No events found for category: ${category}`);
+            return;
+        }
+
+        grid.innerHTML = filtered.map(ev => {
+            const isRecurring = ev.is_recurring ? `<span class="event-recurring-tag"><i data-lucide="repeat" style="width:10px;height:10px;display:inline-block;"></i> Weekly</span>` : '';
+            
+            let timeStr = ev.start_time || '';
+            if (ev.end_time) timeStr += ` - ${ev.end_time}`;
+
+            return `
+                <div class="event-bento-card reveal">
+                    <div>
+                        <div class="event-bento-header">
+                            <span class="event-category-badge"><i data-lucide="tag" style="width:12px;height:12px;"></i> ${escapeHTML(ev.category || 'Event')}</span>
+                            ${isRecurring}
+                        </div>
+                        <h3 class="event-title">${escapeHTML(ev.title)}</h3>
+                        ${ev.description ? `<p class="event-description">${escapeHTML(ev.description)}</p>` : ''}
+                    </div>
+                    <div class="event-meta-list">
+                        ${ev.event_date ? `<div class="event-meta-item"><i data-lucide="calendar"></i> <span>${escapeHTML(ev.event_date)}</span></div>` : ''}
+                        ${timeStr ? `<div class="event-meta-item"><i data-lucide="clock"></i> <span>${escapeHTML(timeStr)}</span></div>` : ''}
+                        ${ev.location ? `<div class="event-meta-item"><i data-lucide="map-pin"></i> <span>${escapeHTML(ev.location)}</span></div>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+    }
+
     // Run UI listeners immediately so buttons work instantly
     initMeetingModal();
 
@@ -1926,6 +1999,7 @@ document.addEventListener('DOMContentLoaded', () => {
             initSpotifyWidget();
             initDynamicTimeAndWeather();
             initCountdownWidget();
+            loadAcademicCalendar();
             initSeasonalTheme();
             initRealtimeSync();
         }, 200);
