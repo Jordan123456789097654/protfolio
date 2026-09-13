@@ -3260,19 +3260,25 @@ section:has(.reveal.active) .hollow-bg-text {
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 14px;
     overflow-x: auto;
-    min-width: 100%;
+    width: 100%;
+    position: relative;
 }
 
 .gcal-time-col {
     width: 75px;
+    min-width: 75px;
     flex-shrink: 0;
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(15, 23, 42, 0.6);
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
+    background: #0f172a;
+    position: sticky;
+    left: 0;
+    z-index: 15;
 }
 
 .gcal-time-header {
     height: 54px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    background: #0f172a;
 }
 
 .gcal-time-slot {
