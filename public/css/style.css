@@ -3256,10 +3256,10 @@ section:has(.reveal.active) .hollow-bg-text {
 
 .gcal-grid-wrapper {
     display: flex;
-    background: rgba(10, 15, 30, 0.85);
+    background: #0b1329;
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 14px;
-    overflow-x: auto;
+    overflow: hidden;
     width: 100%;
     position: relative;
 }
@@ -3270,18 +3270,13 @@ section:has(.reveal.active) .hollow-bg-text {
     flex-shrink: 0;
     border-right: 1px solid rgba(255, 255, 255, 0.12);
     background: #0b1329;
-    position: sticky;
-    left: 0;
-    z-index: 20;
+    z-index: 5;
 }
 
 .gcal-time-header {
     height: 54px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.12);
     background: #0b1329;
-    position: sticky;
-    top: 0;
-    z-index: 25;
 }
 
 .gcal-time-slot {
@@ -3296,11 +3291,17 @@ section:has(.reveal.active) .hollow-bg-text {
     font-weight: 500;
 }
 
+.gcal-days-scroll-area {
+    flex: 1;
+    overflow-x: auto;
+    background: #0b1329;
+}
+
 .gcal-days-grid {
     display: grid;
-    grid-template-columns: repeat(7, minmax(170px, 1fr));
-    flex: 1;
-    min-width: 1190px;
+    grid-template-columns: repeat(7, minmax(160px, 1fr));
+    min-width: 1120px;
+    background: #0b1329;
 }
 
 .gcal-day-col {
@@ -3324,9 +3325,6 @@ section:has(.reveal.active) .hollow-bg-text {
     font-size: 0.85rem;
     color: var(--text-secondary);
     font-weight: 600;
-    position: sticky;
-    top: 0;
-    z-index: 10;
 }
 
 .gcal-day-header.is-today .gcal-day-num {
