@@ -85,8 +85,32 @@ document.addEventListener('DOMContentLoaded', () => {
     if (gradeForm) gradeForm.addEventListener('submit', handleGradeSubmit);
     const saveGradesVisBtn = document.getElementById('save-grades-visibility-btn');
     if (saveGradesVisBtn) saveGradesVisBtn.addEventListener('click', handleGradesVisibilitySave);
+    const autoCalcGpaBtn = document.getElementById('auto-calc-gpa-btn');
+    if (autoCalcGpaBtn) autoCalcGpaBtn.addEventListener('click', () => triggerAutoGpaCalc(true));
     const gradeCancelBtn = document.getElementById('grade-cancel-btn');
     if (gradeCancelBtn) gradeCancelBtn.addEventListener('click', resetGradeForm);
+
+    const gradeValueInput = document.getElementById('grade-value');
+    const gradeSubjectInput = document.getElementById('grade-subject');
+    const gradeGpaInput = document.getElementById('grade-gpa');
+    if (gradeValueInput && gradeGpaInput) {
+        const autoSuggestCourseGpa = () => {
+            const letter = gradeValueInput.value.trim();
+            const subj = gradeSubjectInput ? gradeSubjectInput.value.trim() : '';
+            if (letter && (!gradeGpaInput.value || gradeGpaInput.dataset.autoFilled === 'true')) {
+                const res = convertLetterToGpaPoints(letter, /(ap\b|ib\b|honors|advanced|dual enrollment|de\b)/i.test(subj));
+                if (res !== null) {
+                    gradeGpaInput.value = res.toFixed(1);
+                    gradeGpaInput.dataset.autoFilled = 'true';
+                }
+            }
+        };
+        gradeValueInput.addEventListener('input', autoSuggestCourseGpa);
+        if (gradeSubjectInput) gradeSubjectInput.addEventListener('input', autoSuggestCourseGpa);
+        gradeGpaInput.addEventListener('input', () => {
+            delete gradeGpaInput.dataset.autoFilled;
+        });
+    }
 
     document.getElementById('password-form').addEventListener('submit', handlePasswordChange);
     document.getElementById('export-btn').addEventListener('click', handleExport);
@@ -3194,6 +3218,113 @@ document.getElementById('ai-syllabus-form')?.addEventListener('submit', async (e
 });
 
 // ── Grades & GPA (Admin) ──────────────────────────────────────────
+function convertLetterToGpaPoints(letterStr, isWeighted = false) {
+    if (!letterStr) return null;
+    const clean = String(letterStr).trim().toUpperCase();
+    const num = parseFloat(clean);
+    if (!isNaN(num) && num >= 0 && num <= 5.0) {
+        return num;
+    }
+
+    let base = 4.0;
+    if (clean.startsWith('A+')) base = 4.0;
+    else if (clean.startsWith('A-')) base = 3.7;
+    else if (clean.startsWith('A')) base = 4.0;
+    else if (clean.startsWith('B+')) base = 3.3;
+    else if (clean.startsWith('B-')) base = 2.7;
+    else if (clean.startsWith('B')) base = 3.0;
+    else if (clean.startsWith('C+')) base = 2.3;
+    else if (clean.startsWith('C-')) base = 1.7;
+    else if (clean.startsWith('C')) base = 2.0;
+    else if (clean.startsWith('D+')) base = 1.3;
+    else if (clean.startsWith('D-')) base = 0.7;
+    else if (clean.startsWith('D')) base = 1.0;
+    else if (clean.startsWith('F')) base = 0.0;
+    else {
+        const match = clean.match(/(\d+(\.\d+)?)/);
+        if (match) {
+            const pct = parseFloat(match[1]);
+            if (pct >= 93) base = 4.0;
+            else if (pct >= 90) base = 3.7;
+            else if (pct >= 87) base = 3.3;
+            else if (pct >= 83) base = 3.0;
+            else if (pct >= 80) base = 2.7;
+            else if (pct >= 77) base = 2.3;
+            else if (pct >= 73) base = 2.0;
+            else if (pct >= 70) base = 1.7;
+            else if (pct >= 67) base = 1.3;
+            else if (pct >= 60) base = 1.0;
+            else base = 0.0;
+        } else {
+            return null;
+        }
+    }
+
+    return isWeighted ? base + 1.0 : base;
+}
+
+function calculateGPAFromGrades(gradesList) {
+    if (!Array.isArray(gradesList) || gradesList.length === 0) {
+        return { unweighted: '', weighted: '' };
+    }
+
+    let totalUnweighted = 0;
+    let totalWeighted = 0;
+    let count = 0;
+
+    gradesList.forEach(item => {
+        const subject = item.subject || '';
+        const gradeStr = item.grade || item.letter_grade || '';
+        const explicitGpa = parseFloat(item.gpa || item.gpa_points);
+        const isWeighted = /(ap\b|ib\b|honors|advanced|dual enrollment|de\b)/i.test(subject);
+
+        let unweightedPts = null;
+        let weightedPts = null;
+
+        if (!isNaN(explicitGpa) && explicitGpa >= 0 && explicitGpa <= 5.0) {
+            unweightedPts = Math.min(explicitGpa, 4.0);
+            weightedPts = isWeighted ? explicitGpa + 1.0 : explicitGpa;
+        } else if (gradeStr) {
+            const base = convertLetterToGpaPoints(gradeStr, false);
+            if (base !== null) {
+                unweightedPts = base;
+                weightedPts = base + (isWeighted ? 1.0 : 0.0);
+            }
+        }
+
+        if (unweightedPts !== null) {
+            totalUnweighted += unweightedPts;
+            totalWeighted += weightedPts;
+            count++;
+        }
+    });
+
+    if (count === 0) return { unweighted: '', weighted: '' };
+
+    return {
+        unweighted: (totalUnweighted / count).toFixed(2),
+        weighted: (totalWeighted / count).toFixed(2)
+    };
+}
+
+function triggerAutoGpaCalc(showNotification = true) {
+    const items = window.currentGradesList || [];
+    const computed = calculateGPAFromGrades(items);
+
+    const unweightedInput = document.getElementById('gpa-unweighted');
+    const weightedInput = document.getElementById('gpa-weighted');
+
+    if (computed.unweighted) {
+        if (unweightedInput) unweightedInput.value = computed.unweighted;
+        if (weightedInput) weightedInput.value = computed.weighted;
+        if (showNotification) {
+            showToast(`⚡ Calculated GPA: ${computed.unweighted} Unweighted | ${computed.weighted} Weighted`, 'success');
+        }
+    } else if (showNotification) {
+        showToast('No valid course grades found to calculate GPA.', 'info');
+    }
+}
+
 async function loadGrades() {
     try {
         const res = await apiCall('/admin/grades');
@@ -3205,6 +3336,9 @@ async function loadGrades() {
         const weightedInput = document.getElementById('gpa-weighted');
         const listBody = document.getElementById('admin-grades-list');
 
+        const items = res.grades || [];
+        window.currentGradesList = items;
+
         if (globalToggle) {
             globalToggle.checked = !!res.show_grades_publicly;
             if (toggleLabel) {
@@ -3212,11 +3346,13 @@ async function loadGrades() {
                 toggleLabel.style.color = res.show_grades_publicly ? '#2ed573' : 'var(--text-secondary)';
             }
         }
-        if (unweightedInput) unweightedInput.value = res.gpa_unweighted || '';
-        if (weightedInput) weightedInput.value = res.gpa_weighted || '';
+
+        // Calculate auto-GPA if inputs empty or loading initial data
+        const computed = calculateGPAFromGrades(items);
+        if (unweightedInput) unweightedInput.value = res.gpa_unweighted || computed.unweighted || '';
+        if (weightedInput) weightedInput.value = res.gpa_weighted || computed.weighted || '';
 
         if (!listBody) return;
-        const items = res.grades || [];
 
         if (items.length === 0) {
             listBody.innerHTML = '<tr><td colspan="5" style="padding:16px;text-align:center;color:var(--text-secondary);">No grades added yet. Add your first course grade above!</td></tr>';
@@ -3285,7 +3421,10 @@ async function handleGradeSubmit(e) {
             showToast('Course grade added', 'success');
         }
         resetGradeForm();
-        loadGrades();
+        await loadGrades();
+        // Recalculate GPA automatically after adding/modifying course grade
+        triggerAutoGpaCalc(false);
+        await handleGradesVisibilitySave();
     } catch (err) {
         showToast('Error saving course grade', 'error');
     }
