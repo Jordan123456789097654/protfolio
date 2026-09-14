@@ -176,6 +176,34 @@ router.get('/events', async (req, res) => {
   }
 });
 
+// ── GET Grades & GPA ─────────────────────────────────────────────
+router.get('/grades', async (req, res) => {
+  try {
+    const { rows: configRows } = await safeQuery(req.app.locals.pool, 'SELECT show_grades_publicly, gpa_unweighted, gpa_weighted FROM site_config LIMIT 1');
+    const config = configRows[0] || {};
+    
+    if (!config.show_grades_publicly) {
+      return res.json({
+        show_grades_publicly: false,
+        grades: [],
+        gpa_unweighted: config.gpa_unweighted || '',
+        gpa_weighted: config.gpa_weighted || ''
+      });
+    }
+
+    const { rows: grades } = await safeQuery(req.app.locals.pool, 'SELECT * FROM grades WHERE is_published = true ORDER BY sort_order ASC, created_at DESC');
+
+    res.json({
+      show_grades_publicly: true,
+      gpa_unweighted: config.gpa_unweighted || '',
+      gpa_weighted: config.gpa_weighted || '',
+      grades: grades || []
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── POST Meeting Feedback / Testimonial ───────────────────────────
 router.post('/meetings/feedback', async (req, res) => {
   try {
