@@ -49,6 +49,16 @@ router.get('/analytics/stats', (req, res) => {
   res.json(analyticsStore);
 });
 
+// ── GET Spotify Now Playing ──────────────────────────────────────
+router.get('/spotify/now-playing', async (req, res) => {
+  try {
+    const data = await getNowPlaying(req.app.locals.pool);
+    res.json(data);
+  } catch (err) {
+    res.json({ connected: false, isPlaying: false });
+  }
+});
+
 // ── GET site config ──────────────────────────────────────────────
 router.get('/config', async (req, res) => {
   const { rows } = await safeQuery(req.app.locals.pool, 'SELECT * FROM site_config LIMIT 1');

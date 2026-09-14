@@ -42,17 +42,32 @@
     <!-- Scroll Progress Bar -->
     <div id="scroll-progress"></div>
 
-    <!-- Spotify Now Playing Widget -->
-    <div id="spotify-widget" class="spotify-widget hidden">
-        <div class="spotify-art-wrap">
-            <img id="spotify-art" class="spotify-art" src="" alt="Album art">
-            <div class="spotify-eq"><span></span><span></span><span></span><span></span></div>
+    <!-- Spotify Live Interactive Audio Player Widget (Guns.lol Style) -->
+    <div id="spotify-widget" class="spotify-widget" style="position:fixed;bottom:24px;left:24px;z-index:9999;background:rgba(15,23,42,0.85);border:1px solid rgba(255,255,255,0.12);backdrop-filter:blur(16px);border-radius:16px;padding:12px 16px;display:flex;align-items:center;gap:14px;box-shadow:0 12px 30px rgba(0,0,0,0.5);transition:all 0.3s cubic-bezier(0.16,1,0.3,1);">
+        <div class="spotify-art-wrap" style="position:relative;width:44px;height:44px;border-radius:8px;overflow:hidden;flex-shrink:0;">
+            <img id="spotify-art" class="spotify-art" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=200&q=80" alt="Album art" style="width:100%;height:100%;object-fit:cover;">
+            <div id="spotify-eq-visualizer" class="spotify-eq" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;gap:3px;opacity:0;transition:opacity 0.2s ease;">
+                <span style="width:3px;height:12px;background:#1db954;border-radius:2px;animation:pulse 0.8s infinite ease-in-out;"></span>
+                <span style="width:3px;height:18px;background:#1db954;border-radius:2px;animation:pulse 0.6s infinite ease-in-out 0.2s;"></span>
+                <span style="width:3px;height:10px;background:#1db954;border-radius:2px;animation:pulse 0.9s infinite ease-in-out 0.4s;"></span>
+            </div>
         </div>
-        <div class="spotify-info">
-            <span class="spotify-label"><i data-lucide="music-2"></i> Now Playing</span>
-            <a id="spotify-track" class="spotify-track" href="#" target="_blank" rel="noopener noreferrer"></a>
-            <span id="spotify-artist" class="spotify-artist"></span>
+        
+        <div class="spotify-info" style="display:flex;flex-direction:column;gap:2px;max-width:180px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+                <span style="width:7px;height:7px;background:#1db954;border-radius:50%;box-shadow:0 0 8px #1db954;display:inline-block;"></span>
+                <span class="spotify-label" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);font-weight:700;">Live Music Player</span>
+            </div>
+            <a id="spotify-track" class="spotify-track" href="https://open.spotify.com" target="_blank" rel="noopener noreferrer" style="font-size:0.85rem;font-weight:700;color:#fff;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;">Lo-Fi Coding Beats</a>
+            <span id="spotify-artist" class="spotify-artist" style="font-size:0.75rem;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Chillhop Radio</span>
         </div>
+
+        <!-- Play / Pause Interactive Audio Button -->
+        <button type="button" id="spotify-play-btn" style="background:linear-gradient(135deg, #1db954, #1ed760);border:none;color:#000;width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.95rem;font-weight:700;box-shadow:0 0 15px rgba(29,185,84,0.4);transition:transform 0.2s ease;" title="Play / Pause Music">
+            ▶
+        </button>
+
+        <audio id="spotify-audio-player" loop preload="auto" src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"></audio>
     </div>
 
     <div class="ambient-glow" id="ambient-glow"></div>

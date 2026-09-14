@@ -2653,6 +2653,60 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {}
     }
 
+    // ── Interactive Live Spotify Audio Player Widget ─────────────────────
+    function initSpotifyWidget() {
+        const playBtn = document.getElementById('spotify-play-btn');
+        const audio = document.getElementById('spotify-audio-player');
+        const eqVis = document.getElementById('spotify-eq-visualizer');
+        const trackTitle = document.getElementById('spotify-track');
+        const artistName = document.getElementById('spotify-artist');
+        const albumArt = document.getElementById('spotify-art');
+
+        if (!playBtn || !audio) return;
+
+        let isAudioPlaying = false;
+
+        async function updateSpotifyInfo() {
+            try {
+                const res = await fetch('/api/spotify/now-playing');
+                const data = await res.json();
+                if (data && data.title) {
+                    if (trackTitle) {
+                        trackTitle.textContent = data.title;
+                        trackTitle.href = data.songUrl || 'https://open.spotify.com';
+                    }
+                    if (artistName) artistName.textContent = data.artist || 'Spotify Artist';
+                    if (albumArt && data.albumArt) albumArt.src = data.albumArt;
+                    if (data.previewUrl && audio.src !== data.previewUrl) {
+                        const wasPlaying = isAudioPlaying;
+                        audio.src = data.previewUrl;
+                        if (wasPlaying) audio.play().catch(() => {});
+                    }
+                }
+            } catch (err) {}
+        }
+
+        playBtn.addEventListener('click', () => {
+            if (isAudioPlaying) {
+                audio.pause();
+                isAudioPlaying = false;
+                playBtn.textContent = '▶';
+                if (eqVis) eqVis.style.opacity = '0';
+            } else {
+                audio.play().then(() => {
+                    isAudioPlaying = true;
+                    playBtn.textContent = '❚❚';
+                    if (eqVis) eqVis.style.opacity = '1';
+                }).catch((e) => {
+                    console.log('Audio playback initiated:', e);
+                });
+            }
+        });
+
+        updateSpotifyInfo();
+        setInterval(updateSpotifyInfo, 15000);
+    }
+
     // Run UI listeners immediately so buttons work instantly
     initLanguageSwitcher();
     initCertModal();
