@@ -2655,56 +2655,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Interactive Live Spotify Audio Player Widget ─────────────────────
     function initSpotifyWidget() {
-        const playBtn = document.getElementById('spotify-play-btn');
-        const audio = document.getElementById('spotify-audio-player');
-        const eqVis = document.getElementById('spotify-eq-visualizer');
-        const trackTitle = document.getElementById('spotify-track');
-        const artistName = document.getElementById('spotify-artist');
-        const albumArt = document.getElementById('spotify-art');
+        const iframe = document.getElementById('spotify-embed-iframe');
+        const statusTag = document.getElementById('spotify-status-tag');
+        if (!iframe) return;
 
-        if (!playBtn || !audio) return;
-
-        let isAudioPlaying = false;
+        let currentTrackId = '';
 
         async function updateSpotifyInfo() {
             try {
                 const res = await fetch('/api/spotify/now-playing');
                 const data = await res.json();
-                if (data && data.title) {
-                    if (trackTitle) {
-                        trackTitle.textContent = data.title;
-                        trackTitle.href = data.songUrl || 'https://open.spotify.com';
+
+                if (data && data.connected && data.isPlaying && data.trackId) {
+                    if (statusTag) statusTag.textContent = '🎵 Playing Live Now';
+                    if (currentTrackId !== data.trackId) {
+                        currentTrackId = data.trackId;
+                        iframe.src = `https://open.spotify.com/embed/track/${data.trackId}?utm_source=generator&theme=0`;
                     }
-                    if (artistName) artistName.textContent = data.artist || 'Spotify Artist';
-                    if (albumArt && data.albumArt) albumArt.src = data.albumArt;
-                    if (data.previewUrl && audio.src !== data.previewUrl) {
-                        const wasPlaying = isAudioPlaying;
-                        audio.src = data.previewUrl;
-                        if (wasPlaying) audio.play().catch(() => {});
-                    }
+                } else if (data && data.connected) {
+                    if (statusTag) statusTag.textContent = '⏸️ Currently Paused';
+                } else {
+                    if (statusTag) statusTag.textContent = '📻 Featured Playlist';
                 }
             } catch (err) {}
         }
 
-        playBtn.addEventListener('click', () => {
-            if (isAudioPlaying) {
-                audio.pause();
-                isAudioPlaying = false;
-                playBtn.textContent = '▶';
-                if (eqVis) eqVis.style.opacity = '0';
-            } else {
-                audio.play().then(() => {
-                    isAudioPlaying = true;
-                    playBtn.textContent = '❚❚';
-                    if (eqVis) eqVis.style.opacity = '1';
-                }).catch((e) => {
-                    console.log('Audio playback initiated:', e);
-                });
-            }
-        });
-
         updateSpotifyInfo();
-        setInterval(updateSpotifyInfo, 15000);
+        setInterval(updateSpotifyInfo, 10000);
     }
 
     // Run UI listeners immediately so buttons work instantly
