@@ -2653,37 +2653,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {}
     }
 
-    // ── Interactive Live Spotify Audio Player Widget ─────────────────────
-    function initSpotifyWidget() {
-        const iframe = document.getElementById('spotify-embed-iframe');
-        const statusTag = document.getElementById('spotify-status-tag');
-        if (!iframe) return;
-
-        let currentTrackId = '';
-
-        async function updateSpotifyInfo() {
-            try {
-                const res = await fetch('/api/spotify/now-playing');
-                const data = await res.json();
-
-                if (data && data.connected && data.isPlaying && data.trackId) {
-                    if (statusTag) statusTag.textContent = '🎵 Playing Live Now';
-                    if (currentTrackId !== data.trackId) {
-                        currentTrackId = data.trackId;
-                        iframe.src = `https://open.spotify.com/embed/track/${data.trackId}?utm_source=generator&theme=0`;
-                    }
-                } else if (data && data.connected) {
-                    if (statusTag) statusTag.textContent = '⏸️ Currently Paused';
-                } else {
-                    if (statusTag) statusTag.textContent = '📻 Featured Playlist';
-                }
-            } catch (err) {}
-        }
-
-        updateSpotifyInfo();
-        setInterval(updateSpotifyInfo, 10000);
-    }
-
     // Run UI listeners immediately so buttons work instantly
     initLanguageSwitcher();
     initCertModal();
@@ -2698,7 +2667,6 @@ document.addEventListener('DOMContentLoaded', () => {
             initThemeSwitcher();
             initParticleCanvas();
             initSoundEvents();
-            initSpotifyWidget();
             initDynamicTimeAndWeather();
             initCountdownWidget();
             initSmoothViewTransitions();
