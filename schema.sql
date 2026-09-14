@@ -23,6 +23,11 @@ ALTER TABLE site_config ADD COLUMN IF NOT EXISTS stat_clubs_joined INTEGER DEFAU
 -- Graduation year, shown as a small badge near the hero
 ALTER TABLE site_config ADD COLUMN IF NOT EXISTS class_year VARCHAR(20) DEFAULT '';
 
+-- Academic Grades & GPA Settings
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS show_grades_publicly BOOLEAN DEFAULT false;
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS gpa_unweighted VARCHAR(50) DEFAULT '1.40';
+ALTER TABLE site_config ADD COLUMN IF NOT EXISTS gpa_weighted VARCHAR(50) DEFAULT '1.40';
+
 -- Default featured quote shown in the About section (rotating testimonials,
 -- if any are added, take over from this once they exist)
 ALTER TABLE site_config ADD COLUMN IF NOT EXISTS quote_text TEXT DEFAULT '';
@@ -380,3 +385,39 @@ WHERE NOT EXISTS (SELECT 1 FROM busy_schedules WHERE day_of_week = 'Thursday' AN
 INSERT INTO busy_schedules (title, day_of_week, start_time, end_time, description)
 SELECT 'FBLA Morning Chapter Officer Meeting', 'Thursday', '08:00', '08:30', 'Thursday morning FBLA officer meeting'
 WHERE NOT EXISTS (SELECT 1 FROM busy_schedules WHERE day_of_week = 'Thursday' AND title LIKE '%FBLA%');
+
+-- Academic Grades & GPA Record Table
+CREATE TABLE IF NOT EXISTS grades (
+  id SERIAL PRIMARY KEY,
+  subject VARCHAR(255) NOT NULL,
+  grade VARCHAR(100) NOT NULL,
+  gpa VARCHAR(50) DEFAULT '4.0',
+  school_year VARCHAR(50) DEFAULT '2025-2026',
+  term VARCHAR(50) DEFAULT 'Semester 1',
+  report_card_url TEXT DEFAULT '',
+  is_published BOOLEAN DEFAULT true,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Seed Grades if empty
+INSERT INTO grades (subject, grade, gpa, school_year, term, is_published, sort_order)
+SELECT 'Georgia Studies', '91 (91.16%)', '4.0', '2025-2026', 'Semester 1', true, 1
+WHERE NOT EXISTS (SELECT 1 FROM grades WHERE subject = 'Georgia Studies');
+
+INSERT INTO grades (subject, grade, gpa, school_year, term, is_published, sort_order)
+SELECT 'Language Arts', '83 (83.25%)', '3.0', '2025-2026', 'Semester 1', true, 2
+WHERE NOT EXISTS (SELECT 1 FROM grades WHERE subject = 'Language Arts');
+
+INSERT INTO grades (subject, grade, gpa, school_year, term, is_published, sort_order)
+SELECT 'Mathematics', '54 (54.12%)', '0.0', '2025-2026', 'Semester 1', true, 3
+WHERE NOT EXISTS (SELECT 1 FROM grades WHERE subject = 'Mathematics');
+
+INSERT INTO grades (subject, grade, gpa, school_year, term, is_published, sort_order)
+SELECT 'Science', '54 (53.66%)', '0.0', '2025-2026', 'Semester 1', true, 4
+WHERE NOT EXISTS (SELECT 1 FROM grades WHERE subject = 'Science');
+
+INSERT INTO grades (subject, grade, gpa, school_year, term, is_published, sort_order)
+SELECT 'Spanish I', '57 (57.27%)', '0.0', '2025-2026', 'Semester 1', true, 5
+WHERE NOT EXISTS (SELECT 1 FROM grades WHERE subject = 'Spanish I');
+
