@@ -80,6 +80,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const meetingSettingsForm = document.getElementById('meeting-settings-form');
     if (meetingSettingsForm) meetingSettingsForm.addEventListener('submit', handleMeetingSettingsSave);
 
+    // Grades & GPA listeners
+    const gradeForm = document.getElementById('grade-form');
+    if (gradeForm) gradeForm.addEventListener('submit', handleGradeSubmit);
+    const saveGradesVisBtn = document.getElementById('save-grades-visibility-btn');
+    if (saveGradesVisBtn) saveGradesVisBtn.addEventListener('click', handleGradesVisibilitySave);
+    const gradeCancelBtn = document.getElementById('grade-cancel-btn');
+    if (gradeCancelBtn) gradeCancelBtn.addEventListener('click', resetGradeForm);
+
     document.getElementById('password-form').addEventListener('submit', handlePasswordChange);
     document.getElementById('export-btn').addEventListener('click', handleExport);
     document.getElementById('spotify-connect-btn').addEventListener('click', () => {
@@ -267,6 +275,7 @@ function showDashboard() {
     loadExperience();
     loadCertifications();
     loadAchievements();
+    loadGrades();
     loadGallery();
     loadTestimonials();
     loadSocial();
@@ -3183,6 +3192,126 @@ document.getElementById('ai-syllabus-form')?.addEventListener('submit', async (e
         btn.disabled = false;
     }
 });
+
+// ── Grades & GPA (Admin) ──────────────────────────────────────────
+async function loadGrades() {
+    try {
+        const res = await apiCall('/admin/grades');
+        if (!res) return;
+
+        const globalToggle = document.getElementById('grades-global-toggle');
+        const toggleLabel = document.getElementById('grades-toggle-label');
+        const unweightedInput = document.getElementById('gpa-unweighted');
+        const weightedInput = document.getElementById('gpa-weighted');
+        const listBody = document.getElementById('admin-grades-list');
+
+        if (globalToggle) {
+            globalToggle.checked = !!res.show_grades_publicly;
+            if (toggleLabel) {
+                toggleLabel.textContent = res.show_grades_publicly ? '🌐 Public (Visible on Live Site)' : '🔒 Private (Hidden from Site)';
+                toggleLabel.style.color = res.show_grades_publicly ? '#2ed573' : 'var(--text-secondary)';
+            }
+        }
+        if (unweightedInput) unweightedInput.value = res.gpa_unweighted || '';
+        if (weightedInput) weightedInput.value = res.gpa_weighted || '';
+
+        if (!listBody) return;
+        const items = res.grades || [];
+
+        if (items.length === 0) {
+            listBody.innerHTML = '<tr><td colspan="5" style="padding:16px;text-align:center;color:var(--text-secondary);">No grades added yet. Add your first course grade above!</td></tr>';
+            return;
+        }
+
+        let html = '';
+        items.forEach(item => {
+            html += `
+                <tr style="border-bottom:1px solid var(--border);">
+                    <td style="padding:10px;font-weight:600;color:var(--text-primary);">${escapeHTML(item.subject)}</td>
+                    <td style="padding:10px;"><span style="background:rgba(46,213,115,0.15);color:#2ed573;border:1px solid rgba(46,213,115,0.3);padding:2px 8px;border-radius:6px;font-weight:700;">${escapeHTML(item.grade)}</span></td>
+                    <td style="padding:10px;color:var(--text-secondary);font-size:0.85rem;">${escapeHTML(item.school_year)} ${item.term ? '• ' + escapeHTML(item.term) : ''}</td>
+                    <td style="padding:10px;">${publishToggleHTML('/admin/grades', item, 'loadGrades')}</td>
+                    <td style="padding:10px;text-align:right;">
+                        <button type="button" class="btn-sm btn-outline" onclick='editGradeItem(${JSON.stringify(item).replace(/'/g, "&apos;")})'>Edit</button>
+                        <button type="button" class="btn-sm btn-danger" onclick="deleteItem('/admin/grades', ${item.id}, loadGrades)">Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+        listBody.innerHTML = html;
+    } catch (e) {
+        console.error('Grades load error:', e);
+    }
+}
+
+async function handleGradesVisibilitySave() {
+    const globalToggle = document.getElementById('grades-global-toggle');
+    const unweightedInput = document.getElementById('gpa-unweighted');
+    const weightedInput = document.getElementById('gpa-weighted');
+
+    try {
+        await apiCall('/admin/grades/toggle-public', 'POST', {
+            show_grades_publicly: !!globalToggle?.checked,
+            gpa_unweighted: unweightedInput?.value || '',
+            gpa_weighted: weightedInput?.value || ''
+        });
+        showToast('Grades visibility & GPA updated!', 'success');
+        loadGrades();
+    } catch (e) {
+        showToast('Error updating grades visibility', 'error');
+    }
+}
+
+async function handleGradeSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('grade-id').value;
+    const subject = document.getElementById('grade-subject').value;
+    const grade = document.getElementById('grade-value').value;
+    const gpa = document.getElementById('grade-gpa').value;
+    const school_year = document.getElementById('grade-year').value;
+    const term = document.getElementById('grade-term').value;
+    const sort_order = parseInt(document.getElementById('grade-sort').value, 10) || 0;
+    const report_card_url = document.getElementById('grade-report-url').value;
+    const is_published = document.getElementById('grade-published').checked;
+
+    const payload = { subject, grade, gpa, school_year, term, sort_order, report_card_url, is_published };
+
+    try {
+        if (id) {
+            await apiCall(`/admin/grades/${id}`, 'PUT', payload);
+            showToast('Course grade updated', 'success');
+        } else {
+            await apiCall('/admin/grades', 'POST', payload);
+            showToast('Course grade added', 'success');
+        }
+        resetGradeForm();
+        loadGrades();
+    } catch (err) {
+        showToast('Error saving course grade', 'error');
+    }
+}
+
+function editGradeItem(item) {
+    document.getElementById('grade-id').value = item.id;
+    document.getElementById('grade-subject').value = item.subject || '';
+    document.getElementById('grade-value').value = item.grade || '';
+    document.getElementById('grade-gpa').value = item.gpa || '';
+    document.getElementById('grade-year').value = item.school_year || '';
+    document.getElementById('grade-term').value = item.term || '';
+    document.getElementById('grade-sort').value = item.sort_order || 1;
+    document.getElementById('grade-report-url').value = item.report_card_url || '';
+    document.getElementById('grade-published').checked = !!item.is_published;
+
+    document.getElementById('grade-submit-btn').textContent = 'Update Course Grade';
+    document.getElementById('grade-cancel-btn').classList.remove('hidden');
+}
+
+function resetGradeForm() {
+    document.getElementById('grade-form').reset();
+    document.getElementById('grade-id').value = '';
+    document.getElementById('grade-submit-btn').textContent = 'Add Course Grade';
+    document.getElementById('grade-cancel-btn').classList.add('hidden');
+}
 
 
 

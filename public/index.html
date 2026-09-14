@@ -226,6 +226,32 @@
             </div>
         </section>
 
+        <!-- Academic Grades & GPA Section (Hidden by default unless toggled ON in Admin) -->
+        <section id="grades" class="grades-section hidden">
+            <div class="hollow-bg-text">GRADES</div>
+            <div class="section-container reveal">
+                <div class="section-header">
+                    <span class="section-tag laser-tag" data-i18n="tag_grades">04 // ACADEMIC RECORD</span>
+                    <h2 class="section-title scramble-link" data-i18n="title_grades">Course Grades &amp; Academic Performance</h2>
+                </div>
+
+                <!-- GPA Summary Hero Pill -->
+                <div id="gpa-summary-card" style="margin-bottom:2rem;background:linear-gradient(135deg, rgba(46,213,115,0.12), rgba(0,212,255,0.12));border:1px solid rgba(46,213,115,0.3);border-radius:16px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 10px 30px rgba(0,0,0,0.3);">
+                    <div>
+                        <span style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:#2ed573;font-weight:700;">Verified Cumulative GPA</span>
+                        <h3 id="gpa-display-text" style="margin:4px 0 0 0;font-size:1.35rem;color:#fff;">4.0 Unweighted</h3>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);padding:6px 14px;border-radius:99px;font-size:0.82rem;color:var(--text-secondary);display:flex;align-items:center;gap:6px;">
+                        <span>🎓 Official High School Transcript Record</span>
+                    </div>
+                </div>
+
+                <div id="grades-grid" class="bento-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:1.2rem;">
+                    <!-- Grades cards rendered dynamically -->
+                </div>
+            </div>
+        </section>
+
         <!-- Gallery / Photos Section -->
         <section id="gallery" class="gallery-section">
             <div class="hollow-bg-text">GALLERY</div>

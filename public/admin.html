@@ -55,6 +55,7 @@
                     <button class="tab-btn" data-tab="certifications">🎖️ Certifications</button>
                     <button class="tab-btn" data-tab="skills">💪 Skills &amp; Strengths</button>
                     <button class="tab-btn" data-tab="achievements">🏆 Achievements</button>
+                    <button class="tab-btn" data-tab="grades">📊 Academic Grades &amp; GPA</button>
                     <button class="tab-btn" data-tab="gallery">🖼️ Gallery</button>
                 </div>
 
@@ -294,6 +295,113 @@
                     <p class="settings-desc">Customize section titles, order, and toggle section visibility on your public website.</p>
                     <div id="sections-manager-list" class="sections-list"></div>
                     <button id="save-sections-btn" class="btn-primary" style="margin-top:16px;">Save Section Layout</button>
+                </section>
+
+                <!-- Academic Grades & GPA -->
+                <section id="tab-grades" class="tab-panel">
+                    <h2>📊 Academic Grades, Report Cards &amp; GPA</h2>
+                    <p class="settings-desc">Upload course grades, report card attachments, and toggle whether your grades are displayed publicly on your portfolio.</p>
+
+                    <!-- Global Public Toggle Card -->
+                    <div class="settings-card" style="margin-bottom:1.5rem;background:var(--bg-secondary);border:1px solid var(--border);padding:20px;border-radius:12px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+                            <div>
+                                <h3 style="margin:0 0 4px 0;font-size:1.1rem;color:var(--text-primary);">🌐 Public Visibility Toggle</h3>
+                                <p style="margin:0;font-size:0.85rem;color:var(--text-secondary);">Turn ON to display your Academic Grades section on your live portfolio, or turn OFF to keep them private to you.</p>
+                            </div>
+                            <label style="display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;font-size:1rem;color:var(--text-primary);">
+                                <input type="checkbox" id="grades-global-toggle" style="width:20px;height:20px;cursor:pointer;">
+                                <span id="grades-toggle-label">🔒 Private (Hidden from Site)</span>
+                            </label>
+                        </div>
+
+                        <!-- GPA Inputs -->
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:1rem;margin-top:1.2rem;border-top:1px solid var(--border);padding-top:1rem;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label for="gpa-unweighted">Unweighted GPA</label>
+                                <input type="text" id="gpa-unweighted" placeholder="e.g. 4.0">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label for="gpa-weighted">Weighted GPA</label>
+                                <input type="text" id="gpa-weighted" placeholder="e.g. 4.4">
+                            </div>
+                            <div style="display:flex;align-items:flex-end;">
+                                <button type="button" id="save-grades-visibility-btn" class="btn-primary" style="width:100%;">Save Visibility &amp; GPA</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add New Grade Entry Card -->
+                    <div class="settings-card" style="margin-bottom:1.5rem;">
+                        <h3>➕ Add New Course Grade Entry</h3>
+                        <form id="grade-form">
+                            <input type="hidden" id="grade-id" name="id">
+                            <div class="form-row-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:1rem;">
+                                <div class="form-group">
+                                    <label for="grade-subject">Course / Subject Name *</label>
+                                    <input type="text" id="grade-subject" name="subject" placeholder="e.g. AP Computer Science A" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="grade-value">Letter Grade / Score *</label>
+                                    <input type="text" id="grade-value" name="grade" placeholder="e.g. A+ or 98%" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="grade-gpa">Course GPA / Points</label>
+                                    <input type="text" id="grade-gpa" name="gpa" placeholder="e.g. 4.0">
+                                </div>
+                            </div>
+
+                            <div class="form-row-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:1rem;">
+                                <div class="form-group">
+                                    <label for="grade-year">School Year / Grade Level *</label>
+                                    <input type="text" id="grade-year" name="school_year" placeholder="e.g. 2025-2026 or 11th Grade" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="grade-term">Term / Semester</label>
+                                    <input type="text" id="grade-term" name="term" placeholder="e.g. Semester 1 or Final">
+                                </div>
+                                <div class="form-group">
+                                    <label for="grade-sort">Display Order</label>
+                                    <input type="number" id="grade-sort" name="sort_order" value="1">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="grade-report-url">Report Card Photo / Document (Optional)</label>
+                                <input type="text" id="grade-report-url" name="report_card_url" placeholder="Or paste image/file URL (https://... or /uploads/...)">
+                            </div>
+
+                            <div style="display:flex;align-items:center;gap:1.5rem;margin-top:1rem;">
+                                <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;">
+                                    <input type="checkbox" id="grade-published" name="is_published" checked style="width:18px;height:18px;">
+                                    <span>Publish this course grade</span>
+                                </label>
+                                <button type="submit" id="grade-submit-btn" class="btn-primary">Add Course Grade</button>
+                                <button type="button" id="grade-cancel-btn" class="btn-outline hidden">Cancel Edit</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Existing Grades List Table -->
+                    <div class="settings-card">
+                        <h3>📋 Course Grades &amp; Record List</h3>
+                        <div id="grades-table-container">
+                            <table class="admin-table" style="width:100%;border-collapse:collapse;">
+                                <thead>
+                                    <tr style="text-align:left;border-bottom:1px solid var(--border);">
+                                        <th style="padding:10px;">Course Subject</th>
+                                        <th style="padding:10px;">Grade</th>
+                                        <th style="padding:10px;">Year / Term</th>
+                                        <th style="padding:10px;">Status</th>
+                                        <th style="padding:10px;text-align:right;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-grades-list">
+                                    <tr><td colspan="5" style="padding:16px;text-align:center;color:var(--text-secondary);">Loading grades...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- Media Gallery -->

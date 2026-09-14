@@ -167,6 +167,78 @@ router.get('/export', async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════
+//  GRADES & GPA (Admin)
+// ══════════════════════════════════════════════════════════════════
+router.get('/grades', async (req, res) => {
+  try {
+    const { rows: configRows } = await safeQuery(req.app.locals.pool, 'SELECT show_grades_publicly, gpa_unweighted, gpa_weighted FROM site_config LIMIT 1');
+    const config = configRows[0] || {};
+    const { rows: grades } = await safeQuery(req.app.locals.pool, 'SELECT * FROM grades ORDER BY sort_order ASC, created_at DESC');
+
+    res.json({
+      show_grades_publicly: !!config.show_grades_publicly,
+      gpa_unweighted: config.gpa_unweighted || '4.0',
+      gpa_weighted: config.gpa_weighted || '4.4',
+      grades: grades || []
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/grades', async (req, res) => {
+  try {
+    const { subject, grade, gpa, school_year, term, report_card_url, is_published, sort_order } = req.body;
+    const { rows } = await safeQuery(
+      req.app.locals.pool,
+      `INSERT INTO grades (subject, grade, gpa, school_year, term, report_card_url, is_published, sort_order)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [subject, grade || 'A', gpa || '4.0', school_year || '2025-2026', term || 'Semester 1', report_card_url || '', is_published !== false, sort_order || 0]
+    );
+    res.json(rows[0] || req.body);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/grades/:id', async (req, res) => {
+  try {
+    const { subject, grade, gpa, school_year, term, report_card_url, is_published, sort_order } = req.body;
+    const { rows } = await safeQuery(
+      req.app.locals.pool,
+      `UPDATE grades SET subject=$1, grade=$2, gpa=$3, school_year=$4, term=$5, report_card_url=$6, is_published=$7, sort_order=$8 WHERE id=$9 RETURNING *`,
+      [subject, grade, gpa, school_year, term, report_card_url, is_published, sort_order || 0, req.params.id]
+    );
+    res.json(rows[0] || req.body);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/grades/:id', async (req, res) => {
+  try {
+    await safeQuery(req.app.locals.pool, 'DELETE FROM grades WHERE id=$1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/grades/toggle-public', async (req, res) => {
+  try {
+    const { show_grades_publicly, gpa_unweighted, gpa_weighted } = req.body;
+    await safeQuery(
+      req.app.locals.pool,
+      'UPDATE site_config SET show_grades_publicly=$1, gpa_unweighted=$2, gpa_weighted=$3 WHERE id=(SELECT id FROM site_config LIMIT 1)',
+      [!!show_grades_publicly, gpa_unweighted || '4.0', gpa_weighted || '4.4']
+    );
+    res.json({ success: true, show_grades_publicly: !!show_grades_publicly });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════
 //  PROJECTS
 // ══════════════════════════════════════════════════════════════════
 router.get('/projects', async (req, res) => {

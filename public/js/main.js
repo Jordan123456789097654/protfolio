@@ -316,7 +316,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 '/api/recommendations',
                 '/api/faqs',
                 '/api/sections',
-                '/api/certifications'
+                '/api/certifications',
+                '/api/grades'
             ];
 
             const promises = endpoints.map(url => fetch(url).then(res => {
@@ -327,9 +328,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return null;
             }));
 
-            const [config, experience, social, achievements, gallery, skills, testimonials, recommendations, faqs, sections, certifications] = await Promise.all(promises);
+            const [config, experience, social, achievements, gallery, skills, testimonials, recommendations, faqs, sections, certifications, gradesData] = await Promise.all(promises);
 
-            window.portfolioData = { config, experience, social, achievements, gallery, skills, testimonials, recommendations, faqs, sections, certifications };
+            window.portfolioData = { config, experience, social, achievements, gallery, skills, testimonials, recommendations, faqs, sections, certifications, gradesData };
 
             if (config) renderHero(config);
             if (config) renderAbout(config);
@@ -338,6 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderSocial(social || []);
             renderAchievements(achievements || []);
             renderCertifications(certifications || []);
+            renderGrades(gradesData || null);
             renderGallery(gallery || []);
             renderSkills(skills || []);
             renderTestimonials(testimonials || []);
