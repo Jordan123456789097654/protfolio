@@ -59,7 +59,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Set current year in footer
-    document.getElementById('current-year').textContent = new Date().getFullYear();
+    const currentYearEl = document.getElementById('current-year');
+    if (currentYearEl) currentYearEl.textContent = new Date().getFullYear();
 
     // Log page view event for analytics
     fetch('/api/analytics/event', {
@@ -1289,6 +1290,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderSocial(socialLinks) {
         const container = document.getElementById('social-links');
+        if (!container) return;
         if (!socialLinks || socialLinks.length === 0) {
             container.innerHTML = emptyStateHTML('share-2', 'No social links yet', 'Add a link so people can find you elsewhere.', true);
             if (window.lucide) window.lucide.createIcons();
@@ -2490,8 +2492,170 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.removeChild(link);
     }
 
+    // ── Multi-Language Switcher (EN, ES, FR) ──────────────────────────
+    const translations = {
+        en: {
+            code: 'EN', flag: '🇺🇸',
+            nav_about: 'About', nav_experience: 'Experience', nav_certifications: 'Certifications',
+            nav_skills: 'Skills', nav_awards: 'Awards', nav_contact: 'Contact',
+            btn_activities: 'View Activities', btn_contact: 'Get In Touch',
+            tag_about: '01 // ABOUT ME', title_about: 'Background & Passion',
+            tag_exp: '02 // CLUBS & ACTIVITIES', title_exp: 'Leadership & Experience',
+            tag_cert: '03 // CERTIFICATIONS', title_cert: 'Licenses & Credentials',
+            tag_skills: '04 // SKILLS & STRENGTHS', title_skills: 'Capabilities & Tools',
+            tag_awards: '05 // HONORS & AWARDS', title_awards: 'Recognitions & Wins',
+            tag_recs: '06 // ENDORSEMENTS', title_recs: 'Recommendations & Endorsements',
+            tag_faq: '07 // FREQUENTLY ASKED', title_faq: 'Frequently Asked Questions',
+            tag_contact: '08 // GET IN TOUCH', title_contact: 'Let\'s Connect & Collaborate'
+        },
+        es: {
+            code: 'ES', flag: '🇪🇸',
+            nav_about: 'Sobre mi', nav_experience: 'Experiencia', nav_certifications: 'Certificaciones',
+            nav_skills: 'Habilidades', nav_awards: 'Premios', nav_contact: 'Contacto',
+            btn_activities: 'Ver Actividades', btn_contact: 'Ponerse en Contacto',
+            tag_about: '01 // SOBRE MÍ', title_about: 'Antecedentes y Pasión',
+            tag_exp: '02 // CLUBES Y ACTIVIDADES', title_exp: 'Liderazgo y Experiencia',
+            tag_cert: '03 // CERTIFICACIONES', title_cert: 'Licencias y Credenciales',
+            tag_skills: '04 // HABILIDADES Y FORTALEZAS', title_skills: 'Capacidades y Herramientas',
+            tag_awards: '05 // HONORES Y PREMIOS', title_awards: 'Reconocimientos y Victorias',
+            tag_recs: '06 // RECOMENDACIONES', title_recs: 'Cartas y Recomendaciones',
+            tag_faq: '07 // PREGUNTAS FRECUENTES', title_faq: 'Preguntas Frecuentes',
+            tag_contact: '08 // PONTE EN CONTACTO', title_contact: 'Conectemos y Colaboremos'
+        },
+        fr: {
+            code: 'FR', flag: '🇫🇷',
+            nav_about: 'À propos', nav_experience: 'Expérience', nav_certifications: 'Certifications',
+            nav_skills: 'Compétences', nav_awards: 'Prix', nav_contact: 'Contact',
+            btn_activities: 'Voir les Activités', btn_contact: 'Prendre Contact',
+            tag_about: '01 // À PROPOS DE MOI', title_about: 'Parcours et Passion',
+            tag_exp: '02 // CLUBS ET ACTIVITÉS', title_exp: 'Leadership et Expérience',
+            tag_cert: '03 // CERTIFICATIONS', title_cert: 'Licences et Titres',
+            tag_skills: '04 // COMPÉTENCES', title_skills: 'Capacités et Outils',
+            tag_awards: '05 // HONNEURS ET PRIX', title_awards: 'Distinctions et Victoires',
+            tag_recs: '06 // RECOMMANDATIONS', title_recs: 'Témoignages et Recommandations',
+            tag_faq: '07 // QUESTIONS FRÉQUENTES', title_faq: 'Foire Aux Questions',
+            tag_contact: '08 // PRENDRE CONTACT', title_contact: 'Connectons-nous et Collaborons'
+        }
+    };
+
+    let currentLang = localStorage.getItem('portfolio_lang') || 'en';
+
+    function initLanguageSwitcher() {
+        const btn = document.getElementById('lang-toggle');
+        const flagEl = document.getElementById('lang-flag');
+        const codeEl = document.getElementById('lang-code');
+        if (!btn) return;
+
+        function applyLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('portfolio_lang', lang);
+            const t = translations[lang] || translations.en;
+            if (flagEl) flagEl.textContent = t.flag;
+            if (codeEl) codeEl.textContent = t.code;
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.dataset.i18n;
+                if (t[key]) el.textContent = t[key];
+            });
+        }
+
+        applyLanguage(currentLang);
+
+        btn.addEventListener('click', () => {
+            const order = ['en', 'es', 'fr'];
+            const nextIdx = (order.indexOf(currentLang) + 1) % order.length;
+            applyLanguage(order[nextIdx]);
+        });
+    }
+
+    // ── High-Res Certificate Verifier Modal ────────────────────────────
+    function initCertModal() {
+        const modal = document.getElementById('cert-verifier-modal');
+        const closeBtn = document.getElementById('cert-modal-close');
+        const dismissBtn = document.getElementById('cert-modal-dismiss');
+        const titleEl = document.getElementById('cert-modal-title');
+        const imgEl = document.getElementById('cert-modal-img');
+        const issuerEl = document.getElementById('cert-modal-issuer');
+        const dateEl = document.getElementById('cert-modal-date');
+        const idEl = document.getElementById('cert-modal-id');
+        const linkEl = document.getElementById('cert-modal-verify-link');
+
+        if (!modal) return;
+
+        function closeModal() {
+            modal.classList.add('hidden');
+        }
+
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (dismissBtn) dismissBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        // Delegate click listener on certification cards / badges
+        document.addEventListener('click', (e) => {
+            const card = e.target.closest('.cert-card, .certification-card, .cert-badge, [data-cert-title]');
+            if (!card) return;
+
+            const title = card.dataset.certTitle || card.querySelector('h3, .cert-title, strong')?.textContent || 'Verified Certification';
+            const issuer = card.dataset.certIssuer || card.querySelector('.cert-issuer, .issuer, .organization')?.textContent || 'Authorized Institution';
+            const date = card.dataset.certDate || card.querySelector('.cert-date, .date')?.textContent || '2026';
+            const img = card.dataset.certImg || card.querySelector('img')?.src || 'https://images.unsplash.com/photo-1589330694653-ded6df03f754?auto=format&fit=crop&w=1000&q=80';
+            const link = card.dataset.certLink || card.querySelector('a')?.href || '#';
+            const certId = 'CERT-VERIFIED-' + Math.floor(100000 + Math.random() * 900000);
+
+            if (titleEl) titleEl.textContent = title;
+            if (issuerEl) issuerEl.textContent = issuer;
+            if (dateEl) dateEl.textContent = date;
+            if (idEl) idEl.textContent = certId;
+            if (imgEl) imgEl.src = img;
+            if (linkEl) {
+                linkEl.href = link !== '#' ? link : 'javascript:void(0)';
+                linkEl.style.display = link !== '#' ? 'inline-flex' : 'none';
+            }
+
+            modal.classList.remove('hidden');
+        });
+    }
+
+    // ── Smooth View Transitions ─────────────────────────────────────────
+    function initSmoothViewTransitions() {
+        document.querySelectorAll('.nav-pill, .footer-logo, .back-to-top').forEach(link => {
+            link.addEventListener('click', (e) => {
+                const targetId = link.getAttribute('href');
+                if (targetId && targetId.startsWith('#')) {
+                    const targetEl = document.querySelector(targetId);
+                    if (targetEl) {
+                        if (document.startViewTransition) {
+                            e.preventDefault();
+                            document.startViewTransition(() => {
+                                targetEl.scrollIntoView({ behavior: 'smooth' });
+                            });
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    // ── Track Live Visitor Analytics ────────────────────────────────────
+    function trackVisitorAnalytics() {
+        try {
+            fetch('/api/analytics/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    path: window.location.pathname,
+                    referrer: document.referrer || 'Direct',
+                    userAgent: navigator.userAgent
+                })
+            }).catch(() => {});
+        } catch (e) {}
+    }
+
     // Run UI listeners immediately so buttons work instantly
-    initMeetingModal();
+    initLanguageSwitcher();
+    initCertModal();
 
     // Start everything
     fetchData().then(() => {
@@ -2506,10 +2670,12 @@ document.addEventListener('DOMContentLoaded', () => {
             initSpotifyWidget();
             initDynamicTimeAndWeather();
             initCountdownWidget();
-            loadAcademicCalendar();
+            initSmoothViewTransitions();
+            trackVisitorAnalytics();
             initSeasonalTheme();
             initRealtimeSync();
         }, 200);
     });
 });
+
 

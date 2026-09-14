@@ -23,8 +23,8 @@ function ipv4Lookup(hostname, options, callback) {
   dns.lookup(hostname, { family: 4, all: false }, callback);
 }
 
-const primaryUrl = (process.env.DATABASE_URL || 'postgresql://postgres.yawerazplomaixydplyh:Swr0zw7CSc0yaaId@aws-0-us-west-2.pooler.supabase.com:6543/postgres').trim();
-const fallbackUrl = 'postgresql://postgres.yawerazplomaixydplyh:Swr0zw7CSc0yaaId@aws-0-us-west-2.pooler.supabase.com:5432/postgres';
+const primaryUrl = 'postgresql://postgres.yawerazplomaixydplyh:Swr0zw7CSc0yaaId@aws-0-us-west-2.pooler.supabase.com:5432/postgres';
+const fallbackUrl = (process.env.DATABASE_URL || 'postgresql://postgres.yawerazplomaixydplyh:Swr0zw7CSc0yaaId@aws-0-us-west-2.pooler.supabase.com:6543/postgres').trim();
 
 function createPool(url) {
   const cleanUrl = url.replace(/[?&]sslmode=[^&]*/g, '');
@@ -32,25 +32,23 @@ function createPool(url) {
     connectionString: cleanUrl,
     ssl: { rejectUnauthorized: false },
     lookup: ipv4Lookup,
-    max: 5, // Keep connection count well under Supabase 15 client limit
-    connectionTimeoutMillis: 5000,
-    idleTimeoutMillis: 10000,
-    maxUses: 75 // Close and recycle socket after 75 queries to prevent session accumulation
+    max: 10,
+    connectionTimeoutMillis: 10000,
+    idleTimeoutMillis: 30000
   });
 }
 
 let pool = createPool(primaryUrl);
 
-// Verify DB connection on startup, fallback to direct hostname if pooler fails
 pool.query('SELECT NOW()')
-  .then(() => console.log('✓ Connected to database via primary URL'))
+  .then(() => console.log('✓ Connected to Supabase PostgreSQL database cleanly.'))
   .catch(err => {
-    console.warn('⚠️ Primary DB connection failed:', err.message, '--> Trying fallback connection...');
+    console.warn('⚠️ Primary DB retry:', err.message);
     pool = createPool(fallbackUrl);
     app.locals.pool = pool;
     pool.query('SELECT NOW()')
       .then(() => console.log('✓ Connected to database via fallback URL'))
-      .catch(fallbackErr => console.error('✗ All database connections failed:', fallbackErr.message));
+      .catch(fallbackErr => console.error('✗ Database connection failed:', fallbackErr.message));
   });
 
 // Middleware

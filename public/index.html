@@ -69,16 +69,19 @@
     <nav id="navbar">
         <div class="nav-container">
             <div class="nav-center-pills">
-                <a href="#about" class="nav-pill active">About</a>
-                <a href="#experience" class="nav-pill">Experience</a>
-                <a href="#certifications" class="nav-pill">Certifications</a>
-                <a href="#skills" class="nav-pill">Skills</a>
-                <a href="#achievements" class="nav-pill">Awards</a>
-                <a href="#calendar" class="nav-pill">Calendar</a>
-                <a href="#contact" class="nav-pill">Contact</a>
+                <a href="#about" class="nav-pill active" data-i18n="nav_about">About</a>
+                <a href="#experience" class="nav-pill" data-i18n="nav_experience">Experience</a>
+                <a href="#certifications" class="nav-pill" data-i18n="nav_certifications">Certifications</a>
+                <a href="#skills" class="nav-pill" data-i18n="nav_skills">Skills</a>
+                <a href="#achievements" class="nav-pill" data-i18n="nav_awards">Awards</a>
+                <a href="#contact" class="nav-pill" data-i18n="nav_contact">Contact</a>
             </div>
 
             <div class="nav-right">
+                <!-- Multi-Language Switcher -->
+                <button id="lang-toggle" class="lang-btn magnetic" title="Translate Language" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:6px 12px;border-radius:99px;font-weight:700;font-size:0.8rem;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+                    <span id="lang-flag">🇺🇸</span> <span id="lang-code">EN</span>
+                </button>
                 <!-- Theme Switcher -->
                 <button id="theme-toggle" class="theme-btn magnetic" title="Switch Color Mood">
                     <i data-lucide="palette"></i>
@@ -118,18 +121,6 @@
                 </div>
             </div>
 
-            <!-- Live Event Countdown Timer Widget Banner -->
-            <div id="countdown-banner" class="countdown-banner hidden">
-                <div class="countdown-tag"><i data-lucide="timer"></i> <span id="countdown-title-text">Upcoming Event</span></div>
-                <div class="countdown-units">
-                    <div class="countdown-unit"><span id="cd-days">00</span><label>Days</label></div>
-                    <div class="countdown-unit"><span id="cd-hours">00</span><label>Hours</label></div>
-                    <div class="countdown-unit"><span id="cd-mins">00</span><label>Mins</label></div>
-                    <div class="countdown-unit"><span id="cd-secs">00</span><label>Secs</label></div>
-                </div>
-            </div>
-
-
             <div id="dynamic-greeting-banner" class="dynamic-greeting-banner">
                 <span id="greeting-text">Welcome to my portfolio</span>
             </div>
@@ -142,9 +133,8 @@
             </div>
             <p id="hero-tagline" class="hero-desc-text typewriter-target"></p>
             <div class="hero-cta-group">
-                <a href="#experience" class="btn btn-primary magnetic">View Activities <i data-lucide="arrow-down-right"></i></a>
-                <button id="open-meeting-btn" class="btn btn-outline magnetic"><i data-lucide="calendar"></i> Schedule a Meeting</button>
-                <a href="#contact" class="btn btn-outline magnetic">Get In Touch</a>
+                <a href="#experience" class="btn btn-primary magnetic" data-i18n="btn_activities">View Activities <i data-lucide="arrow-down-right"></i></a>
+                <a href="#contact" class="btn btn-outline magnetic" data-i18n="btn_contact">Get In Touch</a>
             </div>
 
         </div>
@@ -175,8 +165,8 @@
             <div class="hollow-bg-text">ABOUT</div>
             <div class="section-container reveal">
                 <div class="section-header">
-                    <span class="section-tag laser-tag">01 // ABOUT ME</span>
-                    <h2 class="section-title scramble-link">Background & Passion</h2>
+                    <span class="section-tag laser-tag" data-i18n="tag_about">01 // ABOUT ME</span>
+                    <h2 class="section-title scramble-link" data-i18n="title_about">Background & Passion</h2>
                 </div>
                 <div class="bento-grid">
                     <div class="bento-item bento-main tilt-card reveal">
@@ -210,8 +200,8 @@
             <div class="hollow-bg-text">SCHOOL</div>
             <div class="section-container reveal">
                 <div class="section-header">
-                    <span class="section-tag laser-tag">02 // SCHOOL TIMELINE</span>
-                    <h2 class="section-title scramble-link">Clubs & Activities</h2>
+                    <span class="section-tag laser-tag" data-i18n="tag_exp">02 // SCHOOL TIMELINE</span>
+                    <h2 class="section-title scramble-link" data-i18n="title_exp">Clubs & Activities</h2>
                 </div>
                 <div class="timeline" id="experience-timeline">
                     <!-- Clubs & Activities injected dynamically -->
@@ -224,8 +214,8 @@
             <div class="hollow-bg-text">AWARDS</div>
             <div class="section-container reveal">
                 <div class="section-header">
-                    <span class="section-tag laser-tag">03 // RECOGNITION</span>
-                    <h2 class="section-title scramble-link">Achievements & Awards</h2>
+                    <span class="section-tag laser-tag" data-i18n="tag_awards">03 // RECOGNITION</span>
+                    <h2 class="section-title scramble-link" data-i18n="title_awards">Achievements & Awards</h2>
                 </div>
                 <div class="achievements-grid" id="achievements-grid">
                     <!-- Achievements injected dynamically -->
@@ -238,8 +228,8 @@
             <div class="hollow-bg-text">CREDENTIALS</div>
             <div class="section-container reveal">
                 <div class="section-header">
-                    <span class="section-tag laser-tag">04 // VERIFIED CREDENTIALS</span>
-                    <h2 class="section-title scramble-link">Certifications & Badges Shelf</h2>
+                    <span class="section-tag laser-tag" data-i18n="tag_cert">04 // VERIFIED CREDENTIALS</span>
+                    <h2 class="section-title scramble-link" data-i18n="title_cert">Certifications & Badges Shelf</h2>
                 </div>
                 <div class="certifications-grid" id="certifications-grid">
                     <!-- Certifications injected dynamically -->
@@ -266,8 +256,8 @@
             <div class="hollow-bg-text">SKILLS</div>
             <div class="section-container reveal">
                 <div class="section-header">
-                    <span class="section-tag laser-tag">05 // WHAT I BRING</span>
-                    <h2 class="section-title scramble-link">Strengths & Skills</h2>
+                    <span class="section-tag laser-tag" data-i18n="tag_skills">05 // WHAT I BRING</span>
+                    <h2 class="section-title scramble-link" data-i18n="title_skills">Strengths & Skills</h2>
                 </div>
                 <div class="skills-layout">
                     <div class="strengths-block">
@@ -291,8 +281,8 @@
             <div class="hollow-bg-text">LETTERS</div>
             <div class="section-container reveal">
                 <div class="section-header">
-                    <span class="section-tag laser-tag">06 // ENDORSEMENTS</span>
-                    <h2 class="section-title scramble-link">Recommendations &amp; Endorsements</h2>
+                    <span class="section-tag laser-tag" data-i18n="tag_recs">06 // ENDORSEMENTS</span>
+                    <h2 class="section-title scramble-link" data-i18n="title_recs">Recommendations &amp; Endorsements</h2>
                 </div>
 
                 <div class="recommendations-grid" id="recommendations-grid">
@@ -301,76 +291,14 @@
             </div>
         </section>
 
-        <!-- Academic Calendar & Events Section (Placed directly above Contact) -->
-        <section id="calendar" class="calendar-section">
-            <div class="hollow-bg-text">EVENTS</div>
-            <div class="section-container reveal">
-                <div class="section-header">
-                    <span class="section-tag laser-tag">07 // ACADEMIC SCHEDULE</span>
-                    <h2 class="section-title scramble-link">Events &amp; Activity Calendar</h2>
-                </div>
-
-                <div class="gcal-container">
-                    <!-- Google Calendar Header Controls -->
-                    <div class="gcal-header">
-                        <div class="gcal-controls">
-                            <button id="gcal-prev-week-btn" class="gcal-nav-btn" title="Previous Week">&lt;</button>
-                            <button id="gcal-next-week-btn" class="gcal-nav-btn" title="Next Week">&gt;</button>
-                            <button id="gcal-today-btn" class="gcal-today-btn">Today</button>
-                            <span id="gcal-month-year" class="gcal-month-title">September 2026</span>
-                        </div>
-
-                        <!-- Multi-View Switcher & Actions -->
-                        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                            <div class="gcal-view-switcher" style="display:inline-flex;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:3px;">
-                                <button class="gcal-view-btn active" data-view="week" style="padding:4px 12px;border:none;border-radius:6px;background:var(--accent);color:#000;font-weight:700;font-size:0.8rem;cursor:pointer;">Week</button>
-                                <button class="gcal-view-btn" data-view="list" style="padding:4px 12px;border:none;border-radius:6px;background:transparent;color:var(--text-secondary);font-weight:500;font-size:0.8rem;cursor:pointer;">Agenda List</button>
-                            </div>
-                            <button type="button" id="gcal-print-btn" class="btn btn-outline" style="padding:6px 12px;font-size:0.8rem;">🖨️ Print / PDF</button>
-                        </div>
-
-                        <div class="calendar-filter-bar" id="calendar-filter-bar" style="margin-bottom:0;">
-                            <button class="calendar-filter-btn active" data-category="all">All Events</button>
-                            <button class="calendar-filter-btn" data-category="Robotics">🤖 Robotics</button>
-                            <button class="calendar-filter-btn" data-category="FBLA">👔 FBLA</button>
-                            <button class="calendar-filter-btn" data-category="Academic">🎓 Academic</button>
-                            <button class="calendar-filter-btn" data-category="School Event">🏫 School Events</button>
-                        </div>
-                    </div>
-
-                    <!-- Weekly Schedule Grid View -->
-                    <div class="gcal-grid-wrapper">
-                        <div class="gcal-time-col">
-                            <div class="gcal-time-header"></div>
-                            <div class="gcal-time-slot">7:00 AM</div>
-                            <div class="gcal-time-slot">8:00 AM</div>
-                            <div class="gcal-time-slot">9:00 AM</div>
-                            <div class="gcal-time-slot">10:00 AM</div>
-                            <div class="gcal-time-slot">11:00 AM</div>
-                            <div class="gcal-time-slot">12:00 PM</div>
-                            <div class="gcal-time-slot">1:00 PM</div>
-                            <div class="gcal-time-slot">2:00 PM</div>
-                            <div class="gcal-time-slot">3:00 PM</div>
-                            <div class="gcal-time-slot">4:00 PM</div>
-                            <div class="gcal-time-slot">5:00 PM</div>
-                        </div>
-                        <div class="gcal-days-scroll-area">
-                            <div class="gcal-days-grid" id="gcal-days-grid">
-                                <!-- 7 Days (Sun-Sat) rendered dynamically with event pills -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
 
         <!-- Interactive FAQ Accordion Section -->
         <section id="faq" class="faq-section">
             <div class="hollow-bg-text">QUESTIONS</div>
             <div class="section-container reveal">
                 <div class="section-header">
-                    <span class="section-tag laser-tag">08 // FREQUENTLY ASKED</span>
-                    <h2 class="section-title scramble-link">Frequently Asked Questions</h2>
+                    <span class="section-tag laser-tag" data-i18n="tag_faq">07 // FREQUENTLY ASKED</span>
+                    <h2 class="section-title scramble-link" data-i18n="title_faq">Frequently Asked Questions</h2>
                 </div>
                 <div class="faq-accordion" id="faq-accordion">
                     <!-- FAQ accordion items injected dynamically -->
@@ -383,8 +311,8 @@
             <div class="hollow-bg-text">CONTACT</div>
             <div class="section-container reveal">
                 <div class="section-header">
-                    <span class="section-tag laser-tag">09 // GET IN TOUCH</span>
-                    <h2 class="section-title scramble-link">Let's Connect & Collaborate</h2>
+                    <span class="section-tag laser-tag" data-i18n="tag_contact">08 // GET IN TOUCH</span>
+                    <h2 class="section-title scramble-link" data-i18n="title_contact">Let's Connect & Collaborate</h2>
                 </div>
                 <div class="contact-content bento-grid">
                     <div class="contact-form-container tilt-card shutter-reveal">
@@ -409,20 +337,6 @@
                     </div>
                 </div>
 
-                <!-- Schedule & Calendar CTA Banner Card -->
-                <div style="margin-top:2rem;background:linear-gradient(135deg, rgba(216, 165, 62, 0.12), rgba(111, 155, 209, 0.12));border:1px solid rgba(216, 165, 62, 0.3);border-radius:16px;padding:24px 30px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.5rem;box-shadow:0 10px 30px rgba(0,0,0,0.3);">
-                    <div>
-                        <h3 style="margin:0 0 6px 0;font-size:1.25rem;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
-                            📅 Academic Calendar &amp; In-Person Meetings
-                        </h3>
-                        <p style="margin:0;font-size:0.9rem;color:var(--text-secondary);max-width:500px;line-height:1.5;">
-                            View upcoming school events, FBLA meetings, and robotics practices, or book a 1-on-1 meeting around Jordan's availability!
-                        </p>
-                    </div>
-                    <button type="button" id="open-meeting-calendar-btn" class="submit-btn magnetic" style="width:auto;padding:12px 28px;background:linear-gradient(135deg, var(--accent), var(--accent-secondary));color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.95rem;cursor:pointer;">
-                        Open Calendar &amp; Booking 📅
-                    </button>
-                </div>
             </div>
         </section>
     </main>
@@ -452,134 +366,50 @@
         </div>
     </div>
 
-    <!-- Interactive Meeting Booking Modal -->
-    <div id="meeting-modal-overlay" class="modal-overlay hidden">
-        <div class="meeting-modal-card">
-            <div class="meeting-modal-header">
-                <div>
-                    <h3 style="margin:0;font-size:1.3rem;color:var(--text-primary);">📅 Schedule a Chat &amp; View Academic Calendar</h3>
-                    <p style="margin:4px 0 0 0;font-size:0.82rem;color:var(--text-secondary);">Select a date and pick an available time slot around Jordan's schedule.</p>
-                </div>
-                <button type="button" id="meeting-modal-close" class="modal-close-btn">&times;</button>
-            </div>
-
-            <!-- Public School Events Strip -->
-            <div id="public-events-strip" style="background:rgba(216, 165, 62, 0.08);border:1px solid rgba(216, 165, 62, 0.25);border-radius:10px;padding:12px 16px;margin-bottom:18px;">
-                <h4 style="margin:0 0 6px 0;font-size:0.85rem;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;">🏫 Upcoming School &amp; Academic Events</h4>
-                <div id="public-events-list" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;font-size:0.82rem;color:var(--text-secondary);">
-                    <span>Loading calendar events...</span>
-                </div>
-            </div>
-
-            <form id="meeting-booking-form">
-                <div class="form-row-grid">
-                    <div class="form-group">
-                        <label for="meeting-name">Your Full Name *</label>
-                        <input type="text" id="meeting-name" name="name" placeholder="e.g. Dr. Jane Smith" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="meeting-email">Your Email Address *</label>
-                        <input type="email" id="meeting-email" name="email" placeholder="e.g. smith@school.edu" required>
-                    </div>
-                </div>
-
-                <div class="form-row-grid">
-                    <div class="form-group">
-                        <label for="meeting-role">Your Role / Affiliation</label>
-                        <select id="meeting-role" name="role" class="form-control">
-                            <option value="Teacher / Counselor">👨‍🏫 Teacher / Counselor</option>
-                            <option value="Club Advisor / Coach">🌿 Club Advisor / Coach</option>
-                            <option value="Mentor / Professional">💼 Mentor / Professional</option>
-                            <option value="Student / Friend">🎓 Student / Classmate</option>
-                            <option value="Visitor">👋 Visitor</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="meeting-date">Select Date *</label>
-                        <input type="date" id="meeting-date" name="meeting_date" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Available Time Slots (EST) *</label>
-                    <div id="meeting-slots-container" class="time-slots-grid">
-                        <div class="time-slots-placeholder">Please select a date above to check availability...</div>
-                    </div>
-                    <input type="hidden" id="meeting-selected-slot" name="time_slot" required>
-                </div>
-
-                <div class="form-row-grid">
-                    <div class="form-group">
-                        <label for="meeting-location">Meeting Location / Venue (In-Person) *</label>
-                        <select id="meeting-location" name="location_type" class="form-control">
-                            <option value="📍 High School Campus / Classroom">📍 High School Campus / Classroom</option>
-                            <option value="📍 Local Public Library">📍 Local Public Library</option>
-                            <option value="📍 Coffee Shop / Cafe">📍 Coffee Shop / Cafe</option>
-                            <option value="📍 Community Center / Club Lab">📍 Community Center / Club Lab</option>
-                            <option value="📍 FBLA / Robotics Practice Space">📍 FBLA / Robotics Practice Space</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="meeting-timezone">Your Time Zone</label>
-                        <select id="meeting-timezone" name="guest_timezone" class="form-control">
-                            <option value="EST (Eastern Standard Time)">EST (Eastern Time)</option>
-                            <option value="CST (Central Standard Time)">CST (Central Time)</option>
-                            <option value="MST (Mountain Standard Time)">MST (Mountain Time)</option>
-                            <option value="PST (Pacific Standard Time)">PST (Pacific Time)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="meeting-topic">Discussion Topic / Agenda *</label>
-                    <textarea id="meeting-topic" name="topic" rows="3" placeholder="What would you like to discuss during our in-person meeting? (e.g., FBLA project guidance, recommendation follow-up, robotics strategy)" required></textarea>
-                </div>
-
-                <div class="meeting-modal-footer">
-                    <button type="button" id="meeting-modal-cancel" class="btn btn-outline">Cancel</button>
-                    <button type="submit" id="meeting-submit-btn" class="btn btn-primary">Confirm &amp; Book Meeting 📅</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Event Detail & Calendar Export Modal (Google Calendar Style) -->
-    <div id="gcal-detail-modal-overlay" class="modal-overlay hidden">
-        <div class="meeting-modal-card" style="max-width:520px;">
-            <div class="meeting-modal-header" style="border-bottom:none;padding-bottom:0;">
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <span id="gcal-detail-category" class="event-category-badge">School Event</span>
-                    <span id="gcal-detail-recurring" class="event-recurring-tag" style="display:none;"><i data-lucide="repeat" style="width:10px;height:10px;"></i> Weekly</span>
-                </div>
-                <button type="button" id="gcal-detail-close" class="modal-close-btn">&times;</button>
-            </div>
+    <!-- High-Res Certificate Verifier Modal -->
+    <div id="cert-verifier-modal" class="modal-overlay hidden" style="z-index:99999;backdrop-filter:blur(12px);background:rgba(5,10,20,0.85);">
+        <div class="cert-modal-card" style="background:linear-gradient(145deg, rgba(15,23,42,0.95), rgba(10,18,32,0.98));border:1px solid rgba(216,165,62,0.4);border-radius:24px;padding:32px;max-width:680px;width:90%;margin:auto;position:relative;box-shadow:0 25px 60px rgba(0,0,0,0.8), 0 0 30px rgba(216,165,62,0.15);overflow:hidden;">
+            <button type="button" id="cert-modal-close" class="modal-close-btn" style="position:absolute;top:20px;right:20px;background:rgba(255,255,255,0.08);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease;">&times;</button>
             
-            <div style="padding:0 0 20px 0;">
-                <h2 id="gcal-detail-title" style="font-family:var(--font-heading);font-size:1.45rem;font-weight:700;color:var(--text-primary);margin:10px 0 16px 0;line-height:1.3;">Event Details</h2>
-                
-                <div class="event-meta-list" style="border-top:none;padding-top:0;font-size:0.9rem;gap:12px;">
-                    <div class="event-meta-item"><i data-lucide="calendar"></i> <span id="gcal-detail-date" style="color:var(--text-primary);font-weight:600;">Every Thursday</span></div>
-                    <div class="event-meta-item"><i data-lucide="clock"></i> <span id="gcal-detail-time" style="color:var(--text-primary);">08:00 AM - 08:30 AM</span></div>
-                    <div class="event-meta-item" id="gcal-detail-location-wrap"><i data-lucide="map-pin"></i> <span id="gcal-detail-location" style="color:var(--text-secondary);">High School Campus</span></div>
-                    <div class="event-meta-item" id="gcal-detail-status-wrap"><i data-lucide="info"></i> <span id="gcal-detail-status" style="font-weight:700;color:#2ed573;">🟢 Confirmed</span></div>
-                    <div class="event-meta-item" id="gcal-detail-host-wrap"><i data-lucide="user"></i> <span id="gcal-detail-host" style="color:var(--text-secondary);">Mrs. Davila (Club Advisor)</span></div>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                <span class="cert-badge-icon" style="font-size:2rem;">🎖️</span>
+                <div>
+                    <span style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent);font-weight:700;">Official Credential Verification</span>
+                    <h2 id="cert-modal-title" style="margin:2px 0 0 0;font-family:var(--font-heading);font-size:1.4rem;color:#fff;">Certificate Title</h2>
                 </div>
-
-                <p id="gcal-detail-desc" style="font-size:0.88rem;color:var(--text-secondary);line-height:1.6;margin:18px 0 0 0;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;"></p>
             </div>
 
-            <div class="meeting-modal-footer" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;">
-                <button type="button" id="gcal-rsvp-btn" class="btn btn-outline" style="font-size:0.85rem;padding:8px 16px;border-color:var(--accent);color:var(--accent);">
-                    ✋ I'm Attending (RSVP)
-                </button>
-                <div style="display:flex;gap:8px;">
-                    <button type="button" id="gcal-export-ical" class="btn btn-outline" style="font-size:0.85rem;padding:8px 14px;">
-                        📥 iCal (.ics)
-                    </button>
-                    <a id="gcal-export-gcal" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="font-size:0.85rem;padding:8px 16px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
-                        📅 Google Calendar
-                    </a>
+            <!-- High-Res Certificate Preview Box with Glowing Stamp -->
+            <div style="position:relative;width:100%;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.12);background:#070d18;margin-bottom:20px;min-height:240px;display:flex;align-items:center;justify-content:center;">
+                <img id="cert-modal-img" src="" alt="Certificate High-Res Image" style="width:100%;max-height:360px;object-fit:contain;display:block;">
+                
+                <!-- Glowing Verified Stamp -->
+                <div class="verified-stamp" style="position:absolute;bottom:20px;right:20px;background:rgba(16,185,129,0.15);border:2px solid #10b981;color:#10b981;padding:8px 18px;border-radius:8px;font-weight:800;font-size:0.85rem;letter-spacing:0.12em;text-transform:uppercase;box-shadow:0 0 20px rgba(16,185,129,0.4), inset 0 0 10px rgba(16,185,129,0.2);backdrop-filter:blur(6px);transform:rotate(-6deg);display:flex;align-items:center;gap:6px;">
+                    <span style="font-size:1.1rem;">✓</span> VERIFIED CREDENTIAL
                 </div>
+            </div>
+
+            <!-- Credential Details Grid -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px;font-size:0.85rem;">
+                <div>
+                    <span style="color:var(--text-secondary);display:block;font-size:0.75rem;">Issuing Organization:</span>
+                    <strong id="cert-modal-issuer" style="color:#fff;font-size:0.95rem;">Organization</strong>
+                </div>
+                <div>
+                    <span style="color:var(--text-secondary);display:block;font-size:0.75rem;">Issue Date:</span>
+                    <strong id="cert-modal-date" style="color:#fff;font-size:0.95rem;">Date</strong>
+                </div>
+                <div>
+                    <span style="color:var(--text-secondary);display:block;font-size:0.75rem;">Credential ID:</span>
+                    <strong id="cert-modal-id" style="color:var(--accent);font-family:monospace;font-size:0.88rem;">CERT-VERIFIED-2026</strong>
+                </div>
+            </div>
+
+            <div style="margin-top:20px;display:flex;justify-content:flex-end;gap:12px;">
+                <button type="button" id="cert-modal-dismiss" class="btn btn-outline" style="padding:8px 20px;">Close</button>
+                <a id="cert-modal-verify-link" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="padding:8px 22px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;">
+                    Verify Original Link ↗
+                </a>
             </div>
         </div>
     </div>

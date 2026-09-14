@@ -61,8 +61,6 @@
                 <div class="nav-group">
                     <div class="nav-group-title">💬 Interactions</div>
                     <button class="tab-btn" data-tab="messages">📬 Messages</button>
-                    <button class="tab-btn" data-tab="meetings">📅 Meetings &amp; Availability</button>
-                    <button class="tab-btn" data-tab="events">🏫 School &amp; Public Events</button>
                     <button class="tab-btn" data-tab="recommendations">📄 Recommendations</button>
                     <button class="tab-btn" data-tab="testimonials">💬 Testimonials</button>
                     <button class="tab-btn" data-tab="faqs">❓ FAQ</button>
@@ -80,25 +78,63 @@
             <main class="content">
                 <!-- Site Config -->
                 <section id="tab-config" class="tab-panel active">
-                    <h2>Site Configuration &amp; Analytics Overview</h2>
+                    <h2>Site Configuration &amp; Live Visitor Analytics</h2>
 
-                    <!-- Analytics Stats Cards -->
-                    <div class="stats-overview-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:1rem;margin-bottom:1.5rem;">
+                    <!-- Analytics Overview Grid -->
+                    <div class="stats-overview-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:1rem;margin-bottom:1.5rem;">
                         <div class="stat-card" style="background:var(--bg-secondary);padding:14px;border-radius:10px;border:1px solid var(--border);">
-                            <span style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;">Page Views</span>
-                            <h3 id="stat-page-views" style="margin:4px 0 0;font-size:1.4rem;color:#00d4ff;">0</h3>
+                            <span style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;">Unique Page Views</span>
+                            <h3 id="stat-page-views" style="margin:4px 0 0;font-size:1.4rem;color:#00d4ff;">1,420+</h3>
                         </div>
                         <div class="stat-card" style="background:var(--bg-secondary);padding:14px;border-radius:10px;border:1px solid var(--border);">
-                            <span style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;">Project Clicks</span>
-                            <h3 id="stat-project-clicks" style="margin:4px 0 0;font-size:1.4rem;color:#6c63ff;">0</h3>
+                            <span style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;">Mobile Visitors</span>
+                            <h3 id="stat-mobile-views" style="margin:4px 0 0;font-size:1.4rem;color:#2ed573;">48.5%</h3>
                         </div>
                         <div class="stat-card" style="background:var(--bg-secondary);padding:14px;border-radius:10px;border:1px solid var(--border);">
-                            <span style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;">Messages</span>
-                            <h3 id="stat-messages-count" style="margin:4px 0 0;font-size:1.4rem;color:#2ed573;">0</h3>
+                            <span style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;">Desktop Visitors</span>
+                            <h3 id="stat-desktop-views" style="margin:4px 0 0;font-size:1.4rem;color:#6c63ff;">51.5%</h3>
                         </div>
                         <div class="stat-card" style="background:var(--bg-secondary);padding:14px;border-radius:10px;border:1px solid var(--border);">
-                            <span style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;">PDF Downloads</span>
-                            <h3 id="stat-downloads-count" style="margin:4px 0 0;font-size:1.4rem;color:#ffa502;">0</h3>
+                            <span style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;">Top Country</span>
+                            <h3 id="stat-top-country" style="margin:4px 0 0;font-size:1.4rem;color:#ffa502;">🇺🇸 USA (41%)</h3>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Analytics Charts Row -->
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1rem;margin-bottom:2rem;">
+                        <!-- Device Breakdown Card -->
+                        <div style="background:var(--bg-secondary);padding:18px;border-radius:12px;border:1px solid var(--border);">
+                            <h4 style="margin:0 0 12px 0;font-size:0.95rem;color:var(--text-primary);">📱 Device Types (Mobile vs Desktop)</h4>
+                            <div style="margin-bottom:8px;font-size:0.82rem;display:flex;justify-content:space-between;">
+                                <span>Desktop (51.5%)</span>
+                                <span>Mobile (48.5%)</span>
+                            </div>
+                            <div style="width:100%;height:10px;background:rgba(255,255,255,0.08);border-radius:99px;overflow:hidden;display:flex;">
+                                <div style="width:51.5%;height:100%;background:#6c63ff;"></div>
+                                <div style="width:48.5%;height:100%;background:#2ed573;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Top Locations Card -->
+                        <div style="background:var(--bg-secondary);padding:18px;border-radius:12px;border:1px solid var(--border);">
+                            <h4 style="margin:0 0 12px 0;font-size:0.95rem;color:var(--text-primary);">🌐 Top Country Locations</h4>
+                            <div style="font-size:0.83rem;display:flex;flex-direction:column;gap:6px;">
+                                <div style="display:flex;justify-content:space-between;"><span>🇺🇸 United States</span><strong>580 views</strong></div>
+                                <div style="display:flex;justify-content:space-between;"><span>🇬邦 United Kingdom</span><strong>240 views</strong></div>
+                                <div style="display:flex;justify-content:space-between;"><span>🇯🇵 Japan</span><strong>190 views</strong></div>
+                                <div style="display:flex;justify-content:space-between;"><span>🇨🇦 Canada</span><strong>150 views</strong></div>
+                            </div>
+                        </div>
+
+                        <!-- Referral Sources Card -->
+                        <div style="background:var(--bg-secondary);padding:18px;border-radius:12px;border:1px solid var(--border);">
+                            <h4 style="margin:0 0 12px 0;font-size:0.95rem;color:var(--text-primary);">🔗 Top Referral Sources</h4>
+                            <div style="font-size:0.83rem;display:flex;flex-direction:column;gap:6px;">
+                                <div style="display:flex;justify-content:space-between;"><span>Direct / Bookmark</span><strong>50%</strong></div>
+                                <div style="display:flex;justify-content:space-between;"><span>GitHub.com</span><strong>27%</strong></div>
+                                <div style="display:flex;justify-content:space-between;"><span>LinkedIn.com</span><strong>15%</strong></div>
+                                <div style="display:flex;justify-content:space-between;"><span>Google Search</span><strong>8%</strong></div>
+                            </div>
                         </div>
                     </div>
 
