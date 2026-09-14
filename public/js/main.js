@@ -534,6 +534,71 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.lucide) lucide.createIcons();
     }
 
+    function renderGrades(gradesData) {
+        const gradesSection = document.getElementById('grades');
+        if (!gradesSection) return;
+
+        if (!gradesData || !gradesData.show_grades_publicly) {
+            gradesSection.classList.add('hidden');
+            gradesSection.style.display = 'none';
+            toggleSectionVisibility('grades', false);
+            return;
+        }
+
+        const grades = gradesData.grades || [];
+        const publishedGrades = grades.filter(g => g.is_published !== false);
+
+        if (publishedGrades.length === 0 && !gradesData.gpa_unweighted && !gradesData.gpa_weighted) {
+            gradesSection.classList.add('hidden');
+            gradesSection.style.display = 'none';
+            toggleSectionVisibility('grades', false);
+            return;
+        }
+
+        gradesSection.classList.remove('hidden');
+        gradesSection.style.display = '';
+        toggleSectionVisibility('grades', true);
+
+        // Render GPA display text
+        const gpaTextEl = document.getElementById('gpa-display-text');
+        if (gpaTextEl) {
+            const parts = [];
+            if (gradesData.gpa_unweighted) parts.push(`${gradesData.gpa_unweighted} Unweighted`);
+            if (gradesData.gpa_weighted) parts.push(`${gradesData.gpa_weighted} Weighted`);
+            gpaTextEl.textContent = parts.join(' | ') || 'GPA Recorded';
+        }
+
+        // Render grades grid
+        const grid = document.getElementById('grades-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        publishedGrades.forEach(grade => {
+            const card = document.createElement('div');
+            card.className = 'grade-card tilt-card reveal';
+            card.style.cssText = 'background:linear-gradient(145deg, rgba(15,23,42,0.8), rgba(10,18,32,0.9));border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:18px;display:flex;flex-direction:column;justify-content:space-between;gap:12px;box-shadow:0 8px 24px rgba(0,0,0,0.3);';
+            card.innerHTML = `
+                <div>
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
+                        <span style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">${grade.school_year || ''} ${grade.term ? '• ' + grade.term : ''}</span>
+                        <span style="background:rgba(46,213,115,0.15);border:1px solid #2ed573;color:#2ed573;padding:2px 10px;border-radius:99px;font-weight:700;font-size:0.85rem;">Grade: ${grade.letter_grade || 'A'} ${grade.gpa_points ? `(${grade.gpa_points})` : ''}</span>
+                    </div>
+                    <h4 style="font-family:var(--font-heading);font-size:1.1rem;margin:0;color:#fff;">${grade.subject}</h4>
+                </div>
+                ${grade.attachment_url ? `
+                    <div style="margin-top:auto;padding-top:10px;border-top:1px dashed rgba(255,255,255,0.1);">
+                        <a href="${grade.attachment_url}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);font-size:0.82rem;text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-weight:600;">
+                            <i data-lucide="file-text"></i> View Attached Report Card ↗
+                        </a>
+                    </div>
+                ` : ''}
+            `;
+            grid.appendChild(card);
+        });
+
+        if (window.lucide) lucide.createIcons();
+    }
+
     async function initCountdownWidget() {
         const banner = document.getElementById('countdown-banner');
         const titleEl = document.getElementById('countdown-title-text');
