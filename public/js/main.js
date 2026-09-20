@@ -580,26 +580,26 @@ document.addEventListener('DOMContentLoaded', () => {
         recommendations.forEach(rec => {
             const card = document.createElement('div');
             card.className = 'rec-card tilt-card reveal';
-            card.style.cssText = 'background:linear-gradient(145deg, rgba(15,23,42,0.85), rgba(10,18,32,0.95));border:1px solid rgba(216,165,62,0.25);border-radius:18px;padding:24px;display:flex;flex-direction:column;justify-content:space-between;gap:16px;box-shadow:0 12px 32px rgba(0,0,0,0.4);position:relative;overflow:hidden;';
+            card.style.cssText = 'background:linear-gradient(145deg, rgba(15,23,42,0.85), rgba(10,18,32,0.95));border:1px solid rgba(216,165,62,0.25);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,0.35);position:relative;overflow:hidden;';
 
             card.innerHTML = `
-                <div style="position:absolute;top:0;left:0;width:4px;height:100%;background:linear-gradient(180deg, var(--accent), var(--accent-secondary));"></div>
+                <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg, var(--accent), var(--accent-secondary));"></div>
                 
                 <div>
-                    <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:8px;">
-                        <span style="font-size:1.8rem;opacity:0.25;color:var(--accent);font-family:serif;">“</span>
+                    <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:2px;">
+                        <span style="font-size:1.3rem;opacity:0.25;color:var(--accent);font-family:serif;line-height:1;">“</span>
                     </div>
-                    <p style="font-size:0.98rem;line-height:1.6;color:var(--text-primary);font-style:italic;margin:0 0 16px 0;">"${escapeHTML(rec.quote_excerpt)}"</p>
+                    <p style="font-size:0.88rem;line-height:1.5;color:var(--text-primary);font-style:italic;margin:0 0 10px 0;">"${escapeHTML(rec.quote_excerpt)}"</p>
                 </div>
 
-                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08);">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);">
                     <div>
-                        <h4 style="margin:0;font-family:var(--font-heading);font-size:1.05rem;color:#fff;">${escapeHTML(rec.recommender_name)}</h4>
-                        <span style="display:block;font-size:0.82rem;color:var(--text-secondary);">${escapeHTML(rec.recommender_title || '')} ${rec.school_or_org ? '• ' + escapeHTML(rec.school_or_org) : ''}</span>
+                        <h4 style="margin:0;font-family:var(--font-heading);font-size:0.95rem;color:#fff;">${escapeHTML(rec.recommender_name)}</h4>
+                        <span style="display:block;font-size:0.78rem;color:var(--text-secondary);">${escapeHTML(rec.recommender_title || '')} ${rec.school_or_org ? '• ' + escapeHTML(rec.school_or_org) : ''}</span>
                     </div>
 
                     ${rec.letter_pdf_url ? `
-                        <a href="${rec.letter_pdf_url}" target="_blank" rel="noopener noreferrer" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:8px 14px;border-radius:10px;font-size:0.8rem;text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-weight:600;white-space:nowrap;transition:all 0.2s ease;">
+                        <a href="${rec.letter_pdf_url}" target="_blank" rel="noopener noreferrer" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:6px 10px;border-radius:8px;font-size:0.75rem;text-decoration:none;display:inline-flex;align-items:center;gap:5px;font-weight:600;white-space:nowrap;transition:all 0.2s ease;">
                             <i data-lucide="file-text"></i> Full Letter (PDF) ↗
                         </a>
                     ` : ''}
