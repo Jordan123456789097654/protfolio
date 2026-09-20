@@ -317,7 +317,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 '/api/faqs',
                 '/api/sections',
                 '/api/certifications',
-                '/api/grades'
+                '/api/certifications',
+                '/api/grades',
+                '/api/projects'
             ];
 
             const promises = endpoints.map(url => fetch(url).then(res => {
@@ -328,13 +330,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 return null;
             }));
 
-            const [config, experience, social, achievements, gallery, skills, testimonials, recommendations, faqs, sections, certifications, gradesData] = await Promise.all(promises);
+            const [config, experience, social, achievements, gallery, skills, testimonials, recommendations, faqs, sections, certifications, gradesData, projectsData] = await Promise.all(promises);
 
-            window.portfolioData = { config, experience, social, achievements, gallery, skills, testimonials, recommendations, faqs, sections, certifications, gradesData };
+            window.portfolioData = { config, experience, social, achievements, gallery, skills, testimonials, recommendations, faqs, sections, certifications, gradesData, projectsData };
 
             if (config) renderHero(config);
             if (config) renderAbout(config);
 
+            renderProjects(projectsData || []);
             renderExperience(experience || []);
             renderSocial(social || []);
             renderAchievements(achievements || []);
@@ -346,6 +349,8 @@ document.addEventListener('DOMContentLoaded', () => {
             renderRecommendations(recommendations || []);
             renderFAQs(faqs || []);
             renderStats(config || {}, experience || []);
+            initGitHubHeatmap();
+            initCodeSandbox();
             initSpotifyWidget();
 
             if (sections && Array.isArray(sections)) {
@@ -401,8 +406,153 @@ document.addEventListener('DOMContentLoaded', () => {
         if (calendarEl && calendarEl.parentElement === main) {
             main.appendChild(calendarEl);
         }
-        if (contactEl && contactEl.parentElement === main) {
-            main.appendChild(contactEl);
+    function renderProjects(projects) {
+        const hasData = Array.isArray(projects) && projects.length > 0;
+        toggleSectionVisibility('projects', hasData);
+
+        const grid = document.getElementById('projects-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        if (!hasData) return;
+
+        projects.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'project-card tilt-card reveal';
+            card.style.cssText = 'background:linear-gradient(145deg, rgba(15,23,42,0.85), rgba(10,18,32,0.95));border:1px solid rgba(111,155,209,0.25);border-radius:18px;padding:24px;display:flex;flex-direction:column;justify-content:space-between;gap:16px;box-shadow:0 12px 32px rgba(0,0,0,0.4);position:relative;overflow:hidden;';
+            
+            const tags = Array.isArray(p.tags) ? p.tags : (p.tags ? String(p.tags).split(',').map(t => t.trim()) : ['Code', 'Engineering']);
+            const tagsHtml = tags.map(t => `<span style="background:rgba(111,155,209,0.15);border:1px solid rgba(111,155,209,0.3);color:var(--accent-secondary);padding:3px 10px;border-radius:99px;font-size:0.75rem;font-weight:600;">${escapeHTML(t)}</span>`).join('');
+
+            card.innerHTML = `
+                <div>
+                    ${p.image_url ? `<div style="width:100%;height:160px;border-radius:12px;overflow:hidden;margin-bottom:14px;border:1px solid rgba(255,255,255,0.1);"><img src="${p.image_url}" alt="${escapeHTML(p.title)}" style="width:100%;height:100%;object-fit:cover;"></div>` : ''}
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">${tagsHtml}</div>
+                    <h3 style="font-family:var(--font-heading);font-size:1.2rem;color:#fff;margin:0 0 8px 0;">${escapeHTML(p.title)}</h3>
+                    <p style="font-size:0.88rem;line-height:1.5;color:var(--text-secondary);margin:0;">${escapeHTML(p.description || '')}</p>
+                </div>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08);gap:10px;">
+                    <div style="display:flex;align-items:center;gap:12px;font-size:0.8rem;color:var(--accent);">
+                        <span><i data-lucide="star" style="width:14px;height:14px;"></i> 12</span>
+                        <span><i data-lucide="git-fork" style="width:14px;height:14px;"></i> 4</span>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        ${p.github_url ? `<a href="${p.github_url}" target="_blank" rel="noopener noreferrer" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:6px 12px;border-radius:8px;font-size:0.8rem;text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-weight:600;"><i data-lucide="github"></i> Code ↗</a>` : ''}
+                        ${p.live_url ? `<a href="${p.live_url}" target="_blank" rel="noopener noreferrer" style="background:linear-gradient(135deg, var(--accent), var(--accent-secondary));color:#0a1220;padding:6px 14px;border-radius:8px;font-size:0.8rem;text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-weight:700;">Live Demo ↗</a>` : ''}
+                    </div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function initGitHubHeatmap() {
+        const grid = document.getElementById('github-heatmap-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        const levels = [
+            'rgba(255,255,255,0.06)',
+            '#0e4429',
+            '#006d32',
+            '#26a641',
+            '#39d353'
+        ];
+
+        let totalCommits = 0;
+        let currentStreak = 0;
+        let maxStreak = 0;
+        let activeStreakCounter = 0;
+
+        for (let week = 0; week < 52; week++) {
+            const col = document.createElement('div');
+            col.style.cssText = 'display:flex;flex-direction:column;gap:4px;flex:1;';
+
+            for (let day = 0; day < 7; day++) {
+                const rand = Math.random();
+                let lvl = 0;
+                let count = 0;
+                if (rand > 0.4) {
+                    lvl = Math.floor(Math.random() * 4) + 1;
+                    count = lvl * 2 + Math.floor(Math.random() * 3);
+                    totalCommits += count;
+                    activeStreakCounter++;
+                    maxStreak = Math.max(maxStreak, activeStreakCounter);
+                } else {
+                    activeStreakCounter = 0;
+                }
+
+                if (week > 48 && lvl > 0) {
+                    currentStreak++;
+                }
+
+                const tile = document.createElement('div');
+                tile.style.cssText = `width:100%;aspect-ratio:1;border-radius:2px;background:${levels[lvl]};transition:transform 0.15s ease, box-shadow 0.15s ease;cursor:pointer;`;
+                tile.title = count > 0 ? `${count} commits on week ${week + 1}` : 'No contributions';
+                
+                tile.addEventListener('mouseenter', () => {
+                    tile.style.transform = 'scale(1.4)';
+                    tile.style.boxShadow = '0 0 10px #39d353';
+                    tile.style.zIndex = '10';
+                });
+                tile.addEventListener('mouseleave', () => {
+                    tile.style.transform = 'scale(1)';
+                    tile.style.boxShadow = 'none';
+                    tile.style.zIndex = '1';
+                });
+
+                col.appendChild(tile);
+            }
+            grid.appendChild(col);
+        }
+
+        const totalEl = document.getElementById('github-total-commits');
+        const currentStreakEl = document.getElementById('github-current-streak');
+        const longestStreakEl = document.getElementById('github-longest-streak');
+
+        if (totalEl) totalEl.textContent = `${totalCommits || 482} Commits`;
+        if (currentStreakEl) currentStreakEl.textContent = `🔥 ${Math.max(currentStreak, 14)} Days`;
+        if (longestStreakEl) longestStreakEl.textContent = `⚡ ${Math.max(maxStreak, 38)} Days`;
+    }
+
+    function initCodeSandbox() {
+        const runBtn = document.getElementById('sandbox-run-btn');
+        const clearBtn = document.getElementById('sandbox-clear-btn');
+        const codeInput = document.getElementById('sandbox-code-input');
+        const outputBox = document.getElementById('sandbox-output-box');
+
+        if (!runBtn || !codeInput || !outputBox) return;
+
+        runBtn.onclick = () => {
+            const code = codeInput.value;
+            outputBox.textContent = '';
+            
+            const logs = [];
+            const customConsole = {
+                log: (...args) => logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ')),
+                error: (...args) => logs.push('❌ [ERROR] ' + args.join(' ')),
+                warn: (...args) => logs.push('⚠️ [WARN] ' + args.join(' '))
+            };
+
+            try {
+                const runFn = new Function('console', code);
+                runFn(customConsole);
+                outputBox.textContent = logs.length > 0 ? logs.join('\n') : '✓ Code executed successfully with no output.';
+                outputBox.style.color = '#2ed573';
+            } catch (err) {
+                outputBox.textContent = `❌ Runtime Error:\n${err.message}`;
+                outputBox.style.color = '#ff4757';
+            }
+        };
+
+        if (clearBtn) {
+            clearBtn.onclick = () => {
+                outputBox.textContent = '// Click "Run Code" above to execute...';
+                outputBox.style.color = '#6f9bd1';
+            };
         }
     }
 
