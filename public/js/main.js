@@ -1592,9 +1592,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
     }, { passive: true });
 
-    // ── 3D Parallax Tilt & Color-Shifting Tint ───────────────────
+    // ── 3D Parallax Tilt & Spotlight Aura ───────────────────
     function init3DTilt() {
-        const cards = document.querySelectorAll('.tilt-card, .timeline-content');
+        const cards = document.querySelectorAll('.tilt-card, .timeline-content, .rec-card, .cert-card, .bento-item, .project-card');
         cards.forEach(card => {
             let ticking = false;
             let lastEvent = null;
@@ -1611,10 +1611,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     const centerX = rect.width / 2;
                     const centerY = rect.height / 2;
 
-                    const rotateX = ((y - centerY) / centerY) * -10;
-                    const rotateY = ((x - centerX) / centerX) * 10;
+                    const rotateX = ((y - centerY) / centerY) * -8;
+                    const rotateY = ((x - centerX) / centerX) * 8;
 
-                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-6px) scale(1.02)`;
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px) scale(1.015)`;
                     card.style.setProperty('--card-mouse-x', `${x}px`);
                     card.style.setProperty('--card-mouse-y', `${y}px`);
                     ticking = false;
@@ -1682,7 +1682,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ── Text Scramble Disabled for Clean Hover Typography ────────
+    // ── Text Scramble Disabled for Clean Typography ───────────────
     function initTextScramble() {}
 
     // ── Palette Mood Theme Switcher ───────────────────────────────
@@ -1997,7 +1997,118 @@ document.addEventListener('DOMContentLoaded', () => {
         setInterval(poll, 15000);
     }
 
-    function initCursorHover() {}
+    function initCursorHover() {
+        let cursorGlow = document.getElementById('cursor-glow');
+        if (!cursorGlow) {
+            cursorGlow = document.createElement('div');
+            cursorGlow.id = 'cursor-glow';
+            cursorGlow.style.cssText = 'position:fixed;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle, rgba(216,165,62,0.12) 0%, rgba(111,155,209,0.05) 50%, transparent 70%);pointer-events:none;transform:translate(-50%, -50%);z-index:99999;transition:width 0.3s ease, height 0.3s ease, opacity 0.3s ease;opacity:0;will-change:transform, top, left;';
+            document.body.appendChild(cursorGlow);
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            cursorGlow.style.left = e.clientX + 'px';
+            cursorGlow.style.top = e.clientY + 'px';
+            cursorGlow.style.opacity = '1';
+        });
+
+        document.addEventListener('mouseleave', () => {
+            cursorGlow.style.opacity = '0';
+        });
+
+        document.querySelectorAll('a, button, .tilt-card, .rec-card, .cert-card, .nav-pill').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursorGlow.style.width = '380px';
+                cursorGlow.style.height = '380px';
+            });
+            el.addEventListener('mouseleave', () => {
+                cursorGlow.style.width = '280px';
+                cursorGlow.style.height = '280px';
+            });
+        });
+    }
+
+    function initRippleEffect() {
+        document.querySelectorAll('.btn, .nav-pill, .magnetic, .lang-btn, .theme-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const rect = this.getBoundingClientRect();
+                const circle = document.createElement('span');
+                const diameter = Math.max(rect.width, rect.height);
+                const radius = diameter / 2;
+
+                circle.style.width = circle.style.height = `${diameter}px`;
+                circle.style.left = `${e.clientX - rect.left - radius}px`;
+                circle.style.top = `${e.clientY - rect.top - radius}px`;
+                circle.className = 'ripple-wave';
+                circle.style.cssText += 'position:absolute;border-radius:50%;background:rgba(255,255,255,0.35);transform:scale(0);animation:rippleAnimation 0.6s linear;pointer-events:none;';
+
+                const existingRipple = this.querySelector('.ripple-wave');
+                if (existingRipple) existingRipple.remove();
+
+                if (getComputedStyle(this).position === 'static') {
+                    this.style.position = 'relative';
+                }
+                this.appendChild(circle);
+                setTimeout(() => circle.remove(), 600);
+            });
+        });
+    }
+
+    function initRollingCounters() {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const el = entry.target;
+                    if (el.dataset.animated) return;
+                    const text = el.textContent.trim();
+                    const match = text.match(/^([^\d.]*)([\d.]+)(.*)$/);
+                    if (match) {
+                        el.dataset.animated = 'true';
+                        const prefix = match[1] || '';
+                        const targetNum = parseFloat(match[2]);
+                        const suffix = match[3] || '';
+                        const decimals = match[2].includes('.') ? match[2].split('.')[1].length : 0;
+                        const duration = 1200;
+                        const startTime = performance.now();
+
+                        function updateCount(currentTime) {
+                            const elapsed = currentTime - startTime;
+                            const progress = Math.min(elapsed / duration, 1);
+                            const easeProgress = 1 - Math.pow(1 - progress, 3);
+                            const currentVal = (targetNum * easeProgress).toFixed(decimals);
+                            el.textContent = `${prefix}${currentVal}${suffix}`;
+
+                            if (progress < 1) {
+                                requestAnimationFrame(updateCount);
+                            } else {
+                                el.textContent = text;
+                            }
+                        }
+                        requestAnimationFrame(updateCount);
+                    }
+                }
+            });
+        }, { threshold: 0.3 });
+
+        document.querySelectorAll('.unweighted-gpa, .weighted-gpa, .gpa-val, .stat-value, .stat-number').forEach(el => observer.observe(el));
+    }
+
+    function initScrollTimelinePulses() {
+        const items = document.querySelectorAll('.timeline-item');
+        if (items.length === 0) return;
+
+        window.addEventListener('scroll', () => {
+            const viewportCenter = window.innerHeight / 2;
+            items.forEach(item => {
+                const rect = item.getBoundingClientRect();
+                if (rect.top <= viewportCenter + 120 && rect.bottom >= viewportCenter - 120) {
+                    item.classList.add('timeline-pulse-active');
+                } else {
+                    item.classList.remove('timeline-pulse-active');
+                }
+            });
+        }, { passive: true });
+    }
 
     function initRealtimeSync() {
         if (!window.EventSource) return;
@@ -2862,19 +2973,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ── Smooth View Transitions ─────────────────────────────────────────
+    // ── Ultra-Smooth View & Anchor Scrolling ────────────────────────────
     function initSmoothViewTransitions() {
-        document.querySelectorAll('.nav-pill, .footer-logo, .back-to-top').forEach(link => {
+        document.querySelectorAll('.nav-pill, .footer-logo, .back-to-top, a[href^="#"]').forEach(link => {
             link.addEventListener('click', (e) => {
                 const targetId = link.getAttribute('href');
-                if (targetId && targetId.startsWith('#')) {
+                if (targetId && targetId.startsWith('#') && targetId.length > 1) {
                     const targetEl = document.querySelector(targetId);
                     if (targetEl) {
-                        if (document.startViewTransition) {
-                            e.preventDefault();
-                            document.startViewTransition(() => {
-                                targetEl.scrollIntoView({ behavior: 'smooth' });
-                            });
+                        e.preventDefault();
+                        if (lenis) {
+                            lenis.scrollTo(targetEl, { offset: -70, duration: 1.1 });
+                        } else {
+                            targetEl.scrollIntoView({ behavior: 'smooth' });
                         }
                     }
                 }
@@ -2908,6 +3019,9 @@ document.addEventListener('DOMContentLoaded', () => {
             init3DTilt();
             initMagneticElements();
             initTextScramble();
+            initRippleEffect();
+            initRollingCounters();
+            initScrollTimelinePulses();
             initThemeSwitcher();
             initParticleCanvas();
             initSoundEvents();

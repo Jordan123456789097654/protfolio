@@ -3522,6 +3522,56 @@ section:has(.reveal.active) .hollow-bg-text {
     flex-shrink: 0;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   Advanced Animation & Micro-Interaction Enhancements
+   ══════════════════════════════════════════════════════════════════ */
+@keyframes rippleAnimation {
+    to {
+        transform: scale(3.5);
+        opacity: 0;
+    }
+}
+
+.tilt-card, .rec-card, .cert-card, .bento-item, .project-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.tilt-card::before, .rec-card::before, .cert-card::before, .bento-item::before, .project-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(400px circle at var(--card-mouse-x, 50%) var(--card-mouse-y, 50%), rgba(216, 165, 62, 0.14), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.tilt-card:hover::before, .rec-card:hover::before, .cert-card:hover::before, .bento-item:hover::before, .project-card:hover::before {
+    opacity: 1;
+}
+
+.timeline-dot {
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.timeline-pulse-active .timeline-dot {
+    box-shadow: 0 0 0 8px rgba(216, 165, 62, 0.25), 0 0 20px rgba(216, 165, 62, 0.8) !important;
+    background: var(--accent) !important;
+    transform: scale(1.25);
+}
+
+.scramble-link {
+    cursor: default;
+    transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+
+.scramble-link:hover {
+    color: var(--accent);
+    text-shadow: 0 0 12px var(--accent-glow);
+}
+
 
 
 
