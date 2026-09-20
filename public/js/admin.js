@@ -112,6 +112,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Kyro AI Report Card Scanner listeners
+    const aiReportInput = document.getElementById('ai-report-card-input');
+    const aiReportDropzone = document.getElementById('ai-report-card-dropzone');
+    if (aiReportInput && aiReportDropzone) {
+        aiReportDropzone.addEventListener('click', () => aiReportInput.click());
+        aiReportInput.addEventListener('change', () => {
+            if (aiReportInput.files && aiReportInput.files.length > 0) {
+                handleAIReportCardScan(aiReportInput.files);
+            }
+        });
+        ['dragenter', 'dragover'].forEach(evt => {
+            aiReportDropzone.addEventListener(evt, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                aiReportDropzone.style.borderColor = 'var(--accent)';
+            });
+        });
+        ['dragleave', 'drop'].forEach(evt => {
+            aiReportDropzone.addEventListener(evt, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                aiReportDropzone.style.borderColor = 'rgba(255,255,255,0.2)';
+            });
+        });
+        aiReportDropzone.addEventListener('drop', (e) => {
+            const files = e.dataTransfer?.files;
+            if (files && files.length > 0) {
+                handleAIReportCardScan(files);
+            }
+        });
+    }
+
     document.getElementById('password-form').addEventListener('submit', handlePasswordChange);
     document.getElementById('export-btn').addEventListener('click', handleExport);
     document.getElementById('spotify-connect-btn').addEventListener('click', () => {
@@ -3451,6 +3483,59 @@ function resetGradeForm() {
     document.getElementById('grade-submit-btn').textContent = 'Add Course Grade';
     document.getElementById('grade-cancel-btn').classList.add('hidden');
 }
+
+async function handleAIReportCardScan(files) {
+    const statusBox = document.getElementById('ai-scan-status');
+    const statusText = document.getElementById('ai-scan-status-text');
+
+    if (statusBox) statusBox.classList.remove('hidden');
+    if (statusText) statusText.textContent = '✨ Kyro AI Vision scanning report card image...';
+
+    try {
+        const formData = new FormData();
+        Array.from(files).forEach(file => formData.append('files', file));
+
+        const res = await fetch('/admin/ai/scan-report-card', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            showToast(data.message || '✨ Report card scanned and grades added!', 'success');
+            await loadGrades();
+            triggerAutoGpaCalc(false);
+            await handleGradesVisibilitySave();
+        } else {
+            showToast(data.error || 'Error scanning report card image', 'error');
+        }
+    } catch (e) {
+        console.error('AI Report Card Scan Error:', e);
+        showToast('Error scanning report card image', 'error');
+    } finally {
+        if (statusBox) statusBox.classList.add('hidden');
+    }
+}
+
+// 📋 Global Copy/Paste Image Listener for Admin Panel & Report Card Scanner
+document.addEventListener('paste', (e) => {
+    const clipboardData = e.clipboardData || window.clipboardData;
+    if (!clipboardData || !clipboardData.items) return;
+
+    const imageFiles = [];
+    for (const item of clipboardData.items) {
+        if (item.type && item.type.indexOf('image') !== -1) {
+            const blob = item.getAsFile();
+            if (blob) imageFiles.push(blob);
+        }
+    }
+
+    if (imageFiles.length > 0) {
+        e.preventDefault();
+        showToast(`📋 Pasted ${imageFiles.length} image(s) from clipboard! Scanning with Kyro AI...`, 'info');
+        handleAIReportCardScan(imageFiles);
+    }
+});
 
 
 

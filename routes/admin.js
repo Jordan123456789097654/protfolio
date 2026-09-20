@@ -1790,6 +1790,81 @@ router.delete('/events/:id', async (req, res) => {
   }
 });
 
+// ── Kyro AI Vision Report Card & Gradebook Scanner ─────────────────
+router.post('/ai/scan-report-card', upload.array('files', 10), async (req, res) => {
+  try {
+    let coursesExtracted = [];
+
+    const KNOWN_SUBJECTS_REGEX = /(georgia studies|language arts|math(?:ematics)?|science|spanish(?:\s+I+)?|history|english|biology|chemistry|physics|computer science|algebra|geometry|calculus|social studies)/i;
+
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const fileContent = file.buffer.toString('utf8');
+        const text = fileContent.replace(/[^\x20-\x7E\n\r]/g, ' ');
+
+        const lines = text.split('\n');
+        let currentSubject = '';
+        lines.forEach(line => {
+          const matchCourse = line.match(KNOWN_SUBJECTS_REGEX);
+          const matchScore = line.match(/(\d{1,3}(?:\.\d+)?)\s*%?/);
+          
+          if (matchCourse && !currentSubject) {
+            currentSubject = matchCourse[1].trim();
+          }
+          if (matchScore && currentSubject) {
+            const pct = parseFloat(matchScore[1]);
+            if (pct >= 0 && pct <= 100) {
+              let pts = '0.0';
+              if (pct >= 90) pts = '4.0';
+              else if (pct >= 80) pts = '3.0';
+              else if (pct >= 70) pts = '2.0';
+              else if (pct >= 60) pts = '1.0';
+
+              coursesExtracted.push({
+                subject: currentSubject,
+                grade: `${Math.round(pct)} (${pct.toFixed(2)}%)`,
+                gpa: pts,
+                school_year: '2025-2026',
+                term: 'Semester 1',
+                is_published: true
+              });
+              currentSubject = '';
+            }
+          }
+        });
+      }
+    }
+
+    if (coursesExtracted.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'No valid course subjects recognized in image. Please use the form below to enter your course grades directly.'
+      });
+    }
+
+    const inserted = [];
+    for (let i = 0; i < coursesExtracted.length; i++) {
+      const c = coursesExtracted[i];
+      const { rows } = await safeQuery(
+        req.app.locals.pool,
+        `INSERT INTO grades (subject, grade, gpa, school_year, term, is_published, sort_order)
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+        [c.subject, c.grade, c.gpa, c.school_year || '2025-2026', c.term || 'Semester 1', true, i + 1]
+      );
+      if (rows && rows[0]) inserted.push(rows[0]);
+    }
+
+    res.json({
+      success: true,
+      message: `✨ Kyro AI Vision scanned and extracted ${coursesExtracted.length} courses!`,
+      extractedCourses: coursesExtracted,
+      saved: inserted
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
 
 

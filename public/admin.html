@@ -332,6 +332,31 @@
                         </div>
                     </div>
 
+                    <!-- Kyro AI Report Card Scanner Card -->
+                    <div class="settings-card" style="margin-bottom:1.5rem;background:linear-gradient(135deg, rgba(111,155,209,0.1), rgba(216,165,62,0.1));border:1px solid rgba(111,155,209,0.3);">
+                        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                            <div>
+                                <h3 style="margin:0;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
+                                    <span style="font-size:1.3rem;">📸</span> Kyro AI Report Card &amp; Gradebook Scanner
+                                </h3>
+                                <p class="settings-desc" style="margin:4px 0 0 0;">Upload or drop your gradebook screenshots or report cards — Kyro AI Vision will scan, extract courses, and calculate your GPA automatically!</p>
+                            </div>
+                            <label for="ai-report-card-input" class="btn-primary" style="cursor:pointer;white-space:nowrap;">
+                                <span>✨ Upload Report Card Image</span>
+                            </label>
+                            <input type="file" id="ai-report-card-input" accept="image/*,.pdf" multiple class="hidden">
+                        </div>
+
+                        <div id="ai-report-card-dropzone" style="margin-top:1rem;border:2px dashed rgba(255,255,255,0.2);border-radius:12px;padding:24px;text-align:center;background:rgba(0,0,0,0.2);cursor:pointer;transition:all 0.2s ease;">
+                            <div style="font-size:2rem;margin-bottom:6px;">📄</div>
+                            <strong style="color:var(--text-primary);display:block;">Drop Report Card Screenshots or Transcripts Here</strong>
+                            <span style="font-size:0.82rem;color:var(--text-secondary);">Supports PNG, JPG, WebP, PDF gradebook screenshots</span>
+                        </div>
+                        <div id="ai-scan-status" class="hidden" style="margin-top:1rem;padding:12px 16px;background:rgba(46,213,115,0.12);border:1px solid #2ed573;border-radius:8px;color:#2ed573;font-size:0.9rem;display:flex;align-items:center;gap:10px;">
+                            <span id="ai-scan-status-text">Scanning report card image with Kyro AI Vision...</span>
+                        </div>
+                    </div>
+
                     <!-- Add New Grade Entry Card -->
                     <div class="settings-card" style="margin-bottom:1.5rem;">
                         <h3>➕ Add New Course Grade Entry</h3>
