@@ -368,11 +368,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function toggleSectionVisibility(sectionId, hasData) {
         const sectionEl = document.getElementById(sectionId);
+        const navPill = document.querySelector(`.nav-pill[href="#${sectionId}"]`);
         const navLink = document.querySelector(`.nav-links a[href="#${sectionId}"]`);
         const navItem = navLink ? navLink.closest('li') : null;
 
         if (sectionEl) {
             sectionEl.style.display = hasData ? '' : 'none';
+        }
+        if (navPill) {
+            navPill.style.display = hasData ? '' : 'none';
         }
         if (navItem) {
             navItem.style.display = hasData ? '' : 'none';
@@ -387,12 +391,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         orderedSections.forEach(sec => {
             const el = document.getElementById(sec.section_id);
+            const navPill = document.querySelector(`.nav-pill[href="#${sec.section_id}"]`);
             const navLink = document.querySelector(`.nav-links a[href="#${sec.section_id}"]`);
             const navItem = navLink ? navLink.closest('li') : null;
 
             if (el && el.parentElement === main) {
                 if (sec.is_visible === false) {
                     el.style.display = 'none';
+                    if (navPill) navPill.style.display = 'none';
                     if (navItem) navItem.style.display = 'none';
                 } else {
                     main.appendChild(el);
