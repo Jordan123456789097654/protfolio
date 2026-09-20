@@ -427,10 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div style="position:absolute;top:0;left:0;width:4px;height:100%;background:linear-gradient(180deg, var(--accent), var(--accent-secondary));"></div>
                 
                 <div>
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                        <span style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent);font-weight:700;background:rgba(216,165,62,0.12);padding:3px 10px;border-radius:99px;border:1px solid rgba(216,165,62,0.3);display:inline-flex;align-items:center;gap:4px;">
-                            <span>✓</span> VERIFIED ENDORSEMENT
-                        </span>
+                    <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:8px;">
                         <span style="font-size:1.8rem;opacity:0.25;color:var(--accent);font-family:serif;">“</span>
                     </div>
                     <p style="font-size:0.98rem;line-height:1.6;color:var(--text-primary);font-style:italic;margin:0 0 16px 0;">"${escapeHTML(rec.quote_excerpt)}"</p>
