@@ -406,6 +406,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (calendarEl && calendarEl.parentElement === main) {
             main.appendChild(calendarEl);
         }
+        if (contactEl && contactEl.parentElement === main) {
+            main.appendChild(contactEl);
+        }
+    }
+
     function renderProjects(projects) {
         const hasData = Array.isArray(projects) && projects.length > 0;
         toggleSectionVisibility('projects', hasData);
