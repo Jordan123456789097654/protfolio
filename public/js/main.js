@@ -581,8 +581,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const card = document.createElement('div');
             card.className = 'rec-card tilt-card reveal';
             card.style.cssText = 'background:linear-gradient(145deg, rgba(15,23,42,0.85), rgba(10,18,32,0.95));border:1px solid rgba(216,165,62,0.25);border-radius:18px;padding:24px;display:flex;flex-direction:column;justify-content:space-between;gap:16px;box-shadow:0 12px 32px rgba(0,0,0,0.4);position:relative;overflow:hidden;';
-            
-            const initials = (rec.recommender_name || 'R').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
             card.innerHTML = `
                 <div style="position:absolute;top:0;left:0;width:4px;height:100%;background:linear-gradient(180deg, var(--accent), var(--accent-secondary));"></div>
@@ -595,14 +593,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
 
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08);">
-                    <div style="display:flex;align-items:center;gap:12px;">
-                        <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg, #d8a53e, #6f9bd1);color:#0a1220;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:0.95rem;box-shadow:0 0 12px rgba(216,165,62,0.3);">
-                            ${initials}
-                        </div>
-                        <div>
-                            <h4 style="margin:0;font-family:var(--font-heading);font-size:1.05rem;color:#fff;">${escapeHTML(rec.recommender_name)}</h4>
-                            <span style="display:block;font-size:0.82rem;color:var(--text-secondary);">${escapeHTML(rec.recommender_title || '')} ${rec.school_or_org ? '• ' + escapeHTML(rec.school_or_org) : ''}</span>
-                        </div>
+                    <div>
+                        <h4 style="margin:0;font-family:var(--font-heading);font-size:1.05rem;color:#fff;">${escapeHTML(rec.recommender_name)}</h4>
+                        <span style="display:block;font-size:0.82rem;color:var(--text-secondary);">${escapeHTML(rec.recommender_title || '')} ${rec.school_or_org ? '• ' + escapeHTML(rec.school_or_org) : ''}</span>
                     </div>
 
                     ${rec.letter_pdf_url ? `
