@@ -1786,15 +1786,18 @@ async function generateAdminPDFResume(useAI = false) {
     }
 
     try {
-        const [config, experience, skills, social] = await Promise.all([
+        const [config, experience, skills, social, projects, certifications, achievements, grades] = await Promise.all([
             apiCall('/admin/config'),
             apiCall('/admin/experience'),
             apiCall('/admin/skills'),
-            apiCall('/admin/social')
+            apiCall('/admin/social'),
+            apiCall('/admin/projects').catch(() => []),
+            apiCall('/admin/certifications').catch(() => []),
+            apiCall('/admin/achievements').catch(() => []),
+            apiCall('/admin/grades').catch(() => [])
         ]);
 
         let bioText = (config?.about_bio || '').replace(/<[^>]*>/g, '');
-        let expList = Array.isArray(experience) ? [...experience] : [];
 
         if (useAI) {
             showToast('Prompting Kyro AI to polish resume content...', 'success');
@@ -1831,203 +1834,339 @@ async function generateAdminPDFResume(useAI = false) {
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
         const margin = 40;
-        let y = 50;
+        const contentWidth = pageWidth - (margin * 2);
+        let y = 40;
 
         const mainFont = pdfTheme === 'classic' ? 'times' : (pdfTheme === 'developer' ? 'courier' : 'helvetica');
+        let primaryColor = [15, 23, 42];
+        let secondaryColor = [71, 85, 105];
+        let accentColor = pdfTheme === 'classic' ? [30, 41, 59] : (pdfTheme === 'developer' ? [14, 165, 233] : [216, 165, 62]);
+        let headerBgColor = [15, 23, 42];
 
-        // Header Styling based on selected theme
-        if (pdfTheme === 'classic') {
-            // Executive Classic Layout: Centered Serif Header with Double Rules
-            doc.setTextColor(20, 20, 30);
+        function ensureSpace(neededHeight) {
+            if (y + neededHeight > pageHeight - 45) {
+                doc.addPage();
+                y = 45;
+            }
+        }
+
+        function printTextLines(lines, x, fontSize = 9, fontStyle = 'normal', color = secondaryColor, lineSpacing = 12.5) {
+            doc.setFont(mainFont, fontStyle);
+            doc.setFontSize(fontSize);
+            doc.setTextColor(color[0], color[1], color[2]);
+
+            lines.forEach(line => {
+                ensureSpace(lineSpacing + 2);
+                doc.text(line, x, y);
+                y += lineSpacing;
+            });
+        }
+
+        function addSectionHeader(title) {
+            ensureSpace(38);
+            y += 4;
+            
             doc.setFont(mainFont, 'bold');
-            doc.setFontSize(24);
+            doc.setFontSize(11);
+            doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
+            
+            if (pdfTheme === 'developer') {
+                doc.text(`// ${title.toUpperCase()}`, margin, y);
+            } else if (pdfTheme === 'classic') {
+                doc.text(title.toUpperCase(), margin, y);
+            } else {
+                doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
+                doc.rect(margin, y - 9, 3, 12, 'F');
+                doc.text(title.toUpperCase(), margin + 9, y);
+            }
+            
+            y += 5;
+            doc.setDrawColor(226, 232, 240);
+            doc.setLineWidth(0.75);
+            doc.line(margin, y, pageWidth - margin, y);
+            y += 14;
+        }
+
+        // Header Section
+        if (pdfTheme === 'classic') {
+            doc.setFont(mainFont, 'bold');
+            doc.setFontSize(22);
+            doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
             doc.text(config?.name || 'Your Name', pageWidth / 2, 55, { align: 'center' });
 
             doc.setFont(mainFont, 'italic');
-            doc.setFontSize(12);
-            doc.setTextColor(80, 80, 95);
-            doc.text(config?.title || 'Developer & Creator', pageWidth / 2, 73, { align: 'center' });
-
-            const contactLine = [
-                config?.class_year ? `Class of ${config.class_year}` : '',
-                (social || []).map(s => s.url).filter(Boolean).slice(0, 2).join('  |  ')
-            ].filter(Boolean).join('   •   ');
-            if (contactLine) {
-                doc.setFont(mainFont, 'normal');
-                doc.setFontSize(9);
-                doc.text(contactLine, pageWidth / 2, 90, { align: 'center' });
-            }
-
-            doc.setDrawColor(30, 30, 45);
-            doc.setLineWidth(1.5);
-            doc.line(margin, 104, pageWidth - margin, 104);
-            doc.setLineWidth(0.5);
-            doc.line(margin, 107, pageWidth - margin, 107);
-            y = 130;
-        } else if (pdfTheme === 'developer') {
-            // Tech Developer Layout: Monospace Header Banner with Green/Cyan Accents
-            doc.setFillColor(15, 23, 42);
-            doc.rect(0, 0, pageWidth, 115, 'F');
-            doc.setFillColor(0, 212, 255);
-            doc.rect(0, 0, 6, 115, 'F');
-
-            doc.setTextColor(255, 255, 255);
-            doc.setFont(mainFont, 'bold');
-            doc.setFontSize(22);
-            doc.text(`> ${config?.name || 'Your Name'}`, margin, 48);
-
-            doc.setTextColor(0, 212, 255);
-            doc.setFont(mainFont, 'bold');
             doc.setFontSize(11);
-            doc.text(`// ${config?.title || 'Developer & Creator'}`, margin, 68);
+            doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+            doc.text(config?.title || 'Developer & Creator', pageWidth / 2, 72, { align: 'center' });
 
-            doc.setTextColor(148, 163, 184);
-            doc.setFont(mainFont, 'normal');
-            doc.setFontSize(9);
-            const contactLine = [
-                config?.class_year ? `Graduation: ${config.class_year}` : '',
-                (social || []).map(s => s.url).filter(Boolean).slice(0, 2).join('  |  ')
-            ].filter(Boolean).join('   •   ');
-            if (contactLine) doc.text(contactLine, margin, 92);
-            y = 140;
+            const contactItems = [];
+            if (config?.email) contactItems.push(config.email);
+            if (config?.phone) contactItems.push(config.phone);
+            if (config?.location) contactItems.push(config.location);
+            if (config?.class_year) contactItems.push(`Graduation: ${config.class_year}`);
+            const socialUrls = (social || []).map(s => s.url).filter(Boolean);
+            if (socialUrls.length > 0) contactItems.push(socialUrls[0].replace(/^https?:\/\//, ''));
+
+            if (contactItems.length > 0) {
+                doc.setFont(mainFont, 'normal');
+                doc.setFontSize(8.5);
+                doc.setTextColor(100, 116, 139);
+                doc.text(contactItems.join('   •   '), pageWidth / 2, 88, { align: 'center' });
+            }
+
+            doc.setDrawColor(30, 41, 59);
+            doc.setLineWidth(1.25);
+            doc.line(margin, 100, pageWidth - margin, 100);
+            doc.setLineWidth(0.5);
+            doc.line(margin, 103, pageWidth - margin, 103);
+            y = 122;
         } else {
-            // Modern Minimalist Layout
-            doc.setFillColor(18, 18, 26);
-            doc.rect(0, 0, pageWidth, 110, 'F');
-            doc.setFillColor(108, 99, 255);
-            doc.rect(0, 0, 6, 110, 'F');
+            doc.setFillColor(headerBgColor[0], headerBgColor[1], headerBgColor[2]);
+            doc.rect(0, 0, pageWidth, 108, 'F');
+            doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
+            doc.rect(0, 0, 6, 108, 'F');
 
             doc.setTextColor(255, 255, 255);
             doc.setFont(mainFont, 'bold');
             doc.setFontSize(22);
-            doc.text(config?.name || 'Your Name', margin, 45);
+            doc.text(pdfTheme === 'developer' ? `> ${config?.name || 'Your Name'}` : (config?.name || 'Your Name'), margin, 42);
 
-            doc.setTextColor(0, 212, 255);
+            doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
+            doc.setFont(mainFont, pdfTheme === 'developer' ? 'bold' : 'normal');
+            doc.setFontSize(11);
+            doc.text(pdfTheme === 'developer' ? `// ${config?.title || 'Developer & Creator'}` : (config?.title || 'Developer & Creator'), margin, 62);
+
+            doc.setTextColor(203, 213, 225);
             doc.setFont(mainFont, 'normal');
-            doc.setFontSize(12);
-            doc.text(config?.title || 'Developer & Creator', margin, 65);
+            doc.setFontSize(8.5);
+            const contactItems = [];
+            if (config?.email) contactItems.push(config.email);
+            if (config?.phone) contactItems.push(config.phone);
+            if (config?.location) contactItems.push(config.location);
+            if (config?.class_year) contactItems.push(`Graduation: ${config.class_year}`);
+            const socialUrls = (social || []).map(s => s.url).filter(Boolean);
+            if (socialUrls.length > 0) contactItems.push(socialUrls[0].replace(/^https?:\/\//, ''));
 
-            doc.setTextColor(160, 160, 176);
-            doc.setFontSize(9);
-            const contactLine = [
-                config?.class_year ? `Graduation: ${config.class_year}` : '',
-                (social || []).map(s => s.url).filter(Boolean).slice(0, 2).join('  |  ')
-            ].filter(Boolean).join('   •   ');
-            if (contactLine) doc.text(contactLine, margin, 88);
-            y = 135;
-        }
-
-        function addHeading(title) {
-            if (y > pageHeight - 60) { doc.addPage(); y = 50; }
-            if (pdfTheme === 'classic') {
-                doc.setTextColor(30, 30, 45);
-                doc.setFont(mainFont, 'bold');
-                doc.setFontSize(13);
-                doc.text(title.toUpperCase(), margin, y + 13);
-                y += 20;
-                doc.setDrawColor(40, 40, 50);
-                doc.setLineWidth(1);
-                doc.line(margin, y, pageWidth - margin, y);
-                y += 15;
-            } else if (pdfTheme === 'developer') {
-                doc.setTextColor(108, 99, 255);
-                doc.setFont(mainFont, 'bold');
-                doc.setFontSize(12);
-                doc.text(`[// ${title.toUpperCase()}]`, margin, y + 13);
-                y += 22;
-                doc.setDrawColor(200, 200, 220);
-                doc.setLineWidth(0.5);
-                doc.line(margin, y, pageWidth - margin, y);
-                y += 15;
-            } else {
-                doc.setFillColor(108, 99, 255);
-                doc.rect(margin, y, 4, 16, 'F');
-                doc.setTextColor(18, 18, 26);
-                doc.setFont(mainFont, 'bold');
-                doc.setFontSize(13);
-                doc.text(title.toUpperCase(), margin + 12, y + 13);
-                y += 22;
-                doc.setDrawColor(230, 230, 240);
-                doc.setLineWidth(0.75);
-                doc.line(margin, y, pageWidth - margin, y);
-                y += 15;
+            if (contactItems.length > 0) {
+                doc.text(contactItems.join('   •   '), margin, 86);
             }
+            y = 126;
         }
 
+        // Executive Summary
         if (bioText) {
-            addHeading(useAI ? 'AI-Polished Executive Summary' : 'Executive Summary');
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
-            doc.setTextColor(50, 50, 60);
-            const splitBio = doc.splitTextToSize(bioText, pageWidth - margin * 2);
-            doc.text(splitBio, margin, y);
-            y += splitBio.length * 14 + 15;
+            addSectionHeader(useAI ? 'Executive Summary (Kyro AI Polished)' : 'Executive Summary');
+            const splitBio = doc.splitTextToSize(bioText, contentWidth);
+            printTextLines(splitBio, margin, 9, 'normal', [51, 65, 85], 13);
+            y += 6;
         }
 
-        if (expList && expList.length > 0) {
-            addHeading('Experience & Activities');
-            expList.forEach(exp => {
-                if (y > pageHeight - 80) { doc.addPage(); y = 50; }
-                
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(11);
-                doc.setTextColor(20, 20, 30);
+        // Academic Standing
+        const hasGPA = config?.unweighted_gpa || config?.weighted_gpa || config?.class_year;
+        const validGrades = (grades || []).filter(g => g.subject && g.letter_grade);
+        if (hasGPA || validGrades.length > 0) {
+            addSectionHeader('Academic Standing & Education');
+            
+            if (hasGPA) {
+                ensureSpace(24);
+                doc.setFont(mainFont, 'bold');
+                doc.setFontSize(10);
+                doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                doc.text('High School Academic Record', margin, y);
+
+                const gpaLine = [
+                    config.class_year ? `Graduation: ${config.class_year}` : '',
+                    config.unweighted_gpa ? `Unweighted GPA: ${config.unweighted_gpa} / 4.0` : '',
+                    config.weighted_gpa ? `Weighted GPA: ${config.weighted_gpa}` : ''
+                ].filter(Boolean).join('   |   ');
+
+                if (gpaLine) {
+                    doc.setFont(mainFont, 'bold');
+                    doc.setFontSize(9);
+                    doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
+                    doc.text(gpaLine, pageWidth - margin, y, { align: 'right' });
+                }
+                y += 14;
+            }
+
+            if (validGrades.length > 0) {
+                ensureSpace(20);
+                doc.setFont(mainFont, 'italic');
+                doc.setFontSize(8.5);
+                doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+                const courseListStr = validGrades.map(g => `${g.subject} (${g.letter_grade}${g.grade_percent ? ` - ${g.grade_percent}%` : ''})`).join('  •  ');
+                const splitCourses = doc.splitTextToSize(`Key Coursework: ${courseListStr}`, contentWidth);
+                printTextLines(splitCourses, margin, 8.5, 'italic', secondaryColor, 12);
+                y += 4;
+            }
+            y += 4;
+        }
+
+        // Experience
+        if (experience && experience.length > 0) {
+            addSectionHeader('Experience & Extracurricular Leadership');
+
+            experience.forEach(exp => {
+                ensureSpace(32);
+
+                doc.setFont(mainFont, 'bold');
+                doc.setFontSize(10);
+                doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
                 doc.text(exp.job_title || 'Role', margin, y);
 
-                const dateStr = exp.is_current ? `${exp.start_date || ''} – Present` : `${exp.start_date || ''} – ${exp.end_date || ''}`;
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(9);
-                doc.setTextColor(108, 99, 255);
+                const dateStr = exp.is_current ? `${exp.start_date || ''} – Present` : `${exp.start_date || ''}${exp.end_date ? ' – ' + exp.end_date : ''}`;
+                doc.setFont(mainFont, 'bold');
+                doc.setFontSize(8.5);
+                doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
                 doc.text(dateStr, pageWidth - margin, y, { align: 'right' });
-                y += 14;
+                y += 13;
 
                 if (exp.company) {
-                    doc.setFont('helvetica', 'oblique');
-                    doc.setFontSize(9.5);
-                    doc.setTextColor(80, 80, 100);
+                    doc.setFont(mainFont, 'italic');
+                    doc.setFontSize(9);
+                    doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
                     doc.text(exp.company, margin, y);
-                    y += 14;
+                    y += 13;
                 }
 
                 if (exp.description) {
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(9);
-                    doc.setTextColor(60, 60, 75);
-                    const descClean = exp.description.replace(/<[^>]*>/g, '');
-                    const splitDesc = doc.splitTextToSize(descClean, pageWidth - margin * 2);
-                    doc.text(splitDesc, margin, y);
-                    y += splitDesc.length * 13 + 12;
+                    const descClean = exp.description.replace(/<[^>]*>/g, '').trim();
+                    const splitDesc = doc.splitTextToSize(descClean, contentWidth);
+                    printTextLines(splitDesc, margin, 8.5, 'normal', [51, 65, 85], 12);
+                    y += 6;
                 } else {
-                    y += 8;
+                    y += 4;
                 }
             });
         }
 
+        // Projects
+        if (projects && projects.length > 0) {
+            addSectionHeader('Featured Projects & Engineering');
+
+            projects.slice(0, 4).forEach(proj => {
+                ensureSpace(28);
+
+                doc.setFont(mainFont, 'bold');
+                doc.setFontSize(9.5);
+                doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                doc.text(proj.title || 'Project', margin, y);
+
+                if (proj.tech_stack) {
+                    doc.setFont(mainFont, 'italic');
+                    doc.setFontSize(8.5);
+                    doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+                    doc.text(proj.tech_stack, pageWidth - margin, y, { align: 'right' });
+                }
+                y += 13;
+
+                if (proj.description) {
+                    const projDescClean = proj.description.replace(/<[^>]*>/g, '').trim();
+                    const splitProjDesc = doc.splitTextToSize(projDescClean, contentWidth);
+                    printTextLines(splitProjDesc, margin, 8.5, 'normal', [51, 65, 85], 12);
+                    y += 5;
+                } else {
+                    y += 3;
+                }
+            });
+        }
+
+        // Certifications & Awards
+        const hasCerts = certifications && certifications.length > 0;
+        const hasAwards = achievements && achievements.length > 0;
+
+        if (hasCerts || hasAwards) {
+            addSectionHeader('Certifications & Honors');
+
+            if (hasCerts) {
+                certifications.forEach(cert => {
+                    ensureSpace(16);
+                    doc.setFont(mainFont, 'bold');
+                    doc.setFontSize(9);
+                    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                    doc.text(`• ${cert.title}`, margin, y);
+
+                    const issuerDate = [cert.issuer, cert.issue_date].filter(Boolean).join('  |  ');
+                    if (issuerDate) {
+                        doc.setFont(mainFont, 'normal');
+                        doc.setFontSize(8.5);
+                        doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+                        doc.text(issuerDate, pageWidth - margin, y, { align: 'right' });
+                    }
+                    y += 13;
+                });
+            }
+
+            if (hasAwards) {
+                achievements.forEach(award => {
+                    ensureSpace(16);
+                    doc.setFont(mainFont, 'bold');
+                    doc.setFontSize(9);
+                    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                    doc.text(`• ${award.title}`, margin, y);
+
+                    if (award.award_category) {
+                        doc.setFont(mainFont, 'normal');
+                        doc.setFontSize(8.5);
+                        doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+                        doc.text(award.award_category, pageWidth - margin, y, { align: 'right' });
+                    }
+                    y += 13;
+                });
+            }
+            y += 4;
+        }
+
+        // Skills
         if (skills && skills.length > 0) {
-            addHeading('Skills & Technical Proficiencies');
+            addSectionHeader('Skills & Proficiencies');
+
             const categories = {};
             skills.forEach(s => {
-                const cat = s.category || 'General';
+                const cat = s.category || 'Technical';
                 if (!categories[cat]) categories[cat] = [];
                 categories[cat].push(s.name);
             });
 
             Object.keys(categories).forEach(cat => {
-                if (y > pageHeight - 50) { doc.addPage(); y = 50; }
-                const catTitle = `${cat}: `;
-                doc.setFont(mainFont, 'bold');
-                doc.setFontSize(9.5);
-                doc.setTextColor(30, 30, 45);
-                doc.text(catTitle, margin, y);
+                ensureSpace(16);
 
+                doc.setFont(mainFont, 'bold');
+                doc.setFontSize(9);
+                doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                const prefix = `${cat}: `;
+                doc.text(prefix, margin, y);
+
+                const prefixWidth = doc.getTextWidth(prefix);
                 doc.setFont(mainFont, 'normal');
-                doc.setTextColor(70, 70, 85);
+                doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+
                 const skillsStr = categories[cat].join(', ');
-                const maxSkillWidth = pageWidth - margin * 2 - 140;
-                const splitSkills = doc.splitTextToSize(skillsStr, maxSkillWidth);
-                doc.text(splitSkills, margin + 140, y);
-                y += Math.max(splitSkills.length * 13, 16) + 6;
+                const splitSkills = doc.splitTextToSize(skillsStr, contentWidth - prefixWidth);
+                
+                doc.text(splitSkills[0], margin + prefixWidth, y);
+                y += 13;
+                if (splitSkills.length > 1) {
+                    printTextLines(splitSkills.slice(1), margin + 15, 9, 'normal', secondaryColor, 12);
+                }
             });
+        }
+
+        // Footer
+        const totalPages = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+            doc.setPage(i);
+            doc.setFont(mainFont, 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(148, 163, 184);
+
+            doc.setDrawColor(226, 232, 240);
+            doc.setLineWidth(0.5);
+            doc.line(margin, pageHeight - 26, pageWidth - margin, pageHeight - 26);
+
+            const footerTitle = `${config?.name || 'Jordan Daniels'} — Official Resume`;
+            doc.text(footerTitle, margin, pageHeight - 14);
+            doc.text(`Page ${i} of ${totalPages}`, pageWidth - margin, pageHeight - 14, { align: 'right' });
         }
 
         const filename = `${(config?.name || 'Portfolio').replace(/\s+/g, '_')}_${useAI ? 'AI_' : ''}Resume.pdf`;

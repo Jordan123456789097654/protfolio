@@ -918,150 +918,325 @@ document.addEventListener('DOMContentLoaded', () => {
         const experience = data.experience || [];
         const skills = data.skills || [];
         const social = data.social || [];
+        const projects = data.projectsData || data.projects || [];
+        const certifications = data.certifications || [];
+        const achievements = data.achievements || [];
+        const grades = data.gradesData || data.grades || [];
 
         if (!window.jspdf || !window.jspdf.jsPDF) {
             showToast('PDF generator library loading... Please try again in a moment.', true);
             return;
         }
 
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ unit: 'pt', format: 'letter' });
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const pageHeight = doc.internal.pageSize.getHeight();
-        const margin = 40;
-        let y = 50;
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const margin = 40;
+            const contentWidth = pageWidth - (margin * 2);
+            let y = 40;
 
-        // Background header banner
-        doc.setFillColor(18, 18, 26);
-        doc.rect(0, 0, pageWidth, 110, 'F');
+            const fontName = 'helvetica';
+            const primaryColor = [15, 23, 42];
+            const secondaryColor = [71, 85, 105];
+            const accentColor = [216, 165, 62];
+            const headerBgColor = [15, 23, 42];
 
-        // Accent bar
-        doc.setFillColor(108, 99, 255);
-        doc.rect(0, 0, 6, 110, 'F');
+            function ensureSpace(neededHeight) {
+                if (y + neededHeight > pageHeight - 45) {
+                    doc.addPage();
+                    y = 45;
+                }
+            }
 
-        // Name & Title
-        doc.setTextColor(255, 255, 255);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(22);
-        doc.text(config.name || 'Your Name', margin, 45);
+            function printTextLines(lines, x, fontSize = 9, fontStyle = 'normal', color = secondaryColor, lineSpacing = 12.5) {
+                doc.setFont(fontName, fontStyle);
+                doc.setFontSize(fontSize);
+                doc.setTextColor(color[0], color[1], color[2]);
 
-        doc.setTextColor(0, 212, 255);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(12);
-        doc.text(config.title || 'Developer & Creator', margin, 65);
+                lines.forEach(line => {
+                    ensureSpace(lineSpacing + 2);
+                    doc.text(line, x, y);
+                    y += lineSpacing;
+                });
+            }
 
-        // Contact info line in header
-        doc.setTextColor(160, 160, 176);
-        doc.setFontSize(9);
-        const contactLine = [
-            config.class_year ? `Graduation: ${config.class_year}` : '',
-            social.map(s => s.url).filter(Boolean).slice(0, 2).join('  |  ')
-        ].filter(Boolean).join('   •   ');
-        if (contactLine) {
-            doc.text(contactLine, margin, 88);
-        }
-
-        y = 135;
-
-        // Helper for section headings
-        function addHeading(title) {
-            if (y > pageHeight - 60) { doc.addPage(); y = 50; }
-            doc.setFillColor(108, 99, 255);
-            doc.rect(margin, y, 4, 16, 'F');
-            doc.setTextColor(18, 18, 26);
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(13);
-            doc.text(title.toUpperCase(), margin + 12, y + 13);
-            y += 22;
-            doc.setDrawColor(230, 230, 240);
-            doc.setLineWidth(0.75);
-            doc.line(margin, y, pageWidth - margin, y);
-            y += 15;
-        }
-
-        // Bio / Summary
-        if (config.about_bio) {
-            addHeading('Executive Summary');
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
-            doc.setTextColor(50, 50, 60);
-            const bioClean = config.about_bio.replace(/<[^>]*>/g, '');
-            const splitBio = doc.splitTextToSize(bioClean, pageWidth - margin * 2);
-            doc.text(splitBio, margin, y);
-            y += splitBio.length * 14 + 15;
-        }
-
-        // Experience / Activities
-        if (experience && experience.length > 0) {
-            addHeading('Experience & Activities');
-            experience.forEach(exp => {
-                if (y > pageHeight - 80) { doc.addPage(); y = 50; }
+            function addSectionHeader(title) {
+                ensureSpace(38);
+                y += 4;
                 
-                doc.setFont('helvetica', 'bold');
+                doc.setFont(fontName, 'bold');
                 doc.setFontSize(11);
-                doc.setTextColor(20, 20, 30);
-                doc.text(exp.job_title || 'Role', margin, y);
-
-                const dateStr = exp.is_current ? `${exp.start_date || ''} – Present` : `${exp.start_date || ''} – ${exp.end_date || ''}`;
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(9);
-                doc.setTextColor(108, 99, 255);
-                doc.text(dateStr, pageWidth - margin, y, { align: 'right' });
+                doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
+                
+                doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
+                doc.rect(margin, y - 9, 3, 12, 'F');
+                doc.text(title.toUpperCase(), margin + 9, y);
+                
+                y += 5;
+                doc.setDrawColor(226, 232, 240);
+                doc.setLineWidth(0.75);
+                doc.line(margin, y, pageWidth - margin, y);
                 y += 14;
+            }
 
-                if (exp.company) {
-                    doc.setFont('helvetica', 'oblique');
-                    doc.setFontSize(9.5);
-                    doc.setTextColor(80, 80, 100);
-                    doc.text(exp.company, margin, y);
+            // 1. Header Banner
+            doc.setFillColor(headerBgColor[0], headerBgColor[1], headerBgColor[2]);
+            doc.rect(0, 0, pageWidth, 108, 'F');
+            doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
+            doc.rect(0, 0, 6, 108, 'F');
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFont(fontName, 'bold');
+            doc.setFontSize(22);
+            doc.text(config.name || 'Your Name', margin, 42);
+
+            doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
+            doc.setFont(fontName, 'normal');
+            doc.setFontSize(11);
+            doc.text(config.title || 'Developer & Creator', margin, 62);
+
+            doc.setTextColor(203, 213, 225);
+            doc.setFont(fontName, 'normal');
+            doc.setFontSize(8.5);
+            const contactItems = [];
+            if (config.email) contactItems.push(config.email);
+            if (config.phone) contactItems.push(config.phone);
+            if (config.location) contactItems.push(config.location);
+            if (config.class_year) contactItems.push(`Graduation: ${config.class_year}`);
+            const socialUrls = (social || []).map(s => s.url).filter(Boolean);
+            if (socialUrls.length > 0) contactItems.push(socialUrls[0].replace(/^https?:\/\//, ''));
+
+            if (contactItems.length > 0) {
+                doc.text(contactItems.join('   •   '), margin, 86);
+            }
+            y = 126;
+
+            // 2. Executive Summary
+            const bioContent = (config.about_bio || '').replace(/<[^>]*>/g, '').trim();
+            if (bioContent) {
+                addSectionHeader('Executive Summary');
+                const splitBio = doc.splitTextToSize(bioContent, contentWidth);
+                printTextLines(splitBio, margin, 9, 'normal', [51, 65, 85], 13);
+                y += 6;
+            }
+
+            // 3. Academic Standing & Education
+            const hasGPA = config.unweighted_gpa || config.weighted_gpa || config.class_year;
+            const validGrades = (grades || []).filter(g => g.subject && g.letter_grade);
+            if (hasGPA || validGrades.length > 0) {
+                addSectionHeader('Academic Standing & Education');
+                
+                if (hasGPA) {
+                    ensureSpace(24);
+                    doc.setFont(fontName, 'bold');
+                    doc.setFontSize(10);
+                    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                    doc.text('High School Academic Record', margin, y);
+
+                    const gpaLine = [
+                        config.class_year ? `Graduation: ${config.class_year}` : '',
+                        config.unweighted_gpa ? `Unweighted GPA: ${config.unweighted_gpa} / 4.0` : '',
+                        config.weighted_gpa ? `Weighted GPA: ${config.weighted_gpa}` : ''
+                    ].filter(Boolean).join('   |   ');
+
+                    if (gpaLine) {
+                        doc.setFont(fontName, 'bold');
+                        doc.setFontSize(9);
+                        doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
+                        doc.text(gpaLine, pageWidth - margin, y, { align: 'right' });
+                    }
                     y += 14;
                 }
 
-                if (exp.description) {
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(9);
-                    doc.setTextColor(60, 60, 75);
-                    const descClean = exp.description.replace(/<[^>]*>/g, '');
-                    const splitDesc = doc.splitTextToSize(descClean, pageWidth - margin * 2);
-                    doc.text(splitDesc, margin, y);
-                    y += splitDesc.length * 13 + 12;
-                } else {
-                    y += 8;
+                if (validGrades.length > 0) {
+                    ensureSpace(20);
+                    doc.setFont(fontName, 'italic');
+                    doc.setFontSize(8.5);
+                    doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+                    const courseListStr = validGrades.map(g => `${g.subject} (${g.letter_grade}${g.grade_percent ? ` - ${g.grade_percent}%` : ''})`).join('  •  ');
+                    const splitCourses = doc.splitTextToSize(`Key Coursework: ${courseListStr}`, contentWidth);
+                    printTextLines(splitCourses, margin, 8.5, 'italic', secondaryColor, 12);
+                    y += 4;
                 }
-            });
+                y += 4;
+            }
+
+            // 4. Experience & Leadership
+            if (experience && experience.length > 0) {
+                addSectionHeader('Experience & Extracurricular Leadership');
+
+                experience.forEach(exp => {
+                    ensureSpace(32);
+
+                    doc.setFont(fontName, 'bold');
+                    doc.setFontSize(10);
+                    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                    doc.text(exp.job_title || 'Role', margin, y);
+
+                    const dateStr = exp.is_current ? `${exp.start_date || ''} – Present` : `${exp.start_date || ''}${exp.end_date ? ' – ' + exp.end_date : ''}`;
+                    doc.setFont(fontName, 'bold');
+                    doc.setFontSize(8.5);
+                    doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
+                    doc.text(dateStr, pageWidth - margin, y, { align: 'right' });
+                    y += 13;
+
+                    if (exp.company) {
+                        doc.setFont(fontName, 'italic');
+                        doc.setFontSize(9);
+                        doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+                        doc.text(exp.company, margin, y);
+                        y += 13;
+                    }
+
+                    if (exp.description) {
+                        const descClean = exp.description.replace(/<[^>]*>/g, '').trim();
+                        const splitDesc = doc.splitTextToSize(descClean, contentWidth);
+                        printTextLines(splitDesc, margin, 8.5, 'normal', [51, 65, 85], 12);
+                        y += 6;
+                    } else {
+                        y += 4;
+                    }
+                });
+            }
+
+            // 5. Featured Projects & Engineering Work
+            if (projects && projects.length > 0) {
+                addSectionHeader('Featured Projects & Engineering');
+
+                projects.slice(0, 4).forEach(proj => {
+                    ensureSpace(28);
+
+                    doc.setFont(fontName, 'bold');
+                    doc.setFontSize(9.5);
+                    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                    doc.text(proj.title || 'Project', margin, y);
+
+                    if (proj.tech_stack) {
+                        doc.setFont(fontName, 'italic');
+                        doc.setFontSize(8.5);
+                        doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+                        doc.text(proj.tech_stack, pageWidth - margin, y, { align: 'right' });
+                    }
+                    y += 13;
+
+                    if (proj.description) {
+                        const projDescClean = proj.description.replace(/<[^>]*>/g, '').trim();
+                        const splitProjDesc = doc.splitTextToSize(projDescClean, contentWidth);
+                        printTextLines(splitProjDesc, margin, 8.5, 'normal', [51, 65, 85], 12);
+                        y += 5;
+                    } else {
+                        y += 3;
+                    }
+                });
+            }
+
+            // 6. Certifications & Honors
+            const hasCerts = certifications && certifications.length > 0;
+            const hasAwards = achievements && achievements.length > 0;
+
+            if (hasCerts || hasAwards) {
+                addSectionHeader('Certifications & Honors');
+
+                if (hasCerts) {
+                    certifications.forEach(cert => {
+                        ensureSpace(16);
+                        doc.setFont(fontName, 'bold');
+                        doc.setFontSize(9);
+                        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                        doc.text(`• ${cert.title}`, margin, y);
+
+                        const issuerDate = [cert.issuer, cert.issue_date].filter(Boolean).join('  |  ');
+                        if (issuerDate) {
+                            doc.setFont(fontName, 'normal');
+                            doc.setFontSize(8.5);
+                            doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+                            doc.text(issuerDate, pageWidth - margin, y, { align: 'right' });
+                        }
+                        y += 13;
+                    });
+                }
+
+                if (hasAwards) {
+                    achievements.forEach(award => {
+                        ensureSpace(16);
+                        doc.setFont(fontName, 'bold');
+                        doc.setFontSize(9);
+                        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                        doc.text(`• ${award.title}`, margin, y);
+
+                        if (award.award_category) {
+                            doc.setFont(fontName, 'normal');
+                            doc.setFontSize(8.5);
+                            doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+                            doc.text(award.award_category, pageWidth - margin, y, { align: 'right' });
+                        }
+                        y += 13;
+                    });
+                }
+                y += 4;
+            }
+
+            // 7. Technical Skills & Proficiencies
+            if (skills && skills.length > 0) {
+                addSectionHeader('Skills & Proficiencies');
+
+                const categories = {};
+                skills.forEach(s => {
+                    const cat = s.category || 'Technical';
+                    if (!categories[cat]) categories[cat] = [];
+                    categories[cat].push(s.name);
+                });
+
+                Object.keys(categories).forEach(cat => {
+                    ensureSpace(16);
+
+                    doc.setFont(fontName, 'bold');
+                    doc.setFontSize(9);
+                    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                    const prefix = `${cat}: `;
+                    doc.text(prefix, margin, y);
+
+                    const prefixWidth = doc.getTextWidth(prefix);
+                    doc.setFont(fontName, 'normal');
+                    doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+
+                    const skillsStr = categories[cat].join(', ');
+                    const splitSkills = doc.splitTextToSize(skillsStr, contentWidth - prefixWidth);
+                    
+                    doc.text(splitSkills[0], margin + prefixWidth, y);
+                    y += 13;
+                    if (splitSkills.length > 1) {
+                        printTextLines(splitSkills.slice(1), margin + 15, 9, 'normal', secondaryColor, 12);
+                    }
+                });
+            }
+
+            // 8. Footer & Page Numbering
+            const totalPages = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                doc.setPage(i);
+                doc.setFont(fontName, 'normal');
+                doc.setFontSize(8);
+                doc.setTextColor(148, 163, 184);
+
+                doc.setDrawColor(226, 232, 240);
+                doc.setLineWidth(0.5);
+                doc.line(margin, pageHeight - 26, pageWidth - margin, pageHeight - 26);
+
+                const footerTitle = `${config.name || 'Jordan Daniels'} — Official Resume`;
+                doc.text(footerTitle, margin, pageHeight - 14);
+                doc.text(`Page ${i} of ${totalPages}`, pageWidth - margin, pageHeight - 14, { align: 'right' });
+            }
+
+            const filename = `${(config.name || 'Portfolio').replace(/\s+/g, '_')}_Resume.pdf`;
+            doc.save(filename);
+            showToast('📄 Resume PDF downloaded!');
+        } catch (err) {
+            console.error('PDF Generation Error:', err);
+            showToast(err.message || 'Error generating PDF resume', true);
         }
-
-        // Technical Skills & Strengths
-        if (skills && skills.length > 0) {
-            addHeading('Skills & Technical Proficiencies');
-            const categories = {};
-            skills.forEach(s => {
-                const cat = s.category || 'General';
-                if (!categories[cat]) categories[cat] = [];
-                categories[cat].push(s.name);
-            });
-
-            Object.keys(categories).forEach(cat => {
-                if (y > pageHeight - 50) { doc.addPage(); y = 50; }
-                const catTitle = `${cat}: `;
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(9.5);
-                doc.setTextColor(30, 30, 45);
-                doc.text(catTitle, margin, y);
-
-                doc.setFont('helvetica', 'normal');
-                doc.setTextColor(70, 70, 85);
-                const skillsStr = categories[cat].join(', ');
-                const maxSkillWidth = pageWidth - margin * 2 - 140;
-                const splitSkills = doc.splitTextToSize(skillsStr, maxSkillWidth);
-                doc.text(splitSkills, margin + 140, y);
-                y += Math.max(splitSkills.length * 13, 16) + 6;
-            });
-        }
-
-        const filename = `${(config.name || 'Portfolio').replace(/\s+/g, '_')}_Resume.pdf`;
-        doc.save(filename);
-        showToast('📄 Resume PDF downloaded!');
     }
 
 
